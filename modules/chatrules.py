@@ -32,39 +32,77 @@ magic8ball = ["it is certain.",
     "go suck a dick."]
 
 salem_townies = {
-    'bodyguard' : ('Bodyguard', 'Town Protective', 'Protect one person from death each night.'),
-    'doctor' : ('Doctor', 'Town Protective', 'Heal one person each night, preventing them from dying.'),
-    'escort' : ('Escort', 'Town Support', 'Distract someone each night.'),
-    'investigator' : ('Investigator', 'Town Investigative', 'Investigate one person each night for a clue to their role.'),
-    'jailor' : ('Jailor', 'Town Killing', 'You may choose one person during the day to jail for the night.'),
-    'lookout' : ('Lookout', 'Town Investigative', 'Watch one person at night to see who visits them.'),
-    'mayor' : ('Mayor', 'Town Support', 'Gain 3 votes when you reveal yourself as Mayor.'),
-    'medium' : ('Medium', 'Town Support', 'Speak with all dead people at night.'),
-    'retributionist' : ('Retributionist', 'Town Support', 'You may revive a dead town member.'),
-    'sheriff' : ('Sheriff', 'Town Investigative', 'Check one person each night for suspicious activity.'),
-    'spy' : ('Spy', 'Town Investigative', 'Listen in on the Mafia at night, and hear whispers.'),
-    'transporter' : ('Transporter', 'Town Support', 'Choose two people to transport at night.'),
-    'veteran' : ('Veteran', 'Town Killing', 'Decide if you will go on alert and kill anyone who visits you.'),
-    'vigilante' : ('Vigilante', 'Town Killing', 'Choose to take justice into your own hands and shoot someone.')}
+    'bodyguard' : ('Bodyguard', 'Town Protective', 
+        'Protect one person from death each night. If your target is attacked both you and your attacker will die instead. Your counterattack ignores night immunity. (One bulletproof vest)'),
+    'doctor' : ('Doctor', 'Town Protective', 
+        'Heal one person each night, preventing them from dying. You will know if your target is attacked. (One self heal)'),
+    'escort' : ('Escort', 'Town Support', 
+        'Distract someone each night. Prevents them from acting. If you target a Serial Killer they will attack you instead.'),
+    'investigator' : ('Investigator', 'Town Investigative', 
+        'Investigate one person each night for a clue to their role. Framed players will appear to be a Framer.'),
+    'jailor' : ('Jailor', 'Town Killing', 
+        'You may choose one person during the day to jail for the night. You anonymously speak to'+
+        'and can choose to execute your prisoner. Prisoner is roleblocked an immune. (many caveats, see wiki)'),
+    'lookout' : ('Lookout', 'Town Investigative', 
+        'Watch one person at night to see who visits them. Ignores detection immunity.'),
+    'mayor' : ('Mayor', 'Town Support', 
+        'Gain 3 votes when you reveal yourself as Mayor. Once revealed you cannot be healed by a Doctor.'),
+    'medium' : ('Medium', 'Town Support', 
+        'Speak with all dead people (anonymously) at night. If dead, you can choose one living person during the day and speak to them that night. (Some caveats, see wiki)'),
+    'retributionist' : ('Retributionist', 'Town Support', 
+        'You may revive a dead town aligned member (no Mafia/neutral). Cannot revive people who have left the game. The town will get a message when your target is revived.'),
+    'sheriff' : ('Sheriff', 'Town Investigative', 
+        'Check one person each night for suspicious activity. You will know if your target is Mafia or a Serial Killer. Cannot deduce detect-immune roles (Godfather, Arsonist).'),
+    'spy' : ('Spy', 'Town Investigative', 
+        'Listen in on the Mafia at night, and hear whispers. You will know who the Mafia visit at night. Retains spy abilities while dead.'),
+    'transporter' : ('Transporter', 'Town Support', 
+        'Choose two people to transport at night. You can transport yourself. Targets will know if they are swapped. Immune to Witch\'s control.'),
+    'veteran' : ('Veteran', 'Town Killing', 
+        'Decide if you will go on alert and kill anyone who visits you. You are invunerable while alert at night. Cannot be roleblocked. '+ 
+        'You have 3 alerts. Doctors can save attackers. Being transported kills the Transporter but the swap still happens.'),
+    'vigilante' : ('Vigilante', 'Town Killing', 
+        'Choose to take justice into your own hands and shoot someone. You have three shots. Cannot shoot the first night.'+
+        'If you shoot a town aligned player you will commit sudoku from guilt. Cannot kill Night Immune players.')}
 
 salem_mafia = {
-    'blackmailer' : ('Blackmailer', 'Mafia Support', 'Choose one person each night to blackmail.'),
-    'consigliere' : ('Consigliere', 'Mafia Support', 'Check one person for their exact role each night.'),
-    'consort' : ('Consort', 'Mafia Support', 'Distract someone each night.'),
-    'disguiser' : ('Disguiser', 'Mafia Deception', 'Choose a dying target to disguise yourself as.'),
-    'framer' : ('Framer', 'Mafia Deception', 'Choose one person to frame each night.'),
-    'godfather' : ('Godfather', 'Mafia Killing', 'Kill someone each night.'),
-    'janitor' : ('Janitor', 'Mafia Deception', 'Choose a dying person to clean each night.'),
-    'mafioso' : ('Mafioso', 'Mafia Killing', 'Carry out the Godfather\'s orders.')}
+    'blackmailer' : ('Blackmailer', 'Mafia Support', 
+        'Choose one person each night to blackmail. Target cannot talk during the day. During Judgement, blackmailed target\'s message will be changed to "I am blackmailed."'),
+    'consigliere' : ('Consigliere', 'Mafia Support', 
+        'Check one person for their exact role each night. You will get their exact role, unlike the sheriff.'),
+    'consort' : ('Consort', 'Mafia Support', 
+        'Distract someone each night. Prevents them from acting. You are immune to roleblocking. If you target a Serial Killer they will attack you instead.'),
+    'disguiser' : ('Disguiser', 'Mafia Deception', 
+        'Choose a dying target to disguise yourself as. If your target dies you swap names, houses, and, avatars. You only have 3 disguises.'),
+    'framer' : ('Framer', 'Mafia Deception', 
+        'Choose one person to frame each night. Investigators will see framed targets as Framer. Sheriffs will see framed targets as Mafia.'),
+    'godfather' : ('Godfather', 'Mafia Killing', 
+        'Kill someone each night. You can\'t be killed at night. You will appear to be a town member to the Sheriff. If you do not designate a target, the Mafioso may target anyone.'),
+    'janitor' : ('Janitor', 'Mafia Deception', 
+        'Choose a dying person to clean each night. If your target dies at night their role and last will will not be shown to the town, and only you will see them. You only have 3 cleanings.'),
+    'mafioso' : ('Mafioso', 'Mafia Killing', 
+        'Carry out the Godfather\'s orders. If the Godfather designates a target, you will kill them. If Godfather is dead or did not choose to kill someone you can kill whoever you want. ')}
 
 salem_neutrals = {
-    'amnesiac' : ('Amnesiac', 'Neutral Benign', 'Remember who you were by selecting a graveyard role.'),
-    'arsonist' : ('Arsonist', 'Neutral Killing', 'Douse someone in gasoline or ignite all doused targets.'),
-    'executioner' : ('Executioner', 'Neutral Evil', 'Trick the Town into lynching your target.'),
-    'jester' : ('Jester', 'Neutral Evil', 'Trick the Town into voting against you.'),
-    'serial Killer' : ('Serial Killer', 'Neutral Killing', 'Kill someone each night.'),
-    'survivor' : ('Survivor', 'Neutral Benign', 'Put on a bulletproof vest at night, protecting yourself from attacks.'),
-    'witch' : ('Witch', 'Neutral Evil', 'Control someone each night.')}
+    'amnesiac' : ('Amnesiac', 'Neutral Benign', 
+        'Remember who you were by selecting a graveyard role. Choosing a role reveals it to the town. '+
+        'You cannot select a Unique role (Godfather, Mayor, etc...). You can win if you complete your role\' goal or surivive to the end.'),
+    'arsonist' : ('Arsonist', 'Neutral Killing', 
+        'Douse someone in gasoline or ignite all doused targets. Targets will know they are doused in gasoline. If you don\'t act at night you will clean yourself of gas. '+
+        'Death from fire can\'t be prevented by healing or night immunities. You cannot affect jailed targets. Try not to light yourself on fire.'),
+    'executioner' : ('Executioner', 'Neutral Evil', 
+        'Trick the Town into lynching your target. Your target is always a Town member. If your target is killed at night you will become a Jester that morning. '+
+        'You cannot be killed at night (retained after target dies, but lost if you turn into a Jester). You win if your target is lynched before the game ends.'),
+    'jester' : ('Jester', 'Neutral Evil', 
+        'Trick the Town into lynching you. If you are lynched, you may kill one of the GUILTY voters the following night.'+
+        'This goes through any night immunity, however a transporter can swap your target with somebody else and get them killed instead.'),
+    'serial killer' : ('Serial Killer', 'Neutral Killing'
+        'Kill someone each night. If you are role blocked you will attack the blocker instead (Escort, Consort, and Jailor). You can not be killed at night.'),
+    'survivor' : ('Survivor', 'Neutral Benign', 
+        'Put on a bulletproof vest at night, protecting yourself from attacks. You can only use the bulletproof vest 4 times.'+
+        'Your vest will be destroyed regardless if you are attacked or not.  You cannot protect yourself from the Arsonist\'s ignite, Jailor\'s execution, and Jester\'s haunt.'),
+    'witch' : ('Witch', 'Neutral Evil', 
+        'Control someone each night. You can only control targetable actions such as detection and killing. You can force people to target themselves.'+
+        'Your victim will know they are being controlled. You are immune to roleblocking. ')}
 
 salem_roles = dict(salem_townies.items() + salem_mafia.items() + salem_neutrals.items())
 
@@ -309,6 +347,9 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         if not len(args):
             return
+
+        if 'wiki' in args[0]:
+            return "%s: http://town-of-salem.wikia.com/wiki/Roles" % user
 
         # TODO: add support for difflib matching
         for k in data.keys():

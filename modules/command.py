@@ -81,7 +81,7 @@ class Command(object):
         if not self._checkdelay():
             return DELAY_LOCKED
 
-        if len(self.channels) > 0 and channel not in self.channels:
+        if len(self.channels) > 0 and channel not in self.channels + ['borkedbot']:
             return BAD_CHANNEL
 
         return OK
