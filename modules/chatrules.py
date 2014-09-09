@@ -99,7 +99,7 @@ salem_neutrals = {
         'Kill someone each night. If you are role blocked you will attack the blocker instead (Escort, Consort, and Jailor). You can not be killed at night.'),
     'survivor' : ('Survivor', 'Neutral Benign', 
         'Put on a bulletproof vest at night, protecting yourself from attacks. You can only use the bulletproof vest 4 times.'+
-        'Your vest will be destroyed regardless if you are attacked or not.  You cannot protect yourself from the Arsonist\'s ignite, Jailor\'s execution, and Jester\'s haunt.'),
+        'Your vest will be destroyed regardless if you are attacked or not. You cannot protect yourself from the Arsonist\'s ignite, Jailor\'s execution, and Jester\'s haunt.'),
     'witch' : ('Witch', 'Neutral Evil', 
         'Control someone each night. You can only control targetable actions such as detection and killing. You can force people to target themselves.'+
         'Your victim will know they are being controlled. You are immune to roleblocking. ')}
@@ -358,7 +358,7 @@ def generate_message_commands(bot):
     
         return "\"%s\" not found."
     
-    coms.append(command.Command('!salemrole', f, bot, channels=['superjoe'], data=salem_roles, groups=['salem']))
+    coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem']))
 
     ######################################################################
 
