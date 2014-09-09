@@ -229,7 +229,7 @@ def generate_message_commands(bot):
         if message.endswith('?'):
             return "%s, %s"%(user, random.choice(data))
 
-    coms.append(command.SimpleCommand('Borkedbot, ', f, bot, data=magic8ball))
+    coms.append(command.Command('Borkedbot,', f, bot, data=magic8ball))
 
     ######################################################################
     #
