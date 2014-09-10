@@ -84,8 +84,8 @@ salem_mafia = {
 
 salem_neutrals = {
     'amnesiac' : ('Amnesiac', 'Neutral Benign', 
-        'Remember who you were by selecting a graveyard role. Choosing a role reveals it to the town. '+
-        'You cannot select a Unique role (Godfather, Mayor, etc...). You can win if you complete your role\' goal or surivive to the end.'),
+        'Remember who you were by selecting a graveyard role. Choosing a role reveals it to the town. You can select a role cleaned by a Janitor, '+
+        'but you cannot select a Unique role (Godfather, Mayor, etc...). You can win if you complete your role\' goal or surivive to the end.'),
     'arsonist' : ('Arsonist', 'Neutral Killing', 
         'Douse someone in gasoline or ignite all doused targets. Targets will know they are doused in gasoline. If you don\'t act at night you will clean yourself of gas. '+
         'Death from fire can\'t be prevented by healing or night immunities. You cannot affect jailed targets. Try not to light yourself on fire.'),
