@@ -72,7 +72,7 @@ salem_mafia = {
     'consort' : ('Consort', 'Mafia Support', 
         'Distract someone each night. Prevents them from acting. You are immune to roleblocking. If you target a Serial Killer they will attack you instead.'),
     'disguiser' : ('Disguiser', 'Mafia Deception', 
-        'Choose a dying target to disguise yourself as. If your target dies you swap names, houses, and, avatars. You only have 3 disguises.'),
+        'Choose a dying target to disguise yourself as. If your target dies you swap names, houses, and avatars. You only have 3 disguises.'),
     'framer' : ('Framer', 'Mafia Deception', 
         'Choose one person to frame each night. Investigators will see framed targets as Framer. Sheriffs will see framed targets as Mafia.'),
     'godfather' : ('Godfather', 'Mafia Killing', 
