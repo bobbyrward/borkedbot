@@ -41,7 +41,7 @@ salem_townies = {
     'investigator' : ('Investigator', 'Town Investigative', 
         'Investigate one person each night for a clue to their role. Framed players will appear to be a Framer.'),
     'jailor' : ('Jailor', 'Town Killing', 
-        'You may choose one person during the day to jail for the night. You anonymously speak to'+
+        'You may choose one person during the day to jail for the night. You anonymously speak to '+
         'and can choose to execute your prisoner. Prisoner is roleblocked an immune. (many caveats, see wiki)'),
     'lookout' : ('Lookout', 'Town Investigative', 
         'Watch one person at night to see who visits them. Ignores detection immunity.'),
@@ -339,7 +339,7 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand(['!salem', '!salemhelp', '!saleminfo'], 
         "Play Town of Salem here: http://www.blankmediagames.com/TownOfSalem/ Make an account, "+
-        "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat. (Not needed but it helps)", 
+        "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  It's not required but it helps Superjoe keep track of who's who.", 
         bot, channels=['superjoe'], groups=['salem'], repeatdelay=6, prependuser=False, targeted=True))
 
     coms.append(command.SimpleCommand('!salemnames', 'http://doc.asdfxyz.de:81/twitch/superjoe/salem/', 
@@ -353,12 +353,14 @@ def generate_message_commands(bot):
         if 'wiki' in args[0]:
             return "%s: http://town-of-salem.wikia.com/wiki/Roles" % user
 
-        # TODO: add support for difflib matching
-        for k in data.keys():
-            if args[0].lower() in k:
-                return "%s (%s): %s" % data[k]
-    
-        return "\"%s\" not found."
+        import difflib
+
+        searchterm = difflib.get_close_matches(args[0], data.keys(), 1)
+        
+        if len(searchterm):
+            return "%s (%s): %s" % data[searchterm[0].lower()]
+        else: 
+            return "No match for \"%s\"" % args[0]
     
     coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem']))
 
