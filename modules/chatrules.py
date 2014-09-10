@@ -276,7 +276,7 @@ def generate_message_commands(bot):
     # Channel spcifics
     #
 
-    # Monkeys_forever ####
+    # Monkeys_forever ######################################################
 
     def f(channel, user, message, args, data, bot):
         if user != 'sage1447':
@@ -298,12 +298,16 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand(['!rangefinder', '!greenarrow', '!green arrow'], "Here's the console command: dota_disable_range_finder 0", 
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
-    # Superjoe ####
+    # Superjoe ######################################################
 
-    coms.append(command.SimpleCommand('!youtube', 'Subscribe to Superjoe on youtube!  https://www.youtube.com/user/WatchSuperjoe', bot, channels=['superjoe'], prependuser=False, targeted=True))
-    coms.append(command.SimpleCommand('!twitter', 'Follow Superjoe on Twitter!  http://twitter.com/superjoeplays', bot, channels=['superjoe'], prependuser=False, targeted=True))
+    coms.append(command.SimpleCommand('!youtube', 'Subscribe to Superjoe on youtube!  https://www.youtube.com/user/WatchSuperjoe', 
+        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
     
-    coms.append(command.SimpleCommand('!ytmnd', 'http://superjoe.ytmnd.com (courtesy of Slayerx1177)', bot, channels=['superjoe'], prependuser=False, targeted=True))
+    coms.append(command.SimpleCommand('!twitter', 'Follow Superjoe on Twitter!  http://twitter.com/superjoeplays', 
+        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
+    
+    coms.append(command.SimpleCommand('!ytmnd', 'http://superjoe.ytmnd.com (courtesy of Slayerx1177)', 
+        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
 
     def f(channel, user, message, args, data, bot):
         try:
@@ -343,7 +347,7 @@ def generate_message_commands(bot):
         bot, channels=['superjoe'], groups=['salem'], repeatdelay=6, prependuser=False, targeted=True))
 
     coms.append(command.SimpleCommand('!salemnames', 'http://doc.asdfxyz.de:81/twitch/superjoe/salem/', 
-        bot, channels=['superjoe'], groups=['salem'], repeatdelay=6, targeted=True))
+        bot, channels=['superjoe'], groups=['salem'], repeatdelay=8, targeted=True))
 
 
     def f(channel, user, message, args, data, bot):
@@ -365,8 +369,6 @@ def generate_message_commands(bot):
     coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem']))
 
     ######################################################################
-
-    #coms.append(command.SimpleCommand('!argtest', 'This is the test', bot, prependuser = False, targeted=True))
 
     message_commands = coms
 
