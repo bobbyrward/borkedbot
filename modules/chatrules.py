@@ -190,6 +190,8 @@ def generate_message_commands(bot):
     #
 
     coms.append(command.SimpleCommand('Beep?', 'Boop!', bot, True, prependuser = False))
+
+    coms.append(command.SimpleCommand(['!source', '!guts'], "BLEUGH https://github.com/imayhaveborkedit/borkedbot", bot, True, prependuser=True, targeted=True))
     
     #TODO: ADD LIST OF BURSDAY SONGS?
     coms.append(command.SimpleCommand('#!bursday', "Happy Bursday! http://www.youtube.com/watch?v=WCYzk67y_wc", bot, True))
