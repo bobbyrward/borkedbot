@@ -102,7 +102,7 @@ salem_neutrals = {
         'Your vest will be destroyed regardless if you are attacked or not. You cannot protect yourself from the Arsonist\'s ignite, Jailor\'s execution, and Jester\'s haunt.'),
     'witch' : ('Witch', 'Neutral Evil', 
         'Control someone each night. You can only control targetable actions such as detection and killing. You can force people to target themselves.'+
-        'Your victim will know they are being controlled. You are immune to roleblocking. ')}
+        'Your victim will know they are being controlled. You are immune to roleblocking. You win if you live to see the town lose.')}
 
 salem_roles = dict(salem_townies.items() + salem_mafia.items() + salem_neutrals.items())
 
@@ -366,7 +366,7 @@ def generate_message_commands(bot):
         else: 
             return "No match for \"%s\"" % args[0]
     
-    coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem']))
+    coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=6))
 
     ######################################################################
 
