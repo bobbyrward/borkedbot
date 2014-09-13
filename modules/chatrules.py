@@ -198,6 +198,8 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('#!riot', 'ヽ༼ຈل͜ຈ༽ﾉ', bot, True, prependuser = False))
 
+    coms.append(command.SimpleCommand('#!subcount', '%s' % len(bot.channelsubs), bot, True))
+
     def f(channel, user, message, args, data, bot):
         if 'nightbot' in set(bot.oplist + bot.userlist):
             if 'nightbot' in bot.oplist and 'nightbot' not in bot.userlist:
@@ -271,6 +273,11 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('Borkedbot,', f, bot, data=magic8ball))
 
+    def f(channel, user, message, args, data, bot):
+        return '%s: %s' % (user, 'yes' if user in bot.channelsubs else 'no')
+
+    coms.append(command.Command('!amisub', f, bot))
+
     ######################################################################
     #
     # Channel spcifics
@@ -317,11 +324,26 @@ def generate_message_commands(bot):
 
         if user == 'superjoe':
             return "Come on superjoe, everyone knows who you are."
+        elif user == 'imayhaveborkedit' and len(args) == 2:
+            user = args[1]
 
         import cPickle
         username = args[0].replace('"', '')
-        nameDB = cPickle.load(open('/var/www/twitch/superjoe/salem/namemap', 'rb'))
-        nameDB[user] = username
+
+        # Load names
+        nameDB = None
+        with open('/var/www/twitch/superjoe/salem/namemap', 'rb') as ndb:
+            nameDB = cPickle.load(ndb)
+            nameDB[user] = username
+
+        # Load subs
+        sublist = []
+        with open('/var/www/twitch/superjoe/salem/subs', 'rb') as sl:
+            sublist = cPickle.load(sl)
+            sublist.extend(bot.channelsubs)
+            sublist = list(set(sublist))
+        print sublist
+
 
         open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
         with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
@@ -330,12 +352,29 @@ def generate_message_commands(bot):
             fi.write("Twitch name: Salem name\n\n")
             fi.write("superjoe: Superjoe\n\n")
             
-            for d in sorted(nameDB.keys()):
+            normals = []
+            subs = []
+
+            for u in nameDB.keys():
+                (subs if u in sublist else normals).append(u)
+
+            fi.write('== Subs ==\n\n')
+
+            for d in sorted(subs):
                 fi.write('%s: %s\n'%(d, nameDB[d]))
+
+            fi.write('\n== Non-Subs ==\n\n')
+
+            for d in sorted(normals):
+                fi.write('%s: %s\n'%(d, nameDB[d]))
+
             fi.write("</pre></html>")
 
         with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
             cPickle.dump(nameDB, fi2)
+
+        with open('/var/www/twitch/superjoe/salem/subs', 'wb') as sl:
+            cPickle.dump(sublist, sl)
 
         return "\"%s\" registered for %s" % (username, user)
 
@@ -359,7 +398,7 @@ def generate_message_commands(bot):
 
         import difflib
 
-        searchterm = difflib.get_close_matches(args[0], data.keys(), 1)
+        searchterm = difflib.get_close_matches(args[0].lower(), data.keys(), 1)
         
         if len(searchterm):
             return "%s (%s): %s" % data[searchterm[0].lower()]

@@ -6,13 +6,15 @@ from twisted.words.protocols import irc
 from twisted.internet import protocol
 
 import chatmanager
-#import chatlogger
+
 
 class MyBot(irc.IRCClient):
     lineRate = 3
 
     oplist = []
     userlist = []
+
+    channelsubs = []
 
     gotops = False
     hosting = None
@@ -33,7 +35,7 @@ class MyBot(irc.IRCClient):
         chatmanager.setup(self)
         chatmanager.event(None, None, 'serverjoin', None, self, None)
 
-        #self.sendLine('TWITCHCLIENT 3')
+        self.sendLine('TWITCHCLIENT 3') # Oh boy here we go
 
     def joined(self, channel):
         print "Joined %s." % channel
@@ -76,13 +78,32 @@ class MyBot(irc.IRCClient):
         user = user.split("!")[0]
         
         if channel != self.factory.channel:
-            print "INFO (#%s): %s" % (channel, msg)
+            if msg.split()[0] in ['EMOTESET', 'USERCOLOR']:
+                return
+            elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'subscriber':
+                self.channelsubs.append(msg.split()[1])
+                self.channelsubs = list(set(self.channelsubs))
+                return
+
+            print "INFO (%s): %s" % (channel, msg)
             chatmanager.event(channel.replace('#',''), None, 'infomsg', msg, self, user in self.oplist)
             return
 
         if user == 'jtv':
-            print "INFO from ttv (#%s): %s" % (channel, msg)
+            if msg.split()[0] in ['EMOTESET', 'USERCOLOR']:
+                return
+            elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'subscriber':
+                self.channelsubs.append(msg.split()[1])
+                self.channelsubs = list(set(self.channelsubs))
+                return
+
+            print "INFO from ttv (%s): %s" % (channel, msg)
             chatmanager.event(channel.replace('#',''), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
+            return
+
+        if user == 'twitchnotify':
+            print "!!Notification from twitch!! (%s): %s" % (channel, msg)
+            chatmanager.event(channel.replace('#',''), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
             return
         
         #       def event(channel, user, etype, data, bot, isop):
