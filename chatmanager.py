@@ -78,6 +78,7 @@ def _manage_modules():
         new_imports = list(set(fresh_imports) - set(imported_modules))
         removed_imports = list(set(imported_modules) - set(fresh_imports))
 
+        # I don't think anything here can break but i'll leave the try block in anyways
         try:
             ifunusable = False
             for ni in new_imports:
@@ -108,39 +109,37 @@ def _manage_modules():
 # This gets called after modules are imported to activate them
 def _init_modules(bot):
     setup_time = 0
-    try:
-        for m in imported_modules:
-            debug("- %s..." % m.__name__,False)
-            start_time = time.time()
 
-            setup_result = True
+    for m in imported_modules:
+        debug("- %s..." % m.__name__,False)
+        start_time = time.time()
+
+        setup_result = True
+        
+        try:
+            setup_result = m.setup(bot)
+        except Exception as ee:
+            print "Setup failure for %s" % m.__name__
+            print ee
+            print
             
-            try:
-                setup_result = m.setup(bot)
-            except Exception as ee:
-                print "Setup failure for %s" % m.__name__
-                print ee
-                print
-                
-                #exc_type, exc_obj, exc_tb = sys.exc_info()
-                #fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                #print exc_type, fname, exc_tb.tb_lineno
+            #exc_type, exc_obj, exc_tb = sys.exc_info()
+            #fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            #print exc_type, fname, exc_tb.tb_lineno
 
-                setup_result = False
+            setup_result = False
 
-            if not setup_result and setup_result is not None:
-                debug("%s returned bad setup, will be disabled." % m.__name__)
-                #Disable or whatever
+        if not setup_result and setup_result is not None:
+            debug("%s returned bad setup, will be disabled." % m.__name__)
+            #Disable or whatever
 
-            #print setup_result if setup_result is not None else 'Done in',
-            debug('Done in', False)
-            
-            stop_time = ((time.time() - start_time) * 1000)
-            debug("%4.4f ms" % stop_time)
+        #print setup_result if setup_result is not None else 'Done in',
+        debug('Done in', False)
+        
+        stop_time = ((time.time() - start_time) * 1000)
+        debug("%4.4f ms" % stop_time)
 
-            setup_time += stop_time
-    except Exception as e:
-        print "Error initializing %s: %s" % (m, e)
+        setup_time += stop_time
 
     debug("Total setup time: %4.4f ms\n" % setup_time)
 
