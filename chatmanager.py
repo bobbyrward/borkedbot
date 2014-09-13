@@ -28,7 +28,7 @@ def doreload(bot):
 
         for m in imported_modules:
             # Add a os.path.getmtime check or something
-            debug("Reloading %s..." % m.__name__)
+            _debug("Reloading %s..." % m.__name__)
             try:
                 reload(m)
             except Exception as e:
@@ -38,7 +38,7 @@ def doreload(bot):
         _init_modules(bot)
 
 
-    debug('')
+    _debug('')
 
 #########################
 
@@ -50,11 +50,11 @@ def setup(bot):
     _manage_modules()
 
     import_time2 = ((time.time() - import_time) * 1000)
-    debug("Imported modules in %4.4f ms" % import_time2)
+    _debug("Imported modules in %4.4f ms" % import_time2)
 
     # Load settings from pickled dict
 
-    debug("Initializing modules...")
+    _debug("Initializing modules...")
     _init_modules(bot)
 
 
@@ -63,7 +63,7 @@ def _manage_modules():
     global imported_modules
 
     #print "Importing modules..."
-    debug('')
+    _debug('')
 
     try:
         import modules
@@ -83,21 +83,21 @@ def _manage_modules():
             ifunusable = False
             for ni in new_imports:
                 if not (type(getattr(ni, 'setup', False)) is FunctionType and type(getattr(ni, 'alert', False)) is FunctionType):
-                    info("%s is not a useable module and will not be imported." % ni.__name__)
+                    _info("%s is not a useable module and will not be imported." % ni.__name__)
                     ifunusable = True
                     new_imports.remove(ni)
 
-            if ifunusable: info('')
+            if ifunusable: _info('')
 
             if len(new_imports):
-                info("Importing %s new modules:" % len(new_imports))
-                [info('- %s'%m.__name__) for m in new_imports]
-                info('')
+                _info("Importing %s new modules:" % len(new_imports))
+                [_info('- %s'%m.__name__) for m in new_imports]
+                _info('')
                 
             if len(removed_imports):
-                info("Removing %s modules:" % len(removed_imports))
-                [info('- %s'%m.__name__) for m in removed_imports]
-                info('')
+                _info("Removing %s modules:" % len(removed_imports))
+                [_info('- %s'%m.__name__) for m in removed_imports]
+                _info('')
 
             imported_modules.extend(new_imports)
             imported_modules = list(set(imported_modules))
@@ -111,7 +111,7 @@ def _init_modules(bot):
     setup_time = 0
 
     for m in imported_modules:
-        debug("- %s..." % m.__name__,False)
+        _debug("- %s..." % m.__name__,False)
         start_time = time.time()
 
         setup_result = True
@@ -123,25 +123,21 @@ def _init_modules(bot):
             print ee
             print
             
-            #exc_type, exc_obj, exc_tb = sys.exc_info()
-            #fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            #print exc_type, fname, exc_tb.tb_lineno
-
             setup_result = False
 
         if not setup_result and setup_result is not None:
-            debug("%s returned bad setup, will be disabled." % m.__name__)
+            _debug("%s returned bad setup, will be disabled." % m.__name__)
             #Disable or whatever
 
         #print setup_result if setup_result is not None else 'Done in',
-        debug('Done in', False)
+        _debug('Done in', False)
         
         stop_time = ((time.time() - start_time) * 1000)
-        debug("%4.4f ms" % stop_time)
+        _debug("%4.4f ms" % stop_time)
 
         setup_time += stop_time
 
-    debug("Total setup time: %4.4f ms\n" % setup_time)
+    _debug("Total setup time: %4.4f ms\n" % setup_time)
 
 
 # This is what gets called by the bot to distribute events to modules
@@ -159,7 +155,7 @@ def event(channel, user, etype, data, bot, isop):
 
 
 def _process_event(event):
-    debug("Preparing to dispatching %s event" % event.etype)
+    _debug("Preparing to dispatching %s event" % event.etype)
 
     # This needs to be improved to define event types
     #if _check_global_blacklist(event):
@@ -170,7 +166,7 @@ def _process_event(event):
 
     for m in imported_modules:
         try:
-            debug("Alerting %s" % m.__name__)
+            _debug("Alerting %s" % m.__name__)
             m.alert(event)
         except Exception as e:
             print "Alert error for %s: " % m.__name__
@@ -180,15 +176,19 @@ def _process_event(event):
 def _check_global_blacklist(event):
     return user in ('fidofidder', 'sage1447', 'jimbooob')
 
+def _get_exception_info():
+    exc_type, exc_obj, exc_tb = sys.exc_info()
+    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    return (exc_type, fname, exc_tb.tb_lineno)
 
-def debug(o, nl=True):
+def _debug(o, nl=True):
     if DEBUG_OUTPUT:
         if nl:
             print o
         else:
             print o,
 
-def info(o, nl=True):
+def _info(o, nl=True):
     if INFO_OUTPUT:
         if nl:
             print o
