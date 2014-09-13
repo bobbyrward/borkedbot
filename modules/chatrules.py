@@ -408,14 +408,14 @@ def generate_message_commands(bot):
         else: 
             return "No match for \"%s\"" % args[0]
     
-    coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=6))
+    coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=7))
 
     ######################################################################
     #
     # Test commands
     #
 
-    
+    coms.append(command.SimpleCommand('!cooldowntest', 'okeydokey', bot, True, repeatdelay=15))
 
     ######################################################################
 

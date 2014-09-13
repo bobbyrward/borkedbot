@@ -68,38 +68,41 @@ def _manage_modules():
     try:
         import modules
         reload(modules)
-        
+    except ImportError as e:
+        print "Cannot import modules."
+        print e
+    else:
         #old_imports = imported_modules
         fresh_imports = modules._m_imports
         
         new_imports = list(set(fresh_imports) - set(imported_modules))
         removed_imports = list(set(imported_modules) - set(fresh_imports))
 
-        ifunusable = False
-        for ni in new_imports:
-            if not (type(getattr(ni, 'setup', False)) is FunctionType and type(getattr(ni, 'alert', False)) is FunctionType):
-                info("%s is not a useable module and will not be imported." % ni.__name__)
-                ifunusable = True
-                new_imports.remove(ni)
+        try:
+            ifunusable = False
+            for ni in new_imports:
+                if not (type(getattr(ni, 'setup', False)) is FunctionType and type(getattr(ni, 'alert', False)) is FunctionType):
+                    info("%s is not a useable module and will not be imported." % ni.__name__)
+                    ifunusable = True
+                    new_imports.remove(ni)
 
-        if ifunusable: info('')
+            if ifunusable: info('')
 
-        if len(new_imports):
-            info("Importing %s new modules:" % len(new_imports))
-            [info('- %s'%m.__name__) for m in new_imports]
-            info('')
-            
-        if len(removed_imports):
-            info("Removing %s modules:" % len(removed_imports))
-            [info('- %s'%m.__name__) for m in removed_imports]
-            info('')
+            if len(new_imports):
+                info("Importing %s new modules:" % len(new_imports))
+                [info('- %s'%m.__name__) for m in new_imports]
+                info('')
+                
+            if len(removed_imports):
+                info("Removing %s modules:" % len(removed_imports))
+                [info('- %s'%m.__name__) for m in removed_imports]
+                info('')
 
-        imported_modules.extend(new_imports)
-        imported_modules = list(set(imported_modules))
-
-    except Exception as e:
-        print "Module import error:"
-        print e
+            imported_modules.extend(new_imports)
+            imported_modules = list(set(imported_modules))
+        except Exception as e2:
+            print "An unforseen error has occurred setting up imports:"
+            print e2
 
 
 # This gets called after modules are imported to activate them

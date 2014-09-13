@@ -83,6 +83,8 @@ class MyBot(irc.IRCClient):
                 self.channelsubs.append(msg.split()[1])
                 self.channelsubs = list(set(self.channelsubs))
                 return
+            elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'turbo':
+                return
 
             print "INFO (%s): %s" % (channel, msg)
             chatmanager.event(channel.replace('#',''), None, 'infomsg', msg, self, user in self.oplist)
@@ -95,6 +97,9 @@ class MyBot(irc.IRCClient):
                 self.channelsubs.append(msg.split()[1])
                 self.channelsubs = list(set(self.channelsubs))
                 return
+            elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'turbo':
+                return
+
 
             print "INFO from ttv (%s): %s" % (channel, msg)
             chatmanager.event(channel.replace('#',''), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
