@@ -41,7 +41,6 @@ class MyBot(irc.IRCClient):
         print "Joined %s." % channel
         chatmanager.event(channel.replace('#',''), None, 'channeljoin', channel.replace('#',''), self, None)
 
-
     def receivedMOTD(self, motd):
         print '\n### MOTD ###'
         print '\n'.join(motd)

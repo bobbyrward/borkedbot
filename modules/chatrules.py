@@ -126,7 +126,7 @@ def alert(event):
                 event.bot.say(event.channel, output[0])
 
     if event.etype in ['join', 'part']:
-        # not quite yet
+        # not quite yet, maybe not for a while
         pass
 
 
@@ -316,6 +316,8 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('!ytmnd', 'http://superjoe.ytmnd.com (courtesy of Slayerx1177)', 
         bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
 
+    coms.append(command.SimpleCommand('!time', 'The current time in Superjoe Land is %s' % time.asctime(), bot, channels=['superjoe']))
+
     def f(channel, user, message, args, data, bot):
         try:
             args[0]
@@ -342,15 +344,16 @@ def generate_message_commands(bot):
             sublist = cPickle.load(sl)
             sublist.extend(bot.channelsubs)
             sublist = list(set(sublist))
-        print sublist
 
-
+        # Easy way to empty a file
         open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
+        
+        # Rewrite the file
         with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
             fi.write("<html><pre>\n")
             fi.write("Superjoe Town of Salem chat names (sub indicator coming)\n\n")
             fi.write("Twitch name: Salem name\n\n")
-            fi.write("superjoe: Superjoe\n\n")
+            fi.write("superjoe: SuperJoe\n\n")
             
             normals = []
             subs = []
@@ -382,7 +385,7 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand(['!salem', '!salemhelp', '!saleminfo'], 
         "Play Town of Salem here: http://www.blankmediagames.com/TownOfSalem/ Make an account, "+
-        "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  It's not required but it helps Superjoe keep track of who's who.", 
+        "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  Registering in chat isn't required but it helps Superjoe keep track of who's who.", 
         bot, channels=['superjoe'], groups=['salem'], repeatdelay=6, prependuser=False, targeted=True))
 
     coms.append(command.SimpleCommand('!salemnames', 'http://doc.asdfxyz.de:81/twitch/superjoe/salem/', 
@@ -406,6 +409,13 @@ def generate_message_commands(bot):
             return "No match for \"%s\"" % args[0]
     
     coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=6))
+
+    ######################################################################
+    #
+    # Test commands
+    #
+
+    
 
     ######################################################################
 

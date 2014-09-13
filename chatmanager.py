@@ -21,20 +21,22 @@ INFO_OUTPUT = True
 RELOAD_MODULES = True
 
 def doreload(bot):
-    try:
-        if RELOAD_MODULES: 
 
-            _manage_modules()
+    if RELOAD_MODULES: 
 
-            for m in imported_modules:
-                # Add a os.path.getmtime check or something
-                debug("Reloading %s..." % m.__name__)
+        _manage_modules()
+
+        for m in imported_modules:
+            # Add a os.path.getmtime check or something
+            debug("Reloading %s..." % m.__name__)
+            try:
                 reload(m)
+            except Exception as e:
+                print 'I haz an error reloading module %s:' % m.__name__
+                print e
 
-            _init_modules(bot)
-    except Exception as e:
-        print 'I haz an error reloading module %s:' % m.__name__
-        print e
+        _init_modules(bot)
+
 
     debug('')
 
