@@ -70,25 +70,29 @@ def _manage_modules():
     else:
         fresh_imports = modules._m_imports
         
+        for fi in fresh_imports:
+            if getattr(ni, 'DISABLE_MODULE', False):
+                _info("%s has been disabled and will be disregarded." % fi.__name__)
+                fresh_imports.remove(fi)
+
         new_imports = list(set(fresh_imports) - set(imported_modules))
         removed_imports = list(set(imported_modules) - set(fresh_imports))
 
         # I don't think anything here can break but i'll leave the try block in anyways
         try:
-            ifunusable = False
+            if_issue = False
             for ni in new_imports:
                 if not (type(getattr(ni, 'setup', False)) is FunctionType and type(getattr(ni, 'alert', False)) is FunctionType):
-
                     _info("%s is not a useable module and will not be imported." % ni.__name__)
-                    ifunusable = True
+                    if_issue = True
                     new_imports.remove(ni)
 
                 elif getattr(ni, 'DISABLE_MODULE', False):
                     _info("%s has been disabled and will not be imported." % ni.__name__)
-                    ifunusable = True
+                    if_issue = True
                     new_imports.remove(ni)
 
-            if ifunusable: _info('')
+            if if_issue: _info('')
 
             imported_modules.extend(new_imports)
             imported_modules = list(set(imported_modules))
@@ -110,8 +114,9 @@ def _manage_modules():
                     modules_mtime.pop(mm, None)
 
         except Exception as e2:
-            print "An unforseen error has occurred setting up imports:"
-            print e2
+            print "An unforseen error has occurred setting up imports"
+            print "This is probably bad and should be fixed ASAP"
+            print _get_exception_info()
 
 
 # This gets called after modules are imported to activate them
