@@ -354,7 +354,7 @@ def generate_message_commands(bot):
             fi.write("Superjoe Town of Salem chat names (sub indicator coming)\n\n")
             fi.write("Twitch name: Salem name\n\n")
             fi.write("superjoe: SuperJoe\n\n")
-            
+
             normals = []
             subs = []
 

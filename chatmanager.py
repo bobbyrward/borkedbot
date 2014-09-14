@@ -21,14 +21,10 @@ INFO_OUTPUT = True
 RELOAD_MODULES = True
 
 def doreload(bot):
-
     if RELOAD_MODULES: 
-
         _manage_modules()
 
-        for m in imported_modules:
-            
-            # Add a os.path.getmtime check or something
+        for m in imported_modules:            
             if os.path.getmtime(m.__file__) > modules_mtime[m]:
                 _info("Reloading %s..." % m.__name__)
                 try:
@@ -36,9 +32,10 @@ def doreload(bot):
                 except Exception as e:
                     print 'I haz an error reloading module %s:' % m.__name__
                     print _get_exception_info()
+                else:
+                    modules_mtime[m] = os.path.getmtime(m.__file__)
 
         _init_modules(bot)
-
 
     _debug('')
 
@@ -91,21 +88,21 @@ def _manage_modules():
 
             if ifunusable: _info('')
 
+            imported_modules.extend(new_imports)
+            imported_modules = list(set(imported_modules))
+            
             if len(new_imports):
                 _info("Importing %s new modules:" % len(new_imports))
                 [_info('- %s'%m.__name__) for m in new_imports]
                 _info('')
+
+                for mm in imported_modules:
+                    modules_mtime[mm] = os.path.getmtime(mm.__file__)
                 
             if len(removed_imports):
                 _info("Removing %s modules:" % len(removed_imports))
                 [_info('- %s'%m.__name__) for m in removed_imports]
                 _info('')
-
-            imported_modules.extend(new_imports)
-            imported_modules = list(set(imported_modules))
-
-            for mm in imported_modules:
-                modules_mtime[mm] = os.path.getmtime(mm.__file__)
 
         except Exception as e2:
             print "An unforseen error has occurred setting up imports:"
