@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import sys, os
-import time, random, re, redis
+import sys, os, time
+import math, random, re, redis
 import markov
 import command, chatlogger
 from command import get_process_output
-
-import sys, math
 
 
 magic8ball = ["it is certain.",

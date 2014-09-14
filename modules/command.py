@@ -51,9 +51,6 @@ class Command(object):
     # Right so this doesn't actually work because the command gets reloaded every message...
     def _checkdelay(self):
         if self.lastuse is None: return True
-        print "time: %s" % int(self._htime())
-        print "last: %s" % int(self.lastuse)
-
         return int(self._htime() - self.lastuse) > self.repeatdelay
 
 

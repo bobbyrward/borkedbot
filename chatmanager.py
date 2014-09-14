@@ -34,8 +34,7 @@ def doreload(bot):
                     print _get_exception_info()
                 else:
                     modules_mtime[m] = os.path.getmtime(m.__file__)
-
-        _init_modules(bot)
+                    _init_module(m, bot)
 
     _debug('')
 
@@ -71,7 +70,6 @@ def _manage_modules():
         print "Cannot import modules."
         print e
     else:
-        #old_imports = imported_modules
         fresh_imports = modules._m_imports
         
         new_imports = list(set(fresh_imports) - set(imported_modules))
@@ -104,6 +102,9 @@ def _manage_modules():
                 [_info('- %s'%m.__name__) for m in removed_imports]
                 _info('')
 
+                for mm in removed_imports:
+                    modules_mtime.pop(mm, None)
+
         except Exception as e2:
             print "An unforseen error has occurred setting up imports:"
             print e2
@@ -114,25 +115,10 @@ def _init_modules(bot):
     setup_time = 0
 
     for m in imported_modules:
-        _debug("- %s..." % m.__name__,False)
         start_time = time.time()
-
-        setup_result = True
         
-        try:
-            setup_result = m.setup(bot)
-        except Exception as ee:
-            print "Setup failure for %s" % m.__name__
-            print ee
-            print
-            
-            setup_result = False
-
-        if not setup_result and setup_result is not None:
-            _debug("%s returned bad setup, will be disabled." % m.__name__)
-            #Disable or whatever
-
-        #print setup_result if setup_result is not None else 'Done in',
+        _init_module(m, bot)
+        
         _debug('Done in', False)
         
         stop_time = ((time.time() - start_time) * 1000)
@@ -141,6 +127,28 @@ def _init_modules(bot):
         setup_time += stop_time
 
     _debug("Total setup time: %4.4f ms\n" % setup_time)
+
+
+def _init_module(m, bot):
+    _debug("- %s..." % m.__name__,False)
+
+    setup_result = True
+    
+    try:
+        setup_result = m.setup(bot)
+    except Exception as ee:
+        print "Setup failure for %s" % m.__name__
+        print ee
+        print
+        
+        setup_result = False
+
+    if not setup_result and setup_result is not None:
+        _debug("%s returned bad setup, will be disabled." % m.__name__)
+        #Disable or whatever
+
+    #print setup_result if setup_result is not None else 'Done in',
+
 
 
 # This is what gets called by the bot to distribute events to modules
