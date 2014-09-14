@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, os.path
 import time, Queue
 from types import FunctionType
 
@@ -6,6 +6,8 @@ from types import FunctionType
 
 imported_modules = []
 disabled_modules = []
+
+modules_mtime = {}
 
 user_blacklist = {}
 
@@ -16,8 +18,6 @@ INFO_OUTPUT = True
 
 # Either I have a file with enable/disable rules for modules, or I do it in __init__.py
 
-# Ok I know what I need to do.  I need to check for file changes and then reload if needed.
-
 RELOAD_MODULES = True
 
 def doreload(bot):
@@ -27,13 +27,15 @@ def doreload(bot):
         _manage_modules()
 
         for m in imported_modules:
+            
             # Add a os.path.getmtime check or something
-            _debug("Reloading %s..." % m.__name__)
-            try:
-                reload(m)
-            except Exception as e:
-                print 'I haz an error reloading module %s:' % m.__name__
-                print e
+            if os.path.getmtime(m.__file__) > modules_mtime[m]:
+                _info("Reloading %s..." % m.__name__)
+                try:
+                    reload(m)
+                except Exception as e:
+                    print 'I haz an error reloading module %s:' % m.__name__
+                    print _get_exception_info()
 
         _init_modules(bot)
 
@@ -101,6 +103,10 @@ def _manage_modules():
 
             imported_modules.extend(new_imports)
             imported_modules = list(set(imported_modules))
+
+            for mm in imported_modules:
+                modules_mtime[mm] = os.path.getmtime(mm.__file__)
+
         except Exception as e2:
             print "An unforseen error has occurred setting up imports:"
             print e2

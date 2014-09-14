@@ -316,7 +316,7 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('!ytmnd', 'http://superjoe.ytmnd.com (courtesy of Slayerx1177)', 
         bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
 
-    coms.append(command.SimpleCommand('!time', 'The current time in Superjoe Land is %s' % time.asctime(), bot, channels=['superjoe']))
+    coms.append(command.SimpleCommand('!time', 'It is currently %s in Superjoe Land.' % time.asctime(), bot, channels=['superjoe']))
 
     def f(channel, user, message, args, data, bot):
         try:
