@@ -1,4 +1,6 @@
 import sys
+sys.dont_write_bytecode = True
+
 import cPickle, base64
 
 from twisted.internet import reactor
