@@ -16,8 +16,6 @@ INFO_OUTPUT = True
 
 #########################
 
-# Either I have a file with enable/disable rules for modules, or I do it in __init__.py
-
 RELOAD_MODULES = True
 
 def doreload(bot):
@@ -80,7 +78,13 @@ def _manage_modules():
             ifunusable = False
             for ni in new_imports:
                 if not (type(getattr(ni, 'setup', False)) is FunctionType and type(getattr(ni, 'alert', False)) is FunctionType):
+
                     _info("%s is not a useable module and will not be imported." % ni.__name__)
+                    ifunusable = True
+                    new_imports.remove(ni)
+
+                elif getattr(ni, 'DISABLE_MODULE', False):
+                    _info("%s has been disabled and will not be imported." % ni.__name__)
                     ifunusable = True
                     new_imports.remove(ni)
 
