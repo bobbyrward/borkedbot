@@ -11,10 +11,9 @@ modules_mtime = {}
 
 user_blacklist = {}
 
+IS_SETUP = False
 DEBUG_OUTPUT = False
 INFO_OUTPUT = True
-
-#########################
 
 RELOAD_MODULES = True
 
@@ -36,8 +35,6 @@ def doreload(bot):
 
     _debug('')
 
-#########################
-
 
 # This is the entry point for a bot using this
 def setup(bot):
@@ -48,10 +45,12 @@ def setup(bot):
     import_time2 = ((time.time() - import_time) * 1000)
     _debug("Imported modules in %4.4f ms" % import_time2)
 
-    # Load settings from pickled dict
+    # Load settings from pickled dict or whatever
 
     _debug("Initializing modules...")
     _init_modules(bot)
+
+    IS_SETUP = True
 
 
 # This gets called by setup to gather
@@ -190,7 +189,7 @@ def _process_event(event):
             m.alert(event)
         except Exception as e:
             print "Alert error for %s: " % m.__name__
-            print e
+            print _get_exception_info()
 
 
 def _check_global_blacklist(event):

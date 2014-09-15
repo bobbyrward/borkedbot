@@ -14,7 +14,7 @@ class MyBot(irc.IRCClient):
     lineRate = 3
 
     oplist = []
-    userlist = []
+    userlist = [] # RIP TWITCHCLENT 1
 
     channelsubs = []
 
