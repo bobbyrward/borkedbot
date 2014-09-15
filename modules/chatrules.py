@@ -59,7 +59,7 @@ salem_townies = {
         'Decide if you will go on alert and kill anyone who visits you. You are invunerable while alert at night. Cannot be roleblocked. '+ 
         'You have 3 alerts. Doctors can save attackers. Being transported kills the Transporter but the swap still happens.'),
     'vigilante' : ('Vigilante', 'Town Killing', 
-        'Choose to take justice into your own hands and shoot someone. You have three shots. Cannot shoot the first night.'+
+        'Choose to take justice into your own hands and shoot someone. You have three shots. Cannot shoot the first night. '+
         'If you shoot a town aligned player you will commit sudoku from guilt. Cannot kill Night Immune players.')}
 
 salem_mafia = {
@@ -91,15 +91,15 @@ salem_neutrals = {
         'Trick the Town into lynching your target. Your target is always a Town member. If your target is killed at night you will become a Jester that morning. '+
         'You cannot be killed at night (retained after target dies, but lost if you turn into a Jester). You win if your target is lynched before the game ends.'),
     'jester' : ('Jester', 'Neutral Evil', 
-        'Trick the Town into lynching you. If you are lynched, you may kill one of the GUILTY voters the following night.'+
+        'Trick the Town into lynching you. If you are lynched, you may kill one of the GUILTY voters the following night. '+
         'This goes through any night immunity, however a transporter can swap your target with somebody else and get them killed instead.'),
     'serial killer' : ('Serial Killer', 'Neutral Killing'
         'Kill someone each night. If you are role blocked you will attack the blocker instead (Escort, Consort, and Jailor). You can not be killed at night.'),
     'survivor' : ('Survivor', 'Neutral Benign', 
-        'Put on a bulletproof vest at night, protecting yourself from attacks. You can only use the bulletproof vest 4 times.'+
+        'Put on a bulletproof vest at night, protecting yourself from attacks. You can only use the bulletproof vest 4 times. '+
         'Your vest will be destroyed regardless if you are attacked or not. You cannot protect yourself from the Arsonist\'s ignite, Jailor\'s execution, and Jester\'s haunt.'),
     'witch' : ('Witch', 'Neutral Evil', 
-        'Control someone each night. You can only control targetable actions such as detection and killing. You can force people to target themselves.'+
+        'Control someone each night. You can only control targetable actions such as detection and killing. You can force people to target themselves. '+
         'Your victim will know they are being controlled. You are immune to roleblocking. You win if you live to see the town lose.')}
 
 salem_roles = dict(salem_townies.items() + salem_mafia.items() + salem_neutrals.items())
@@ -276,6 +276,28 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!amisub', f, bot))
 
+    def f(channel, user, message, args, data, bot):
+        import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi
+        if len(args):
+            channel = args[0].lower()
+        streamdata = twitchapi.get('streams/%s' % channel.replace('#',''), 'stream')
+        if streamdata is None:
+            return "There is no stream D:"
+
+        isotime = streamdata['created_at']
+
+        t_0 = dateutil.parser.parse(isotime)
+        t_now = datetime.datetime.now(dateutil.tz.tzutc())
+
+        reldelta = dateutil.relativedelta.relativedelta(t_now, t_0)
+
+        if not reldelta.days:
+            return "{0} has been streaming for {1.hours} hours, {1.minutes} minutes, and {1.seconds} seconds.".format(channel, reldelta)
+        else:
+            return "{0} has been streaming for {1.days} days, {1.hours} hours, {1.minutes} minutes, and {1.seconds} seconds.".format(channel, reldelta) 
+
+    coms.append(command.Command('!uptime', f, bot, repeatdelay=8))
+
     ######################################################################
     #
     # Channel spcifics
@@ -395,10 +417,7 @@ def generate_message_commands(bot):
 
 
     def f(channel, user, message, args, data, bot):
-        if not len(args):
-            return
-
-        if 'wiki' in args[0]:
+        if not len(args) or 'wiki' in args[0]:
             return "%s: http://town-of-salem.wikia.com/wiki/Roles" % user
 
         import difflib
