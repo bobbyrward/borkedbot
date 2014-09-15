@@ -190,6 +190,7 @@ def _process_event(event):
         except Exception as e:
             print "Alert error for %s: " % m.__name__
             print _get_exception_info()
+            print e
 
 
 def _check_global_blacklist(event):

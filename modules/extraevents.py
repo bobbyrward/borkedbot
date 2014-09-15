@@ -6,5 +6,5 @@ def setup(bot):
 
 def alert(event):
     if event.etype == 'twitchnotify':
-        if 'has just subscribed!' in event.data:
-            bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ NEW SUB HYPE ヽ༼ຈل͜ຈ༽ﾉ')
+        if 'just subscribed!' in event.data:
+            event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s ヽ༼ຈل͜ຈ༽ﾉ' % event.data.split()[0])
