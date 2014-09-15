@@ -318,7 +318,7 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         return 'It is currently %s in Superjoe Land.' % time.asctime()
 
-    coms.append(command.Command('!time', f, bot, channels=['superjoe']))
+    coms.append(command.Command('!time', f, bot, channels=['superjoe'], repeatdelay=8))
 
     def f(channel, user, message, args, data, bot):
         try:

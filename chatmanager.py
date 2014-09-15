@@ -70,7 +70,7 @@ def _manage_modules():
         fresh_imports = modules._m_imports
         
         for fi in fresh_imports:
-            if getattr(ni, 'DISABLE_MODULE', False):
+            if getattr(fi, 'DISABLE_MODULE', False):
                 _info("%s has been disabled and will be disregarded." % fi.__name__)
                 fresh_imports.remove(fi)
 
