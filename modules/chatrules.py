@@ -423,12 +423,12 @@ def generate_message_commands(bot):
         import difflib
 
         searchterm = difflib.get_close_matches(args[0].lower(), data.keys(), 1)
-        
+
         if len(searchterm):
             return "%s (%s): %s" % data[searchterm[0].lower()]
         else: 
             return "No match for \"%s\"" % args[0]
-    
+
     coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=7))
 
     ######################################################################
@@ -445,10 +445,8 @@ def generate_message_commands(bot):
     return "Generated %s message commands" % len(message_commands)
 
 
-
 def generate_joinpart_commands(bot):
     global joinpart_commands
-
 
 
 def _getargs(msg):

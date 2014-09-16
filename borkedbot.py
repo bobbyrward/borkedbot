@@ -30,6 +30,10 @@ class MyBot(irc.IRCClient):
     def nickname(self):
         return self.factory.nickname
 
+    @property
+    def channel(self):
+        return self.factory.channel
+
     def signedOn(self):
         self.join(self.factory.channel)
         print "Signed on as %s.\n" % self.nickname
@@ -132,7 +136,6 @@ class MyBot(irc.IRCClient):
         chatmanager.event(channel.replace('#',''), None, 'part', user, self, user in self.oplist)
 
     def botsay(self, msg):
-        print self.channel, self.factory.channel
         self.say(self.factory.channel, msg)
 
     def quirkyMessage(self, s):
