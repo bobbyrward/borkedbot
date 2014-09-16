@@ -292,9 +292,9 @@ def generate_message_commands(bot):
         reldelta = dateutil.relativedelta.relativedelta(t_now, t_0)
 
         if not reldelta.days:
-            return "{0} has been streaming for {1.hours} hours, {1.minutes} minutes, and {1.seconds} seconds.".format(channel, reldelta)
+            return "{0}, {1} has been streaming for approximately {2.hours} hours and {2.minutes} minutes.".format(user, channel, reldelta)
         else:
-            return "{0} has been streaming for {1.days} days, {1.hours} hours, {1.minutes} minutes, and {1.seconds} seconds.".format(channel, reldelta) 
+            return "{0}, {1} has been streaming for approximately {2.days} days, {2.hours} hours and {2.minutes} minutes.".format(user, channel, reldelta) 
 
     coms.append(command.Command('!uptime', f, bot, repeatdelay=8))
 
