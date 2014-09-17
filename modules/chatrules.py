@@ -307,7 +307,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         if user != 'sage1447':
-            return '%s: Anywhere between 5.8k and 6k' % user
+            return '%s: Anywhere between 5.9k and 6.1k' % user
 
     coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=10))
 
@@ -353,7 +353,7 @@ def generate_message_commands(bot):
         elif user == 'imayhaveborkedit' and len(args) == 2:
             user = args[1]
 
-        import cPickle
+        import cPickle, time
         username = args[0].replace('"', '')
 
         # Load names
@@ -375,8 +375,8 @@ def generate_message_commands(bot):
         # Rewrite the file
         with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
             fi.write("<html><pre>\n")
-            fi.write("Superjoe Town of Salem chat names (sub indicator coming)\n\n")
-            fi.write("Twitch name: Salem name\n\n")
+            fi.write("Superjoe Town of Salem chat names\nLast update: %s\n\n" % time.asctime())
+            fi.write("Name Format:\nTwitch name: Salem name\n\n")
             fi.write("superjoe: SuperJoe\n\n")
 
             normals = []
@@ -385,12 +385,12 @@ def generate_message_commands(bot):
             for u in nameDB.keys():
                 (subs if u in sublist else normals).append(u)
 
-            fi.write('== Subs ==\n\n')
+            fi.write('== Subs (%s) ==\n\n' % len(subs))
 
             for d in sorted(subs):
                 fi.write('%s: %s\n'%(d, nameDB[d]))
 
-            fi.write('\n== Non-Subs ==\n\n')
+            fi.write('\n== Non-Subs (%s) ==\n\n' % len(normals))
 
             for d in sorted(normals):
                 fi.write('%s: %s\n'%(d, nameDB[d]))
@@ -407,9 +407,66 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!registersalem', f, bot, channels=['superjoe'], groups=['salem']))
 
+    def f(channel, user, message, args, data, bot):
+        import cPickle, time
+
+        try: username = args[0]
+        except: username = None
+
+        remname = None
+        nameDB = None
+        sublist = []
+        
+        with open('/var/www/twitch/superjoe/salem/namemap', 'rb') as ndb:
+            nameDB = cPickle.load(ndb)
+            remname = nameDB.pop(username, None)
+
+        with open('/var/www/twitch/superjoe/salem/subs', 'rb') as sl:
+            sublist = cPickle.load(sl)
+            sublist.extend(bot.channelsubs)
+            sublist = list(set(sublist))
+
+        open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
+        
+        with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
+            fi.write("<html><pre>\n")
+            fi.write("Superjoe Town of Salem chat names\nLast update: %s\n\n" % time.asctime())
+            fi.write("Name Format:\nTwitch name: Salem name\n\n")
+            fi.write("superjoe: SuperJoe\n\n")
+
+            normals = []
+            subs = []
+
+            for u in nameDB.keys():
+                (subs if u in sublist else normals).append(u)
+
+            fi.write('== Subs (%s) ==\n\n' % len(subs))
+
+            for d in sorted(subs):
+                fi.write('%s: %s\n'%(d, nameDB[d]))
+
+            fi.write('\n== Non-Subs (%s) ==\n\n' % len(normals))
+
+            for d in sorted(normals):
+                fi.write('%s: %s\n'%(d, nameDB[d]))
+
+            fi.write("</pre></html>")
+
+        with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
+            cPickle.dump(nameDB, fi2)
+
+        with open('/var/www/twitch/superjoe/salem/subs', 'wb') as sl:
+            cPickle.dump(sublist, sl)
+
+        if remname: return "Removed %s from name list." % username
+        else: return "%s not found." % username
+
+    coms.append(command.Command('#!unregistersalem', f, bot, True, channels=['superjoe'], groups=['salem']))
+
     coms.append(command.SimpleCommand(['!salem', '!salemhelp', '!saleminfo'], 
         "Play Town of Salem here: http://www.blankmediagames.com/TownOfSalem/ Make an account, "+
-        "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  Registering in chat isn't required but it helps Superjoe keep track of who's who.", 
+        "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  "+
+        "Registering in chat isn't required but it helps Superjoe keep track of who's who.", 
         bot, channels=['superjoe'], groups=['salem'], repeatdelay=6, prependuser=False, targeted=True))
 
     coms.append(command.SimpleCommand('!salemnames', 'http://doc.asdfxyz.de:81/twitch/superjoe/salem/', 
@@ -435,8 +492,6 @@ def generate_message_commands(bot):
     #
     # Test commands
     #
-
-    coms.append(command.SimpleCommand('!cooldowntest', 'okeydokey', bot, True, repeatdelay=15))
 
     ######################################################################
 
