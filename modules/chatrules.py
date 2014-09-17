@@ -198,33 +198,33 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('#!subcount', '%s' % len(bot.channelsubs), bot, True))
 
-    def f(channel, user, message, args, data, bot):
-        if 'nightbot' in set(bot.oplist + bot.userlist):
-            if 'nightbot' in bot.oplist and 'nightbot' not in bot.userlist:
-                return "Nightbot is modded but not in the channel? O.o"
-            elif 'nightbot' not in bot.oplist and 'nightbot' in bot.userlist:
-                return "I think nightbot just got here."
-            return "Nightbot should be here."
-        else:
-            return "Nightbot doesn't seem to be here."
+    # def f(channel, user, message, args, data, bot):
+    #     if 'nightbot' in set(bot.oplist + bot.userlist):
+    #         if 'nightbot' in bot.oplist and 'nightbot' not in bot.userlist:
+    #             return "Nightbot is modded but not in the channel? O.o"
+    #         elif 'nightbot' not in bot.oplist and 'nightbot' in bot.userlist:
+    #             return "I think nightbot just got here."
+    #         return "Nightbot should be here."
+    #     else:
+    #         return "Nightbot doesn't seem to be here."
 
-    coms.append(command.Command('!nightbot', f, bot, True))
+    # coms.append(command.Command('!nightbot', f, bot, True))
     
-    def f(channel, user, message, args, data, bot):
-        if not len(args): 
-            return
+    # def f(channel, user, message, args, data, bot):
+    #     if not len(args): 
+    #         return
 
-        pag = args[0].lower()
-        # lower args[0]
+    #     pag = args[0].lower()
+    #     # lower args[0]
 
-        if pag in set(bot.oplist + bot.userlist):
-            if pag in bot.oplist and pag not in bot.userlist:
-                return "%s is modded but not in the channel? O.o" % pag
-            return "%s should be here." % pag
-        else:
-            return "%s doesn't seem to be here." % pag
+    #     if pag in set(bot.oplist + bot.userlist):
+    #         if pag in bot.oplist and pag not in bot.userlist:
+    #             return "%s is modded but not in the channel? O.o" % pag
+    #         return "%s should be here." % pag
+    #     else:
+    #         return "%s doesn't seem to be here." % pag
 
-    coms.append(command.Command('!paging', f, bot, True))
+    # coms.append(command.Command('!paging', f, bot, True))
 
     def f(channel, user, message, args, data, bot):
         return get_process_output('ddate', shell=True)
@@ -505,7 +505,10 @@ def generate_joinpart_commands(bot):
 
 
 def _getargs(msg):
-    a = msg.split()
+    try:
+        a = msg.split()
+    except:
+        return list()
     if len(a) == 1:
         return list()
     else:
