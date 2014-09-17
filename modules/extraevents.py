@@ -12,7 +12,7 @@ def alert(event):
     if event.data.startswith('HOSTTARGET') and event.data.split()[1] != '-':
         hs = event.data.split()[1]
         sr = twitchapi.get('streams/%s' % hs, 'stream')
-        if not sr:
+        if sr:
             event.bot.say(event.channel, "Now hosting %s, playing %s.  All %s of you, go check it out! %s" % 
                 (hs, str(sr['game']), event.data.split()[2],'http://twitch.tv/%s' % hs))
         else: 
