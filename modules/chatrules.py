@@ -117,15 +117,19 @@ def setup(bot):
 
 def alert(event):
     if event.etype == 'msg':
+        tstart = time.time()
         for comm in message_commands:
+            t1 = time.time()
             output = comm.process(event.channel, event.user, event.data, _getargs(event.data))
+            t2 = time.time()
             if output[1] is command.OK:
+                print "[Chatrules] Command time: %4.4fms, Total time: %4.4fms" % ((t2-t1)*1000,(t2-tstart)*1000)
                 print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
                 event.bot.say(event.channel, output[0])
 
-    if event.etype in ['join', 'part']:
-        # not quite yet, maybe not for a while
-        pass
+    #if event.etype in ['join', 'part']:
+    #    # not quite yet, maybe not for a while
+    #    pass
 
 
 def generate_message_commands(bot):
@@ -182,6 +186,10 @@ def generate_message_commands(bot):
             return "You borked something: %s" % e
     coms.append(command.Command('#!eval', f, bot, groups=me_only_group))
 
+    def f(channel, user, message, args, data, bot):
+        return ' '.join(args)
+    coms.append(command.Command('#!echo', f, bot, groups=me_only_group))
+
     ######################################################################
     #
     # Mod message_commands
@@ -196,7 +204,7 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('#!riot', 'ヽ༼ຈل͜ຈ༽ﾉ', bot, True, prependuser = False))
 
-    coms.append(command.SimpleCommand('#!subcount', '%s' % len(bot.channelsubs), bot, True))
+    #coms.append(command.SimpleCommand('#!subcount', '%s' % len(bot.channelsubs), bot, True))
 
     # def f(channel, user, message, args, data, bot):
     #     if 'nightbot' in set(bot.oplist + bot.userlist):
@@ -307,9 +315,21 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         if user != 'sage1447':
-            return '%s: Anywhere between 5.9k and 6.1k' % user
+            return '%s: Anywhere between 5.9k and 6.2k' % user
 
     coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=10))
+
+    def f(channel, user, message, args, data, bot):
+        import json, requests, time
+        lburl = "http://www.dota2.com/webapi/ILeaderboard/GetDivisionLeaderboard/v0001?division=americas"
+        jdata = json.loads(requests.get(lburl).text)
+
+        rank, mmr = {i['name']:(i['rank'],i['solo_mmr']) for i in jdata['leaderboard']}['monkeys-forever']
+        lastupdate = time.strftime('%b %d, %I:%M%p',time.localtime(int(jdata['time_posted'])))
+
+        return "Monkeys is rank %s on the leaderboards, with %s mmr. Last leaderboard update: %s" % (rank, mmr, lastupdate)
+
+    coms.append(command.Command('!leaderboard', f, bot, channels=['monkeys_forever'], repeatdelay=10))
 
     coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'], 
         "Monkeys' playlist can be found here: http://grooveshark.com/playlist/Stream/81341599", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
