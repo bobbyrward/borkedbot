@@ -313,11 +313,11 @@ def generate_message_commands(bot):
 
     # Monkeys_forever ######################################################
 
-    def f(channel, user, message, args, data, bot):
-        if user != 'sage1447':
-            return '%s: Anywhere between 5.9k and 6.2k' % user
-
-    coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=10))
+    #def f(channel, user, message, args, data, bot):
+    #    if user != 'sage1447':
+    #        return '%s: Anywhere between 5.9k and 6.2k' % user
+#
+    #coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=20))
 
     def f(channel, user, message, args, data, bot):
         import json, requests, time
@@ -329,7 +329,9 @@ def generate_message_commands(bot):
 
         return "Monkeys is rank %s on the leaderboards, with %s mmr. Last leaderboard update: %s" % (rank, mmr, lastupdate)
 
-    coms.append(command.Command('!leaderboard', f, bot, channels=['monkeys_forever'], repeatdelay=10))
+    coms.append(command.Command(['!leaderboard', '!leaderboards', '!mmr'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
+
+    coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'], 
         "Monkeys' playlist can be found here: http://grooveshark.com/playlist/Stream/81341599", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))

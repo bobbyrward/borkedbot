@@ -78,44 +78,38 @@ def _manage_modules():
         removed_imports = list(set(imported_modules) - set(fresh_imports))
 
         # I don't think anything here can break but i'll leave the try block in anyways
-        try:
-            if_issue = False
-            for ni in new_imports:
-                if not (type(getattr(ni, 'setup', False)) is FunctionType and type(getattr(ni, 'alert', False)) is FunctionType):
-                    _info("%s is not a useable module and will not be imported." % ni.__name__)
-                    if_issue = True
-                    new_imports.remove(ni)
+        if_issue = False
+        for ni in new_imports:
+            if not (type(getattr(ni, 'setup', False)) is FunctionType and type(getattr(ni, 'alert', False)) is FunctionType):
+                _info("%s is not a useable module and will not be imported." % ni.__name__)
+                if_issue = True
+                new_imports.remove(ni)
 
-                elif getattr(ni, 'DISABLE_MODULE', False):
-                    _info("%s has been disabled and will not be imported." % ni.__name__)
-                    if_issue = True
-                    new_imports.remove(ni)
+            elif getattr(ni, 'DISABLE_MODULE', False):
+                _info("%s has been disabled and will not be imported." % ni.__name__)
+                if_issue = True
+                new_imports.remove(ni)
 
-            if if_issue: _info('')
+        if if_issue: _info('')
 
-            imported_modules.extend(new_imports)
-            imported_modules = list(set(imported_modules))
+        imported_modules.extend(new_imports)
+        imported_modules = list(set(imported_modules))
+        
+        if len(new_imports):
+            _info("Importing %s new modules:" % len(new_imports))
+            [_info('- %s'%m.__name__) for m in new_imports]
+            _info('')
+
+            for mm in imported_modules:
+                modules_mtime[mm] = os.path.getmtime(mm.__file__)
             
-            if len(new_imports):
-                _info("Importing %s new modules:" % len(new_imports))
-                [_info('- %s'%m.__name__) for m in new_imports]
-                _info('')
+        if len(removed_imports):
+            _info("Removing %s modules:" % len(removed_imports))
+            [_info('- %s'%m.__name__) for m in removed_imports]
+            _info('')
 
-                for mm in imported_modules:
-                    modules_mtime[mm] = os.path.getmtime(mm.__file__)
-                
-            if len(removed_imports):
-                _info("Removing %s modules:" % len(removed_imports))
-                [_info('- %s'%m.__name__) for m in removed_imports]
-                _info('')
-
-                for mm in removed_imports:
-                    modules_mtime.pop(mm, None)
-
-        except Exception as e2:
-            print "An unforseen error has occurred setting up imports"
-            print "This is probably bad and should be fixed ASAP"
-            print _get_exception_info()
+            for mm in removed_imports:
+                modules_mtime.pop(mm, None)
 
 
 # This gets called after modules are imported to activate them

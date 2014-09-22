@@ -6,8 +6,9 @@ def setup(bot):
 
 def alert(event):
     if event.etype == 'twitchnotify':
-        if 'just subscribed!' in event.data:
-            event.bot.say(event.channel, 'ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s ヽ༼ຈل͜ຈ༽ﾉ' % event.data.split()[0].upper())
+        if event.channel in ['monkeys_forever', 'superjoe']:
+            if 'just subscribed!' in event.data:
+                event.bot.say(event.channel, 'SUB HYPE! PRAISE %s ヽ༼ຈل͜ຈ༽ﾉ' % event.data.split()[0].upper())
 
     if event.etype != 'serverjoin':
         if event.data.startswith('HOSTTARGET') and event.data.split()[1] != '-':
