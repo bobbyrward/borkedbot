@@ -272,11 +272,12 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!saysomething', f, bot, repeatdelay=30))
 
-    def f(channel, user, message, args, data, bot):
-        if message.endswith('?'):
-            return "%s, %s"%(user, random.choice(data))
-
-    coms.append(command.Command('Borkedbot,', f, bot, data=magic8ball))
+    #def f(channel, user, message, args, data, bot):
+    #    if message.endswith('?'):
+    #        return "%s, %s"%(user, random.choice(data))
+#
+    #coms.append(command.Command('Borkedbot,', f, bot, data=magic8ball))
+    # TODO: Add channel blacklist
 
     #def f(channel, user, message, args, data, bot):
     #    return '%s: %s' % (user, 'yes' if user in bot.channelsubs else 'no')
