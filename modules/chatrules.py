@@ -191,7 +191,6 @@ def generate_message_commands(bot):
     coms.append(command.Command('#!echo', f, bot, groups=me_only_group))
 
     ######################################################################
-    #
     # Mod message_commands
     #
 
@@ -279,11 +278,11 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('Borkedbot,', f, bot, data=magic8ball))
 
-    def f(channel, user, message, args, data, bot):
-        return '%s: %s' % (user, 'yes' if user in bot.channelsubs else 'no')
-
-    coms.append(command.Command('!amisub', f, bot))
-
+    #def f(channel, user, message, args, data, bot):
+    #    return '%s: %s' % (user, 'yes' if user in bot.channelsubs else 'no')
+#
+    #coms.append(command.Command('!amisub', f, bot))
+ 
     def f(channel, user, message, args, data, bot):
         import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi
         if len(args):
@@ -345,6 +344,9 @@ def generate_message_commands(bot):
         "It's a bug with the TI2 animated background.  Put this in your launch options: -dashboard international_2012", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand(['!rangefinder', '!greenarrow', '!green arrow'], "Here's the console command: dota_disable_range_finder 0", 
+        bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
+ 
+    coms.append(command.SimpleCommand(['!fountainhooks', '!pudgefail'], 'rip root http://www.youtube.com/watch?v=7ba9nCot71w&hd=1', 
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     # Superjoe ######################################################
