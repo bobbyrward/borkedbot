@@ -327,7 +327,7 @@ def generate_message_commands(bot):
         rank, mmr = {i['name']:(i['rank'],i['solo_mmr']) for i in jdata['leaderboard']}['monkeys-forever']
         lastupdate = time.strftime('%b %d, %I:%M%p',time.localtime(int(jdata['time_posted'])))
 
-        return "Monkeys is rank %s on the leaderboards, with %s mmr. Last leaderboard update: %s" % (rank, mmr, lastupdate)
+        return "Monkeys is rank %s on the leaderboards, with %s mmr. Last leaderboard update: %s EST ( http://dota2.com/leaderboards/#americas )" % (rank, mmr, lastupdate)
 
     coms.append(command.Command(['!leaderboard', '!leaderboards', '!mmr'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
 
