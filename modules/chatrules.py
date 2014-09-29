@@ -320,14 +320,34 @@ def generate_message_commands(bot):
     #coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=20))
 
     def f(channel, user, message, args, data, bot):
-        import json, requests, time
+        import json, requests, time, datetime, dateutil
         lburl = "http://www.dota2.com/webapi/ILeaderboard/GetDivisionLeaderboard/v0001?division=americas"
         jdata = json.loads(requests.get(lburl).text)
 
         rank, mmr = {i['name']:(i['rank'],i['solo_mmr']) for i in jdata['leaderboard']}['monkeys-forever']
-        lastupdate = time.strftime('%b %d, %I:%M%p',time.localtime(int(jdata['time_posted'])))
+        ltime = time.localtime(int(jdata['time_posted']))
 
-        return "Monkeys is rank %s on the leaderboards, with %s mmr. Last leaderboard update: %s EST ( http://dota2.com/leaderboards/#americas )" % (rank, mmr, lastupdate)
+        lastupdate = time.strftime('%b %d, %I:%M%p',ltime)
+        lt = datetime.datetime.fromtimestamp(time.mktime(ltime)).replace(tzinfo=dateutil.tz.tzutc())
+        t_now = datetime.datetime.now(dateutil.tz.tzutc())
+
+        reldelta = dateutil.relativedelta.relativedelta(t_now, lt)
+
+        daystr = 'Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '+
+        '{2.days} days, {2.hours} hours, {2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )'
+        
+        hourstr = 'Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '+
+        '{2.hours} hours, {2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )'
+        
+        minstr = 'Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '+
+        '{2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )'
+
+        if reldelta.days:
+            return daystr.format(rank, mmr, reldelta)
+        elif reldelta.hours:
+            return hourstr.format(rank, mmr, reldelta)
+        else:
+            return minstr.format(rank, mmr, reldelta)
 
     coms.append(command.Command(['!leaderboard', '!leaderboards', '!mmr'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
 
