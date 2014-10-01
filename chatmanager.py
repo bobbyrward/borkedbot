@@ -1,5 +1,5 @@
 import sys, os, os.path
-import time, Queue
+import time, Queue, traceback
 from types import FunctionType
 
 #########################
@@ -28,7 +28,7 @@ def doreload(bot):
                     reload(m)
                 except Exception as e:
                     print 'I haz an error reloading module %s:' % m.__name__
-                    print _get_exception_info()
+                    print traceback.format_exc()
                 else:
                     modules_mtime[m] = os.path.getmtime(m.__file__)
                     _init_module(m, bot)
@@ -183,17 +183,12 @@ def _process_event(event):
             m.alert(event)
         except Exception as e:
             print "Alert error for %s: " % m.__name__
-            print _get_exception_info()
-            print e
+            print traceback.format_exc()
 
 
 def _check_global_blacklist(event):
     return user in ('fidofidder', 'sage1447', 'jimbooob')
 
-def _get_exception_info():
-    exc_type, exc_obj, exc_tb = sys.exc_info()
-    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-    return (exc_type, fname, exc_tb.tb_lineno)
 
 def _debug(o, nl=True):
     if DEBUG_OUTPUT:
