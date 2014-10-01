@@ -96,6 +96,8 @@ $RECYCLE.BIN/
 
 # My stuff 
 passwd
+apikey
+settings.data
 testfile
 joinpartbot.py
 *.p

@@ -90,6 +90,9 @@ class Command(object):
         return OK
 
 
+    def enabledInChannel(self, channel):
+        return channel in self.channels and channel not in self.blacklist
+
     def process(self, channel, user, message, args):
         err = self._dochecks(channel, user, message, args)
         if err != OK:

@@ -3,7 +3,7 @@
 import sys, os, time
 import math, random, re, redis
 import markov
-import command, chatlogger
+import command, chatlogger, settings
 from command import get_process_output
 
 
@@ -190,6 +190,20 @@ def generate_message_commands(bot):
         return ' '.join(args)
     coms.append(command.Command('#!echo', f, bot, groups=me_only_group))
 
+    def f(channel, user, message, args, data, bot):
+        import settings
+
+        if len(args):
+            if args[0] in ['len', 'size', 'keys']:
+                print settings.data
+                return str(len(settings.data))
+            if args[0] in ['get']:
+                return str(settings.getdata(args[1]))
+            if args[0] in ['set']:
+                settings.setdata(args[1], args[2])
+
+    coms.append(command.Command('#!settings', f, bot, groups=me_only_group))
+
     ######################################################################
     # Mod message_commands
     #
@@ -352,19 +366,45 @@ def generate_message_commands(bot):
     coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
-        import json, os
+        import json, os, time
 
-        print args
-        if len(args) and args[0].lower() == 'update' and user in bot.oplist:
+        isupdate = len(args) and args[0].lower() == 'update' and user in bot.oplist
+
+        outputstring = "Solo: %s | Party: %s"
+
+        if isupdate:
             print "Updating mmr"
-            os.system('nodejs ./modules/node/index.js')
 
-        with open('/var/www/twitch/monkeys_forever/data', 'r') as d:
-            dotadata = json.loads(d.readline())
+            with open('/var/www/twitch/monkeys_forever/data', 'r') as d:
+                olddotadata = json.loads(d.readline())
 
-        mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
+            os.system('cd modules/node; nodejs index.js')
 
-        return "Monkeys' solo mmr is %s" % mmr
+            with open('/var/www/twitch/monkeys_forever/data', 'r') as d:
+                dotadata = json.loads(d.readline())
+
+            old_mmr_s = str(olddotadata['gameAccountClient']['soloCompetitiveRank'])
+            old_mmr_p = str(olddotadata['gameAccountClient']['competitiveRank'])
+
+            new_mmr_s = str(dotadata['gameAccountClient']['soloCompetitiveRank'])
+            new_mmr_p = str(dotadata['gameAccountClient']['competitiveRank'])
+
+            mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
+            mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
+
+            if int(mmr_s_change) >= 0: mmr_s_change = '+' + mmr_s_change
+            if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
+
+            return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
+
+        else:    
+            with open('/var/www/twitch/monkeys_forever/data', 'r') as d:
+                dotadata = json.loads(d.readline())
+    
+            mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
+            mmrp = dotadata['gameAccountClient']['competitiveRank']
+    
+            return "Solo: %s | Party: %s" % (mmr,mmrp)
 
     coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=25))
 
@@ -384,7 +424,7 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand(['!rangefinder', '!greenarrow', '!green arrow'], "Here's the console command: dota_disable_range_finder 0", 
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
  
-    coms.append(command.SimpleCommand(['!fountainhooks', '!pudgefail'], 'rip root http://www.youtube.com/watch?v=7ba9nCot71w&hd=1', 
+    coms.append(command.SimpleCommand(['!fountainhooks', '!pudgefail', '!pudgefails'], 'rip root http://www.youtube.com/watch?v=7ba9nCot71w&hd=1', 
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     # Superjoe ######################################################
