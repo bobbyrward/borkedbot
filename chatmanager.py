@@ -65,7 +65,7 @@ def _manage_modules():
         reload(modules)
     except ImportError as e:
         print "Cannot import modules."
-        print e
+        print traceback.format_exc()
     else:
         fresh_imports = modules._m_imports
         
@@ -140,7 +140,7 @@ def _init_module(m, bot):
         setup_result = m.setup(bot)
     except Exception as ee:
         print "Setup failure for %s" % m.__name__
-        print ee
+        print traceback.format_exc()
         print
         
         setup_result = False
