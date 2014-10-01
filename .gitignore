@@ -101,3 +101,5 @@ joinpartbot.py
 *.p
 *.old
 modules/test
+modules/node
+

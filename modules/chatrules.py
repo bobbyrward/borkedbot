@@ -320,7 +320,7 @@ def generate_message_commands(bot):
     #coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=20))
 
     def f(channel, user, message, args, data, bot):
-        import json, requests, time, datetime, dateutil
+        import json, requests, time, datetime, dateutil, dateutil.tz, dateutil.relativedelta
         lburl = "http://www.dota2.com/webapi/ILeaderboard/GetDivisionLeaderboard/v0001?division=americas"
         jdata = json.loads(requests.get(lburl).text)
 
@@ -333,14 +333,14 @@ def generate_message_commands(bot):
 
         reldelta = dateutil.relativedelta.relativedelta(t_now, lt)
 
-        daystr = 'Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '+
-        '{2.days} days, {2.hours} hours, {2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )'
+        daystr = ('Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '
+            '{2.days} days, {2.hours} hours, {2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
         
-        hourstr = 'Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '+
-        '{2.hours} hours, {2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )'
+        hourstr = ('Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '
+            '{2.hours} hours, {2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
         
-        minstr = 'Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '+
-        '{2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )'
+        minstr = ('Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '
+            '{2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
 
         if reldelta.days:
             return daystr.format(rank, mmr, reldelta)
@@ -349,7 +349,24 @@ def generate_message_commands(bot):
         else:
             return minstr.format(rank, mmr, reldelta)
 
-    coms.append(command.Command(['!leaderboard', '!leaderboards', '!mmr'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
+    coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
+
+    def f(channel, user, message, args, data, bot):
+        import json, os
+
+        print args
+        if len(args) and args[0].lower() == 'update' and user in bot.oplist:
+            print "Updating mmr"
+            os.system('nodejs ./modules/node/index.js')
+
+        with open('/var/www/twitch/monkeys_forever/data', 'r') as d:
+            dotadata = json.loads(d.readline())
+
+        mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
+
+        return "Monkeys' solo mmr is %s" % mmr
+
+    coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=25))
 
     coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
