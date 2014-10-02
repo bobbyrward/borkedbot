@@ -1,3 +1,6 @@
+import sys
+sys.dont_write_bytecode = True
+
 import re, random, redis, cPickle
 
 LOAD_ORDER = 60

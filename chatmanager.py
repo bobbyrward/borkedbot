@@ -1,4 +1,7 @@
-import sys, os, os.path
+import sys
+sys.dont_write_bytecode = True
+
+import os, os.path
 import time, Queue, traceback
 from types import FunctionType
 
@@ -99,7 +102,7 @@ def _manage_modules():
         imported_modules = list(set(imported_modules))
 
         imported_modules.sort(key=lambda x: x.LOAD_ORDER)
-        
+
         if len(new_imports):
             _info("Importing %s new modules:" % len(new_imports))
             [_info('- %s'%m.__name__) for m in new_imports]

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import sys
+sys.dont_write_bytecode = True
+
 import os, time, json
 import twitchapi, steamapi, settings
 

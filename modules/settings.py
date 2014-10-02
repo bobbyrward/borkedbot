@@ -1,4 +1,7 @@
-import sys, os, cPickle
+import sys
+sys.dont_write_bytecode = True
+
+import os, cPickle
 
 LOAD_ORDER = 50
 

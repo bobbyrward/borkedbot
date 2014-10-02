@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import sys
+sys.dont_write_bytecode = True
 
-import sys, os, time
+import os, time
 import math, random, re, redis
 import markov
 import command, chatlogger, settings
@@ -329,12 +331,6 @@ def generate_message_commands(bot):
     #
 
     # Monkeys_forever ######################################################
-
-    #def f(channel, user, message, args, data, bot):
-    #    if user != 'sage1447':
-    #        return '%s: Anywhere between 5.9k and 6.2k' % user
-#
-    #coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=20))
 
     def f(channel, user, message, args, data, bot):
         import json, requests, time, datetime, dateutil, dateutil.tz, dateutil.relativedelta
