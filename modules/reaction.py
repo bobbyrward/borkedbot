@@ -1,5 +1,7 @@
 import time
 
+LOAD_ORDER = 100
+
 def setup(bot):
     pass
 

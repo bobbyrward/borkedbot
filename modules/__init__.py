@@ -1,4 +1,4 @@
-import pkgutil 
+import pkgutil, traceback
 
 __path__ = pkgutil.extend_path(__path__, __name__)
 _m_imports = []
@@ -17,5 +17,5 @@ for _importer, _modname, _ispkg in pkgutil.walk_packages(path=__path__, prefix=_
     except Exception as e:
         print
         print "Error importing %s: %s" % (_modname, e.message)
-        print e
+        print traceback.format_exc()
         print

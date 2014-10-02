@@ -23,7 +23,7 @@ def doreload(bot):
 
         for m in imported_modules:            
             if os.path.getmtime(m.__file__) > modules_mtime[m]:
-                _info("Reloading %s..." % m.__name__)
+                _info("Reloading %s" % m.__name__)
                 try:
                     reload(m)
                 except Exception as e:
@@ -77,10 +77,13 @@ def _manage_modules():
         new_imports = list(set(fresh_imports) - set(imported_modules))
         removed_imports = list(set(imported_modules) - set(fresh_imports))
 
-        # I don't think anything here can break but i'll leave the try block in anyways
         if_issue = False
         for ni in new_imports:
             if not (type(getattr(ni, 'setup', False)) is FunctionType and type(getattr(ni, 'alert', False)) is FunctionType):
+
+                if getattr(ni, 'LOAD_ORDER', None) is None:
+                    ni.LOAD_ORDER = 1000
+
                 _info("%s is not a useable module and will not be imported." % ni.__name__)
                 if_issue = True
                 new_imports.remove(ni)
@@ -94,6 +97,8 @@ def _manage_modules():
 
         imported_modules.extend(new_imports)
         imported_modules = list(set(imported_modules))
+
+        imported_modules.sort(key=lambda x: x.LOAD_ORDER)
         
         if len(new_imports):
             _info("Importing %s new modules:" % len(new_imports))

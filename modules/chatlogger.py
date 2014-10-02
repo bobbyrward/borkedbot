@@ -1,6 +1,7 @@
 import time, datetime
 import os
 
+LOAD_ORDER = 10
 
 def setup(bot):
     pass

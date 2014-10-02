@@ -6,6 +6,7 @@ import markov
 import command, chatlogger, settings
 from command import get_process_output
 
+LOAD_ORDER = 20
 
 magic8ball = ["it is certain.",
     "it is decidedly so.",

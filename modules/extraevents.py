@@ -2,6 +2,8 @@
 import os, time, json
 import twitchapi, steamapi, settings
 
+LOAD_ORDER = 30
+
 def setup(bot):
     pass
 
@@ -13,7 +15,7 @@ def alert(event):
                 event.bot.botsay('SUB HYPE! PRAISE %s ヽ༼ຈل͜ຈ༽ﾉ' % event.data.split()[0].upper())
 
     # mmr updating
-    if event.etype not in ['serverjoin', 'channeljoin'] and event.channel == 'monkeys_forever':
+    if event.etype not in ['serverjoin', 'channeljoin', 'timer'] and event.channel == 'monkeys_forever':
         getmatchtimeout = settings.trygetset('monkeys_get_match_timeout', 45)
         lastmatchfetch = settings.trygetset('monkeys_last_match_fetch', time.time())
         

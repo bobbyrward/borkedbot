@@ -2,6 +2,7 @@
 
 import time, subprocess, random
 
+LOAD_ORDER = 70
 
 class OK(): pass                    # Everything is ok    
 class DELAY_LOCKED(): pass          # Not enough time has passed to use this command again

@@ -1,5 +1,7 @@
 import requests, json
 
+LOAD_ORDER = 80
+
 root = 'https://api.twitch.tv/kraken/'
 
 def _apiget(path):

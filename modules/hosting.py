@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import twitchapi, time
 
+LOAD_ORDER = 40
+
 AUTO_UNHOST = True
 WHITELIST = ['monkeys_forever', 'superjoe', 'imayhaveborkedit']
 

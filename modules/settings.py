@@ -1,5 +1,7 @@
 import sys, os, cPickle
 
+LOAD_ORDER = 50
+
 datafilename = 'settings.data'
 data = {}
 

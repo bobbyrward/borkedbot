@@ -1,5 +1,6 @@
 import re, random, redis, cPickle
 
+LOAD_ORDER = 60
 
 redis_conn = redis.Redis()
 chain_length = 2

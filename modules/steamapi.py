@@ -1,5 +1,7 @@
 import requests, json, settings
 
+LOAD_ORDER = 90
+
 root = 'https://api.steampowered.com/'
 
 with open('apikey', 'r') as f:
