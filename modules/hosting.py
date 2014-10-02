@@ -17,7 +17,7 @@ def setup(bot):
 def alert(event):
     global AUTO_UNHOST
 
-    if event.etype != 'serverjoin':
+    if event.etype == 'jtvmsg':
         if 'Only the channel owner and channel editors can use the /unhost command.' in event.data:
             print "Not an editor, cannot unhost."
             AUTO_UNHOST = False

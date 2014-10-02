@@ -3,9 +3,8 @@ sys.dont_write_bytecode = True
 
 import cPickle, base64
 
-from twisted.internet import reactor
+from twisted.internet import reactor, task, protocol
 from twisted.words.protocols import irc
-from twisted.internet import protocol
 
 import chatmanager
 
@@ -21,6 +20,8 @@ class MyBot(irc.IRCClient):
     gotops = False
     hosting = None
 
+    timertask = None
+
     @property
     def password(self):
         with open('passwd', 'r') as f:
@@ -34,6 +35,10 @@ class MyBot(irc.IRCClient):
     def channel(self):
         return self.factory.channel
 
+
+    def timer(self):
+        chatmanager.event(None, None, 'timer', None, self, None)
+
     def signedOn(self):
         self.join(self.factory.channel)
         print "Signed on as %s.\n" % self.nickname
@@ -46,6 +51,9 @@ class MyBot(irc.IRCClient):
     def joined(self, channel):
         print "Joined %s." % channel
         chatmanager.event(channel.replace('#',''), None, 'channeljoin', channel.replace('#',''), self, None)
+        
+        self.timertask = task.LoopingCall(self.timer)
+        self.timertask.start(30, True)
 
     def receivedMOTD(self, motd):
         print '\n### MOTD ###'

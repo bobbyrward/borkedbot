@@ -155,7 +155,7 @@ def _init_module(m, bot):
 
 # This is what gets called by the bot to distribute events to modules
 def event(channel, user, etype, data, bot, isop):
-    if etype != 'msg':
+    if etype not in ['msg', 'timer']:
         print "Received event, %s: %s" % (etype, data)
 
 

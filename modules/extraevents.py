@@ -56,5 +56,5 @@ def alert(event):
                 if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
 
                 newmmrstring = outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
-                #event.bot.botsay("Monkeys has finished a game.  http://www.dotabuff.com/matches/%s Updated mmr: %s" % (lastestmatch['match_id'], newmmrstring))
+                event.bot.botsay("Monkeys has finished a game.  http://www.dotabuff.com/matches/%s Updated mmr: %s" % (lastestmatch['match_id'], newmmrstring))
                 print "Monkeys has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (lastestmatch['match_id'], newmmrstring)
