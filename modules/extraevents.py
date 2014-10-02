@@ -16,7 +16,7 @@ def alert(event):
 
     # mmr updating
     if event.etype not in ['serverjoin', 'channeljoin', 'timer'] and event.channel == 'monkeys_forever':
-        getmatchtimeout = settings.trygetset('monkeys_get_match_timeout', 45)
+        getmatchtimeout = settings.trygetset('monkeys_get_match_timeout', 60)
         lastmatchfetch = settings.trygetset('monkeys_last_match_fetch', time.time())
         
         if time.time() - int(getmatchtimeout) > float(lastmatchfetch):

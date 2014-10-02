@@ -201,7 +201,9 @@ def generate_message_commands(bot):
             if args[0] in ['get']:
                 return str(settings.getdata(args[1]))
             if args[0] in ['set']:
+                oldval = settings.getdata(args[1])
                 settings.setdata(args[1], args[2])
+                return "Key %s changed: %s -> %s" % (args[1], oldval, args[2])
 
     coms.append(command.Command('#!settings', f, bot, groups=me_only_group))
 
