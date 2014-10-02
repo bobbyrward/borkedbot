@@ -10,12 +10,6 @@ root = 'https://api.steampowered.com/'
 with open('apikey', 'r') as f:
     apikey = f.readline()
 
-try:
-    monkeysid = settings.getdata('monkeys_id')
-except Exception as e:
-    print e
-
-
 DOTA_MATCH_TYPES = {
     -1: 'Invalid',
     0: 'Public matchmaking',
@@ -36,10 +30,8 @@ def _apiget(path):
 def get(path='', key=None):
     return _apiget(path) if not key else _apiget(path)[key]
 
-def getmonkeyslastmatch():
-    return _apiget('IDOTA2Match_570/GetMatchHistory/V001/?key=%s&matches_requested=1&account_id=%s' % (apikey,monkeysid))['result']['matches'][0]
-
-
+def getlastdotamatch(idnum):
+    return _apiget('IDOTA2Match_570/GetMatchHistory/V001/?key=%s&matches_requested=1&account_id=%s' % (apikey,idnum))['result']['matches'][0]
 
 def setup(bot):
     return

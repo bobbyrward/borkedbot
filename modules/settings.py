@@ -32,7 +32,8 @@ def setdata(key, value):
     global data
 
     if key in data.keys():
-        print "[Settings] Key %s changed: %s -> %s" % (key, data[key], value)
+        if data[key] != value:
+            print "[Settings] Key %s changed: %s -> %s" % (key, data[key], value)
     
     if key not in data.keys():
         print "[Settings] Key added: %s" % key

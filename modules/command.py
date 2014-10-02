@@ -90,6 +90,9 @@ class Command(object):
         if len(self.channels) > 0 and channel not in self.channels + ['borkedbot']:
             return BAD_CHANNEL
 
+        if channel in self.blacklist:
+            return BAD_CHANNEL
+
         return OK
 
 

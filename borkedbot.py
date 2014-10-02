@@ -3,7 +3,8 @@ sys.dont_write_bytecode = True
 
 import cPickle, base64
 
-from twisted.internet import reactor, task, protocol
+from twisted.internet import reactor, task, protocol#, stdio
+#from twisted.protocols import basic
 from twisted.words.protocols import irc
 
 import chatmanager
@@ -155,6 +156,10 @@ class MyBot(irc.IRCClient):
         print line, excType, excValue
 
 
+    #def connectionMade(self):
+    #    self.transport.write('HELLO > ')
+
+
 class MyBotFactory(protocol.ClientFactory):
     protocol = MyBot
 
@@ -179,6 +184,10 @@ if __name__ == "__main__":
     else:
         server = 'irc.twitch.tv'
         chan = sys.argv[1]
-        reactor.connectTCP(server, 6667, MyBotFactory('#' + chan))
+        mbf = MyBotFactory('#' + chan)
+        
+        reactor.connectTCP(server, 6667, mbf)
+        #stdio.StandardIO(mbf)
+        
         reactor.run()
 
