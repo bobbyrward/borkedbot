@@ -13,7 +13,7 @@ def setup(bot):
 def alert(event):
     # Sub alert
     if event.etype == 'twitchnotify':
-        if event.channel in ['monkeys_forever', 'superjoe', 'kizzmett']:
+        if event.channel in ['unsanitylive', 'monkeys_forever', 'superjoe', 'kizzmett']:
             if 'just subscribed!' in event.data:
                 event.bot.botsay('SUB HYPE! PRAISE %s ヽ༼ຈل͜ຈ༽ﾉ' % event.data.split()[0].upper())
 

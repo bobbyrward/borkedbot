@@ -5,10 +5,36 @@ import requests, json, settings
 
 LOAD_ORDER = 90
 
-root = 'https://api.steampowered.com/'
-
 with open('apikey', 'r') as f:
     apikey = f.readline()
+
+root = 'https://api.steampowered.com/'
+
+# http://dev.dota2.com/showthread.php?t=58317
+dotaAPIcalls = {
+    "https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/v001/" : 
+    ("hero_id","game_mode","skill","min_players","account_id","league_id","start_at_match_id","matches_requested","tournament_games_only"),
+    # game_mode: DOTA_MATCH_TYPE
+    # skill: 0 for any, 1 for normal, 2 for high, 3 for very high skill (default is 0)
+
+    "https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v001/" : ("match_id"),
+    
+    "https://api.steampowered.com/IDOTA2Match_570/GetMatchHistoryBySequenceNum/v0001/" : 
+    ("start_at_match_seq_num","matches_requested"),
+    
+    "https://api.steampowered.com/IEconDOTA2_570/GetHeroes/v0001/" : (),
+    
+    "https://api.steampowered.com/IDOTA2Match_570/GetLeagueListing/v0001/" : (),
+    
+    "https://api.steampowered.com/IDOTA2Match_570/GetLiveLeagueGames/v0001/" : (),
+    
+    "https://api.steampowered.com/IDOTA2Match_570/GetTeamInfoByTeamID/v001/" : 
+    ("start_at_team_id","teams_requested"),
+    
+    "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/" : (), # ??? 
+    
+    "https://api.steampowered.com/IEconItems_570/GetSchema/v0001/" : (), # ???
+}
 
 DOTA_MATCH_TYPES = {
     -1: 'Invalid',

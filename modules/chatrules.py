@@ -413,49 +413,6 @@ def generate_message_commands(bot):
 
     coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
 
-    # def f(channel, user, message, args, data, bot):
-    #     import json, os, time, settings
-
-    #     isupdate = len(args) and args[0].lower() == 'update' and user in bot.oplist
-
-    #     outputstring = "Solo: %s | Party: %s"
-
-    #     if isupdate:
-    #         print "Updating mmr"
-
-    #         with open('/var/www/twitch/monkeys_forever/data', 'r') as d:
-    #             olddotadata = json.loads(d.readline())
-
-    #         os.system('cd modules/node; nodejs mmr.js monkeys_forever %s' % settings.getdata('monkeys_forever_dota_id'))
-
-    #         with open('/var/www/twitch/monkeys_forever/data', 'r') as d:
-    #             dotadata = json.loads(d.readline())
-
-    #         old_mmr_s = str(olddotadata['gameAccountClient']['soloCompetitiveRank'])
-    #         old_mmr_p = str(olddotadata['gameAccountClient']['competitiveRank'])
-
-    #         new_mmr_s = str(dotadata['gameAccountClient']['soloCompetitiveRank'])
-    #         new_mmr_p = str(dotadata['gameAccountClient']['competitiveRank'])
-
-    #         mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
-    #         mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
-
-    #         if int(mmr_s_change) >= 0: mmr_s_change = '+' + mmr_s_change
-    #         if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
-
-    #         return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
-
-    #     else:    
-    #         with open('/var/www/twitch/monkeys_forever/data', 'r') as d:
-    #             dotadata = json.loads(d.readline())
-    
-    #         mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
-    #         mmrp = dotadata['gameAccountClient']['competitiveRank']
-    
-    #         return "Solo: %s | Party: %s" % (mmr,mmrp)
-
-    # coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever'], repeatdelay=25))
-
     coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'], 
@@ -640,50 +597,7 @@ def generate_message_commands(bot):
 
     # Kizzmett ##########
 
-    # def f(channel, user, message, args, data, bot):
-    #     import json, os, time
-
-    #     isupdate = len(args) and args[0].lower() == 'update' and user in bot.oplist
-
-    #     outputstring = "Solo: %s | Party: %s"
-
-    #     if isupdate:
-    #         print "Updating mmr"
-
-    #         with open('/var/www/twitch/kizzmett/data', 'r') as d:
-    #             olddotadata = json.loads(d.readline())
-
-    #         os.system('cd modules/node; nodejs mmr.js kizzmett %s' % settings.getdata('kizzmett_dota_id'))
-
-    #         with open('/var/www/twitch/kizzmett/data', 'r') as d:
-    #             dotadata = json.loads(d.readline())
-
-    #         old_mmr_s = str(olddotadata['gameAccountClient']['soloCompetitiveRank'])
-    #         old_mmr_p = str(olddotadata['gameAccountClient']['competitiveRank'])
-
-    #         new_mmr_s = str(dotadata['gameAccountClient']['soloCompetitiveRank'])
-    #         new_mmr_p = str(dotadata['gameAccountClient']['competitiveRank'])
-
-    #         mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
-    #         mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
-
-    #         if int(mmr_s_change) >= 0: mmr_s_change = '+' + mmr_s_change
-    #         if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
-
-    #         return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
-
-    #     else:    
-    #         with open('/var/www/twitch/kizzmett/data', 'r') as d:
-    #             dotadata = json.loads(d.readline())
-    
-    #         mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
-    #         mmrp = dotadata['gameAccountClient']['competitiveRank']
-    
-    #         return "Solo: %s | Party: %s" % (mmr,mmrp)
-
-    # coms.append(command.Command('!mmr', f, bot, channels=['kizzmett'], repeatdelay=25))
-
-
+    # ???
 
     ######################################################################
     #

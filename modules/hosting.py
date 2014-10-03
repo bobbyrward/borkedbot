@@ -38,7 +38,8 @@ def nowhosting(event):
     if event.data.startswith('HOSTTARGET') and event.data.split()[1] != '-':
         hostedstreamer = event.data.split()[1]
         streamdata = twitchapi.get('streams/%s' % hostedstreamer, 'stream')
-        
+        print 'WE ARE NOW HOSTING %s' % hostedstreamer
+
         IS_HOSTING = True
         HOSTING_CHANNEL = hostedstreamer
         
@@ -48,9 +49,10 @@ def nowhosting(event):
         else: 
             print "%s is not streaming." % hostedstreamer
     elif event.data.startswith('HOSTTARGET') and event.data.split()[1] == '-':
+        print "Unhosting %s " % HOSTING_CHANNEL
+
         IS_HOSTING = False
         HOSTING_CHANNEL = None
-        print "Unhosting"
 
 
 def checkifhostonline(event):

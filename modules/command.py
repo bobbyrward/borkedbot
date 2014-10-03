@@ -81,7 +81,7 @@ class Command(object):
         if 'special' in self.groups and user != 'imayhaveborkedit':
             return SPECIAL_RESTRICTED
 
-        if user not in self.bot.oplist and self.opcom:
+        if self.opcom and user not in self.bot.oplist and user != 'imayhaveborkedit':
             return OP_RESTRICTED
 
         if not self._checkdelay():
