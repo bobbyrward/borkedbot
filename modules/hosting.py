@@ -24,9 +24,10 @@ def alert(event):
 
     if event.etype == 'jtvmsg':
         if 'Only the channel owner and channel editors can use the /unhost command.' in event.data:
-            print "Not an editor, cannot unhost."
+            print "[Hosting]Not an editor, cannot unhost."
             AUTO_UNHOST = False
 
+    if event.etype == 'infomsg':
         nowhosting(event)
         checkifhostonline(event)
 
@@ -38,7 +39,7 @@ def nowhosting(event):
     if event.data.startswith('HOSTTARGET') and event.data.split()[1] != '-':
         hostedstreamer = event.data.split()[1]
         streamdata = twitchapi.get('streams/%s' % hostedstreamer, 'stream')
-        print 'WE ARE NOW HOSTING %s' % hostedstreamer
+        print '[Hosting] WE ARE NOW HOSTING %s' % hostedstreamer
 
         IS_HOSTING = True
         HOSTING_CHANNEL = hostedstreamer
@@ -49,7 +50,7 @@ def nowhosting(event):
         else: 
             print "%s is not streaming." % hostedstreamer
     elif event.data.startswith('HOSTTARGET') and event.data.split()[1] == '-':
-        print "Unhosting %s " % HOSTING_CHANNEL
+        print "[Hosting] Unhosting %s " % HOSTING_CHANNEL
 
         IS_HOSTING = False
         HOSTING_CHANNEL = None

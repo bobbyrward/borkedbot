@@ -14,16 +14,13 @@ def setup(bot):
 
 def alert(event):
     if event.etype == 'msg' and event.channel in enabled_channels.keys():
-        r = mmr(event.channel, enabled_channels[event.channel])
+        r = mmr(event.channel)
         if r is not None:
             event.bot.botsay(r)
 
 
-def mmr(channel, name):
-    getmatchtimeout = settings.trygetset('%s_get_match_timeout' % channel, 60)
-    lastmatchfetch = settings.trygetset('%s_last_match_fetch' % channel, time.time())
-    
-    if time.time() - int(getmatchtimeout) > float(lastmatchfetch):
+def mmr(channel):
+    if checktimeout(channel):
         settings.setdata('%s_last_match_fetch' % channel, time.time(), False)
         
         dotaid = settings.getdata('%s_dota_id' % channel)
@@ -65,5 +62,12 @@ def mmr(channel, name):
             if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
 
             newmmrstring = outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
-            print "[MMR] %s has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (name, latestmatch['match_id'], newmmrstring)
-            return "%s has finished a game.  http://www.dotabuff.com/matches/%s Updated mmr: %s" % (name, latestmatch['match_id'], newmmrstring)
+            print "[MMR] %s has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
+            return "%s has finished a game.  http://www.dotabuff.com/matches/%s Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
+
+def checktimeout(channel):
+    getmatchtimeout = settings.trygetset('%s_get_match_timeout' % channel, 60)
+    lastmatchfetch = settings.trygetset('%s_last_match_fetch' % channel, time.time())
+    
+    return time.time() - int(getmatchtimeout) > float(lastmatchfetch)
+    

@@ -331,6 +331,14 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!uptime', f, bot, repeatdelay=8))
 
+
+    ######################################################################
+    #
+    # Channel spcifics
+    #
+
+    # Sort of general ######################################################
+
     def f(channel, user, message, args, data, bot):
         import json, os, time, settings, mmr
 
@@ -377,10 +385,8 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever', 'kizzmett'], repeatdelay=25))
 
-    ######################################################################
-    #
-    # Channel spcifics
-    #
+    coms.append(command.SimpleCommand('!mumble', 'doc.asdfxyz.de (default port) 100 slot open server, on 24/7.  Try not to be toxic, or bork will ban you.', 
+        bot, channels=['superjoe', 'monkeys_forever'], repeatdelay=10, targeted=True))
 
     # Monkeys_forever ######################################################
 
