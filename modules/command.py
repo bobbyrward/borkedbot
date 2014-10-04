@@ -6,7 +6,7 @@ import time, subprocess, random
 
 LOAD_ORDER = 70
 
-class OK(): pass                    # Everything is ok    
+class OK(): pass                    # Everything is ok
 class DELAY_LOCKED(): pass          # Not enough time has passed to use this command again
 class WRONG_TRIGGER():  pass        # Just represents that this isn't the command you're looking for
 class BAD_CHANNEL(): pass           # Can't use this command in this channel for some reason (black/white list)
@@ -17,7 +17,7 @@ class SPECIAL_RESTRICTED(): pass    # Only I can use these
 
 
 class Command(object):
-    def __init__(self, trigger, outfunc, bot, opcom = False, channels = [], data = None, groups = [], 
+    def __init__(self, trigger, outfunc, bot, opcom = False, channels = [], chanblacklist = [], data = None, groups = [], 
         repeatdelay = 0, casesensitive = False):
 
         self.trigger = trigger
@@ -31,13 +31,13 @@ class Command(object):
 
         self.lastuse = None
 
-        self.blacklist = []
+        self.blacklist = chanblacklist
         self.groups = []
 
         if groups is None: 
             return
-        
-        if type(groups) is type(' '):
+
+        if type(groups) is str:
             self.groups.append(groups)
         else:
             self.groups.extend(groups)
@@ -51,7 +51,6 @@ class Command(object):
     def _issequence(self, item):
         return hasattr(item, '__iter__')
 
-    # Right so this doesn't actually work because the command gets reloaded every message...
     def _checkdelay(self):
         if self.lastuse is None: return True
         return int(self._htime() - self.lastuse) > self.repeatdelay
@@ -81,13 +80,19 @@ class Command(object):
         if 'special' in self.groups and user != 'imayhaveborkedit':
             return SPECIAL_RESTRICTED
 
-        if self.opcom and user not in self.bot.oplist and user != 'imayhaveborkedit':
+        if 'host' in self.groups and user not in [channel, 'imayhaveborkedit']:
+            return HOST_RESTRICTED
+
+        if self.opcom and user not in self.bot.oplist + ['imayhaveborkedit']:
             return OP_RESTRICTED
 
         if not self._checkdelay():
             return DELAY_LOCKED
 
-        if len(self.channels) > 0 and channel not in self.channels + ['borkedbot']:
+        if channel in self.blacklist:
+            return BAD_CHANNEL
+
+        if len(self.channels) and channel not in self.channels + ['borkedbot']:
             return BAD_CHANNEL
 
         if channel in self.blacklist:
@@ -102,18 +107,18 @@ class Command(object):
     def process(self, channel, user, message, args):
         err = self._dochecks(channel, user, message, args)
         if err != OK:
-            return [None, err]
+            return (None, err)
 
         self.lastuse = self._htime()
 
         if self.outfunc is not None:
-            return [self.outfunc(channel, user, message, args, self.data, self.bot), OK]
+            return (self.outfunc(channel, user, message, args, self.data, self.bot), OK)
         else: 
             raise RuntimeError("No function specified")
 
 
 class SimpleCommand(Command):
-    def __init__(self, trigger, output, bot, opcom = False, channels = [], data = None, groups = [], 
+    def __init__(self, trigger, output, bot, opcom = False, channels = [], chanblacklist = [], data = None, groups = [], 
         repeatdelay = 0, casesensitive = False, prependuser = True, targeted = False):
 
         self.trigger = trigger
@@ -129,22 +134,22 @@ class SimpleCommand(Command):
 
         self.lastuse = None
         
-        self.blacklist = []
+        self.blacklist = chanblacklist
         self.groups = []
 
         if groups is None: 
             return
         
-        if type(groups) is type(' '):
+        if type(groups) is str:
             self.groups.append(groups)
         else:
             self.groups.extend(groups)
-        
+
 
     def process(self, channel, user, message, args):
         err = self._dochecks(channel, user, message, args)
         if err != OK:
-            return [None, err]
+            return (None, err)
 
         self.lastuse = self._htime()
     
@@ -168,20 +173,7 @@ class SimpleCommand(Command):
                 res = res % ('', self.output)
 
 
-        return [res, OK]
-
-
-class JoinPartCommand(object):
-    def __init__(self, user, bot, joinfunc=None, partfunc=None, channels=[], data=None, groups = [], repeatdelay = 0):
-        self.user = user
-        self.bot = bot
-        self.joinfunc = joinfunc
-        self.partfunc = partfunc
-        self.channels = channels
-        self.data = data
-        self.groups = groups
-        self.repeatdelay = repeatdelay
-
+        return (res, OK)
 
 
 def get_process_output(incomm, shell=False, stripnls=False):
@@ -193,3 +185,15 @@ def setup(bot):
 
 def alert(event):
     pass
+
+
+#class JoinPartCommand(object):
+#    def __init__(self, user, bot, joinfunc=None, partfunc=None, channels=[], data=None, groups = [], repeatdelay = 0):
+#        self.user = user
+#        self.bot = bot
+#        self.joinfunc = joinfunc
+#        self.partfunc = partfunc
+#        self.channels = channels
+#        self.data = data
+#        self.groups = groups
+#        self.repeatdelay = repeatdelay

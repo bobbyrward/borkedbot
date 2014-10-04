@@ -1,7 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 
-import cPickle, base64
+import cPickle, base64, time
 
 from twisted.internet import reactor, task, protocol#, stdio
 #from twisted.protocols import basic
@@ -15,11 +15,9 @@ class MyBot(irc.IRCClient):
 
     oplist = []
     userlist = [] # RIP TWITCHCLENT 1
-
     channelsubs = []
 
     gotops = False
-    hosting = None
 
     timertask = None
 
@@ -38,7 +36,7 @@ class MyBot(irc.IRCClient):
 
 
     def timer(self):
-        chatmanager.event(None, None, 'timer', None, self, None)
+        chatmanager.event(self.channel, None, 'timer', time.time(), self, None)
 
     def signedOn(self):
         self.join(self.factory.channel)
@@ -51,7 +49,7 @@ class MyBot(irc.IRCClient):
 
     def joined(self, channel):
         print "Joined %s." % channel
-        chatmanager.event(channel.replace('#',''), None, 'channeljoin', channel.replace('#',''), self, None)
+        chatmanager.event(chan(channel), None, 'channeljoin', chan(channel), self, None)
         
         self.timertask = task.LoopingCall(self.timer)
         self.timertask.start(30, True)
@@ -77,13 +75,13 @@ class MyBot(irc.IRCClient):
         if sett and modes == 'o':
             for u in args:
                 self.oplist.append(u)
-                chatmanager.event(channel.replace('#',''), user, 'op', u, self, True)
+                chatmanager.event(chan(channel), user, 'op', u, self, True)
         elif not sett and modes == 'o':
             for u in args:
                 try:
                     self.oplist.remove(u)
                 except: pass
-                chatmanager.event(channel.replace('#',''), user, 'deop', u, self, True)
+                chatmanager.event(chan(channel), user, 'deop', u, self, True)
 
         self.oplist = list(set(self.oplist))
 
@@ -102,7 +100,7 @@ class MyBot(irc.IRCClient):
                 return
 
             print "INFO (%s): %s" % (channel, msg)
-            chatmanager.event(channel.replace('#',''), None, 'infomsg', msg, self, user in self.oplist)
+            chatmanager.event(chan(channel), None, 'infomsg', msg, self, user in self.oplist)
             return
 
         if user == 'jtv':
@@ -117,24 +115,24 @@ class MyBot(irc.IRCClient):
 
 
             print "INFO from ttv (%s): %s" % (channel, msg)
-            chatmanager.event(channel.replace('#',''), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
+            chatmanager.event(chan(channel), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
             return
 
         if user == 'twitchnotify':
             print "!!Notification from twitch!! (%s): %s" % (channel, msg)
-            chatmanager.event(channel.replace('#',''), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
+            chatmanager.event(chan(channel), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
             return
         
         #       def event(channel, user, etype, data, bot, isop):
-        chatmanager.event(channel.replace('#',''), user, 'msg', msg, self, user in self.oplist)
+        chatmanager.event(chan(channel), user, 'msg', msg, self, user in self.oplist)
 
-    def notify(self, something):
-        return
+    def chan(self, c):
+        return c.replace('#','')
 
     def userJoined(self, user, channel):
         self.userlist.append(user)
         self.userlist = list(set(self.userlist))
-        chatmanager.event(channel.replace('#',''), None, 'join', user, self, user in self.oplist)
+        chatmanager.event(chan(channel), None, 'join', user, self, user in self.oplist)
 
     def userLeft(self, user, channel):
         try:
@@ -142,7 +140,7 @@ class MyBot(irc.IRCClient):
         except:
             print "User not in list to part from (%s)" % user
         self.userlist = list(set(self.userlist))
-        chatmanager.event(channel.replace('#',''), None, 'part', user, self, user in self.oplist)
+        chatmanager.event(chan(channel), None, 'part', user, self, user in self.oplist)
 
     def botsay(self, msg):
         self.say(self.factory.channel, msg)
@@ -154,10 +152,6 @@ class MyBot(irc.IRCClient):
     def badMessage(self, line, excType, excValue, tb):
         print "Something bad has happened"
         print line, excType, excValue
-
-
-    #def connectionMade(self):
-    #    self.transport.write('HELLO > ')
 
 
 class MyBotFactory(protocol.ClientFactory):
