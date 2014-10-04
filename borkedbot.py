@@ -48,9 +48,9 @@ class MyBot(irc.IRCClient):
         self.sendLine('TWITCHCLIENT 3') # Oh boy here we go
 
     def joined(self, channel):
-        print "Joined %s." % channel
-        chatmanager.event(chan(channel), None, 'channeljoin', chan(channel), self, None)
-        
+        print "Joined %s." % self.chan(channel)
+        chatmanager.event(self.chan(channel), None, 'channeljoin', self.chan(channel), self, None)
+
         self.timertask = task.LoopingCall(self.timer)
         self.timertask.start(30, True)
 
@@ -70,18 +70,18 @@ class MyBot(irc.IRCClient):
             print "Received initial list of ops"
             self.gotops = True
 
-        print "Modes changed by %s in %s: %s%s for %s" % (user, channel, '+' if sett else '-', modes, list(args))
+        #print "Modes changed by %s in %s: %s%s for %s" % (user, channel, '+' if sett else '-', modes, list(args))
 
         if sett and modes == 'o':
             for u in args:
                 self.oplist.append(u)
-                chatmanager.event(chan(channel), user, 'op', u, self, True)
+                chatmanager.event(self.chan(channel), user, 'op', u, self, True)
         elif not sett and modes == 'o':
             for u in args:
                 try:
                     self.oplist.remove(u)
                 except: pass
-                chatmanager.event(chan(channel), user, 'deop', u, self, True)
+                chatmanager.event(self.chan(channel), user, 'deop', u, self, True)
 
         self.oplist = list(set(self.oplist))
 
@@ -100,7 +100,7 @@ class MyBot(irc.IRCClient):
                 return
 
             print "INFO (%s): %s" % (channel, msg)
-            chatmanager.event(chan(channel), None, 'infomsg', msg, self, user in self.oplist)
+            chatmanager.event(self.chan(channel), None, 'infomsg', msg, self, user in self.oplist)
             return
 
         if user == 'jtv':
@@ -115,16 +115,16 @@ class MyBot(irc.IRCClient):
 
 
             print "INFO from ttv (%s): %s" % (channel, msg)
-            chatmanager.event(chan(channel), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
+            chatmanager.event(self.chan(channel), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
             return
 
         if user == 'twitchnotify':
             print "!!Notification from twitch!! (%s): %s" % (channel, msg)
-            chatmanager.event(chan(channel), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
+            chatmanager.event(self.chan(channel), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
             return
-        
+
         #       def event(channel, user, etype, data, bot, isop):
-        chatmanager.event(chan(channel), user, 'msg', msg, self, user in self.oplist)
+        chatmanager.event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
 
     def chan(self, c):
         return c.replace('#','')
@@ -132,7 +132,7 @@ class MyBot(irc.IRCClient):
     def userJoined(self, user, channel):
         self.userlist.append(user)
         self.userlist = list(set(self.userlist))
-        chatmanager.event(chan(channel), None, 'join', user, self, user in self.oplist)
+        chatmanager.event(self.chan(channel), None, 'join', user, self, user in self.oplist)
 
     def userLeft(self, user, channel):
         try:
@@ -140,7 +140,7 @@ class MyBot(irc.IRCClient):
         except:
             print "User not in list to part from (%s)" % user
         self.userlist = list(set(self.userlist))
-        chatmanager.event(chan(channel), None, 'part', user, self, user in self.oplist)
+        chatmanager.event(self.chan(channel), None, 'part', user, self, user in self.oplist)
 
     def botsay(self, msg):
         self.say(self.factory.channel, msg)
@@ -176,12 +176,13 @@ if __name__ == "__main__":
     if len(sys.argv) is not 2:
         print "Usage: python borkedbot.py [channel]"
     else:
+        starttime = time.time()
         server = 'irc.twitch.tv'
         chan = sys.argv[1]
         mbf = MyBotFactory('#' + chan)
-        
+
         reactor.connectTCP(server, 6667, mbf)
-        #stdio.StandardIO(mbf)
-        
+
         reactor.run()
 
+        print "\nTotal run time: %s" % time.time() - starttime
