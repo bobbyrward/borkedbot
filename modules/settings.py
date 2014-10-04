@@ -27,12 +27,12 @@ def getdata(key):
     loadsettings()
     return data[key]
 
-def setdata(key, value):
+def setdata(key, value, announce=True):
     loadsettings()
     global data
 
     if key in data.keys():
-        if data[key] != value:
+        if data[key] != value and announce:
             print "[Settings] Key %s changed: %s -> %s" % (key, data[key], value)
     
     if key not in data.keys():
@@ -42,12 +42,12 @@ def setdata(key, value):
     
     savesettings()
 
-def trygetset(key, value):
+def trygetset(key, value, announce=True):
     loadsettings()
     try:
         return data[key]
     except:
-        setdata(key, value)
+        setdata(key, value, announce)
         return data[key] 
 
 

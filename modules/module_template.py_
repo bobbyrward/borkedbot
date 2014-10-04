@@ -1,0 +1,13 @@
+import sys
+sys.dont_write_bytecode = True
+
+
+
+LOAD_ORDER = 1000
+
+
+def setup(bot):
+    return
+
+def alert(event):
+    return

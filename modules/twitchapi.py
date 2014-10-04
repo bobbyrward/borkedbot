@@ -8,17 +8,14 @@ LOAD_ORDER = 80
 root = 'https://api.twitch.tv/kraken/'
 
 def _apiget(path):
-    return requests.get(root+path).text
-
-def _convertjson(j):
-    return json.loads(j)
+    return requests.get(root+path).json()
 
 def get(path='', key=None):
-    return _convertjson(_apiget(path)) if not key else _convertjson(_apiget(path))[key]
+    return _apiget(path) if not key else _apiget(path)[key]
 
 
 def setup(bot):
-	return
+    return
 
 def alert(event):
-	return
+    return

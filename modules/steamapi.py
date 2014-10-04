@@ -14,7 +14,7 @@ root = 'https://api.steampowered.com/'
 dotaAPIcalls = {
     "https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/v001/" : 
     ("hero_id","game_mode","skill","min_players","account_id","league_id","start_at_match_id","matches_requested","tournament_games_only"),
-    # game_mode: DOTA_MATCH_TYPE
+    # game_mode: see DOTA_MATCH_TYPE
     # skill: 0 for any, 1 for normal, 2 for high, 3 for very high skill (default is 0)
 
     "https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v001/" : ("match_id"),

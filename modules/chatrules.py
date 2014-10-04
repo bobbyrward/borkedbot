@@ -332,7 +332,10 @@ def generate_message_commands(bot):
     coms.append(command.Command('!uptime', f, bot, repeatdelay=8))
 
     def f(channel, user, message, args, data, bot):
-        import json, os, time, settings
+        import json, os, time, settings, mmr
+
+        if channel not in mmr.enabled_channels:
+            return
 
         isupdate = len(args) and args[0].lower() == 'update' and user in bot.oplist
 
@@ -423,8 +426,11 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand(['!song', '!currentsong'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
         channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
+    #coms.append(command.SimpleCommand('!background', 
+    #    "It's a bug with the TI2 animated background.  Put this in your launch options: -dashboard international_2012", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))   
+
     coms.append(command.SimpleCommand('!background', 
-        "It's a bug with the TI2 animated background.  Put this in your launch options: -dashboard international_2012", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
+        "It's a bug with the TI2 animated background.  See: http://redd.it/2crova", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand(['!rangefinder', '!greenarrow', '!green arrow'], "Here's the console command: dota_disable_range_finder 0", 
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))

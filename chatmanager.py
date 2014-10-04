@@ -86,6 +86,8 @@ def _manage_modules():
 
                 if getattr(ni, 'LOAD_ORDER', None) is None:
                     ni.LOAD_ORDER = 1000
+                    setattr(ni, 'LOAD_ORDER', 1000)
+                    # Does this actually work?
 
                 _info("%s is not a useable module and will not be imported." % ni.__name__)
                 if_issue = True
