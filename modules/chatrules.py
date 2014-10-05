@@ -430,11 +430,10 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand(['!song', '!currentsong'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
         channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
-    #coms.append(command.SimpleCommand('!background', 
-    #    "It's a bug with the TI2 animated background.  Put this in your launch options: -dashboard international_2012", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))   
-
     coms.append(command.SimpleCommand('!background', 
-        "It's a bug with the TI2 animated background.  See: http://redd.it/2crova", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
+        "It's a bug with the TI2 animated background.  Launch options: \"-dashboard international_2012\" "+
+        "Console command: \"dota_embers 0\"  Then, close, open, and close your console, and play a game.", 
+        bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand(['!rangefinder', '!greenarrow', '!green arrow'], "Here's the console command: dota_disable_range_finder 0", 
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))

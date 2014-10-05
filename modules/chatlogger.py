@@ -30,9 +30,9 @@ def log(user, channel, msg, isop, logstdout = True):
         elif isop:
             indicator = '+'
         else:
-            indicator = ''
+            indicator = ' '
 
-        print now + "[" + channel + "]", indicator + user + ":", msg
+        print now + "[" + channel + "]", '<' + indicator + user + '>', msg
 
     with open(logpath + "log.txt", 'a+') as f:
         f.write(now + user +": " +  msg + "\n")

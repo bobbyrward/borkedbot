@@ -13,6 +13,9 @@ def _apiget(path):
 def get(path='', key=None):
     return _apiget(path) if not key else _apiget(path)[key]
 
+def is_streaming(channel):
+    return get('streams/%s' % channel, 'stream') is not None
+
 
 def setup(bot):
     return

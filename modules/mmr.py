@@ -2,7 +2,7 @@ import sys
 sys.dont_write_bytecode = True
 
 import os, time, json
-import steamapi, settings
+import steamapi, twitchapi, settings
 
 LOAD_ORDER = 35
 
@@ -66,8 +66,19 @@ def mmr(channel):
             return "%s has finished a game.  http://www.dotabuff.com/matches/%s Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
 
 def checktimeout(channel):
-    getmatchtimeout = settings.trygetset('%s_get_match_timeout' % channel, 60)
+    laststreamcheck = settings.trygetset('%s_last_is_streaming_check' % channel, time.time())
+    streamchecktimeout = settings.trygetset('%s_is_streaming_timeout' % channel, 30)
+    
+    if time.time() - int(streamchecktimeout) > float(laststreamcheck):
+        if twitchapi.is_streaming(channel):
+           getmatchtimeout = settings.trygetset('%s_get_online_match_timeout' % channel, 20)
+        else:
+           getmatchtimeout = settings.trygetset('%s_get_offline_match_timeout' % channel, 90)
+
+        settings.setdata('%s_last_is_streaming_check' % channel, time.time(), False)
+
+    getmatchtimeout = settings.trygetset('%s_get_match_timeout' % channel, 30)
+
     lastmatchfetch = settings.trygetset('%s_last_match_fetch' % channel, time.time())
     
     return time.time() - int(getmatchtimeout) > float(lastmatchfetch)
-    
