@@ -185,4 +185,4 @@ if __name__ == "__main__":
 
         reactor.run()
 
-        print "\nTotal run time: %s" % time.time() - starttime
+        print "\nTotal run time: %s" % (time.time() - starttime)

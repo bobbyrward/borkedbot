@@ -63,7 +63,7 @@ def mmr(channel):
 
             newmmrstring = outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
             print "[MMR] %s has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
-            return "%s has finished a game.  http://www.dotabuff.com/matches/%s Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
+            return "%s has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
 
 def checktimeout(channel):
     laststreamcheck = settings.trygetset('%s_last_is_streaming_check' % channel, time.time())
