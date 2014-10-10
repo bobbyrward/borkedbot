@@ -96,7 +96,7 @@ salem_neutrals = {
     'jester' : ('Jester', 'Neutral Evil', 
         'Trick the Town into lynching you. If you are lynched, you may kill one of the GUILTY voters the following night. '+
         'This goes through any night immunity, however a transporter can swap your target with somebody else and get them killed instead.'),
-    'serial killer' : ('Serial Killer', 'Neutral Killing'
+    'serial killer' : ('Serial Killer', 'Neutral Killing',
         'Kill someone each night. If you are role blocked you will attack the blocker instead (Escort, Consort, and Jailor). You can not be killed at night.'),
     'survivor' : ('Survivor', 'Neutral Benign', 
         'Put on a bulletproof vest at night, protecting yourself from attacks. You can only use the bulletproof vest 4 times. '+
@@ -345,7 +345,10 @@ def generate_message_commands(bot):
 
         isupdate = len(args) and args[0].lower() == 'update' and user in bot.oplist
 
-        outputstring = "Solo: %s | Party: %s"
+        if len(args) and 'update' in args[0].lower() and not isupdate:
+            outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
+        else:
+            outputstring = "Solo: %s | Party: %s"
 
         if isupdate:
             print "Updating mmr"
@@ -379,7 +382,7 @@ def generate_message_commands(bot):
             mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
             mmrp = dotadata['gameAccountClient']['competitiveRank']
     
-            return "Solo: %s | Party: %s" % (mmr,mmrp)
+            return outputstring % (mmr,mmrp)
 
     coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever', 'kizzmett'], repeatdelay=25))
 
@@ -431,8 +434,8 @@ def generate_message_commands(bot):
         channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand('!background', 
-        "It's a bug with the TI2 animated background.  Launch options: \"-dashboard international_2012\" "+
-        "Console command: \"dota_embers 0\"  Then, close, open, and close your console, and play a game.", 
+        "It's a bug with the TI2 animated background.  Launch option: \"-dashboard international_2012\" "+
+        "Console command: \"dota_embers 0\"  Then close, open, and close your console, and play a game.", 
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand(['!rangefinder', '!greenarrow', '!green arrow'], "Here's the console command: dota_disable_range_finder 0", 
@@ -582,7 +585,8 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand(['!salem', '!salemhelp', '!saleminfo'], 
         "Play Town of Salem here: http://www.blankmediagames.com/TownOfSalem/ Make an account, "+
         "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  "+
-        "Registering in chat isn't required but it helps Superjoe keep track of who's who.", 
+        "Registering in chat isn't required but it helps Superjoe keep track of who's who.  "+
+        "Subs get priority but everyone else gets invited afterwards.", 
         bot, channels=['superjoe'], groups=['salem'], repeatdelay=6, prependuser=False, targeted=True))
 
     coms.append(command.SimpleCommand('!salemnames', 'http://doc.asdfxyz.de:81/twitch/superjoe/salem/', 
@@ -602,7 +606,7 @@ def generate_message_commands(bot):
         else: 
             return "No match for \"%s\"" % args[0]
 
-    coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=7))
+    coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=4))
 
     # Kizzmett ##########
 

@@ -171,6 +171,8 @@ def event(channel, user, etype, data, bot, isop):
 
     doreload(bot)
 
+    if channel is not None: channel = channel.replace('#','')
+
     event = IRCevent(bot, channel, user, etype, data, isop)
 
     # Extra logic goes here

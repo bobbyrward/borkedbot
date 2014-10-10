@@ -1,7 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 
-import os, time, json
+import os, time, json, subprocess, shlex
 import steamapi, twitchapi, settings
 
 LOAD_ORDER = 35
@@ -32,10 +32,10 @@ def mmr(channel):
         latestmatch = steamapi.getlastdotamatch(dotaid)
         previousmatch = settings.trygetset('%s_last_match' % channel, latestmatch)
 
-        #print "[MMR] Checking match IDs (%s:%s)" % (previousmatch['match_id'], latestmatch['match_id'])
         
         if previousmatch['match_id'] != latestmatch['match_id'] and str(latestmatch['lobby_type']) == '7':
-            settings.setdata('%s_last_match' % channel, latestmatch)
+            print "[MMR] Match ID change found (%s:%s)" % (previousmatch['match_id'], latestmatch['match_id'])
+            settings.setdata('%s_last_match' % channel, latestmatch, False)
 
             outputstring = "Solo: %s | Party: %s"
 

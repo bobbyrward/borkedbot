@@ -104,4 +104,4 @@ joinpartbot.py
 *.old
 modules/test
 modules/node
-
+modules/node-test

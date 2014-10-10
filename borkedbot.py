@@ -42,17 +42,19 @@ class MyBot(irc.IRCClient):
         self.join(self.factory.channel)
         print "Signed on as %s.\n" % self.nickname
         self.oplist.append(self.factory.channel.replace('#', ''))
+        
+        self.sendLine('TWITCHCLIENT 3') # Oh boy here we go
+        
         chatmanager.setup(self)
         chatmanager.event(None, None, 'serverjoin', None, self, None)
 
-        self.sendLine('TWITCHCLIENT 3') # Oh boy here we go
 
     def joined(self, channel):
         print "Joined %s." % self.chan(channel)
         chatmanager.event(self.chan(channel), None, 'channeljoin', self.chan(channel), self, None)
 
         self.timertask = task.LoopingCall(self.timer)
-        self.timertask.start(30, True)
+        self.timertask.start(15, True)
 
     def receivedMOTD(self, motd):
         print '\n### MOTD ###'

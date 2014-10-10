@@ -8,7 +8,11 @@ LOAD_ORDER = 80
 root = 'https://api.twitch.tv/kraken/'
 
 def _apiget(path):
-    return requests.get(root+path).json()
+    try:
+        return requests.get(root+path).json()
+    except Exception as e:
+        print e
+
 
 def get(path='', key=None):
     return _apiget(path) if not key else _apiget(path)[key]

@@ -36,7 +36,7 @@ def setdata(key, value, announce=True):
             print "[Settings] Key %s changed: %s -> %s" % (key, data[key], value)
     
     if key not in data.keys():
-        print "[Settings] Key added: %s" % key
+        print "[Settings] Key added: %s (%s)" % (key, value)
 
     data[key] = value
     

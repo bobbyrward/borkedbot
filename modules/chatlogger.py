@@ -9,7 +9,7 @@ def setup(bot):
     pass
 
 def alert(event):
-    if event.etype == 'msg':
+    if event.etype in ['msg','action']:
         log(event.user, event.channel, event.data, event.user in event.bot.oplist)
 
 def formatdate():

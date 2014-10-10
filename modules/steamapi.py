@@ -57,7 +57,8 @@ def get(path='', key=None):
     return _apiget(path) if not key else _apiget(path)[key]
 
 def getlastdotamatch(idnum):
-    return _apiget('IDOTA2Match_570/GetMatchHistory/V001/?key=%s&matches_requested=1&account_id=%s' % (apikey,idnum))['result']['matches'][0]
+    r = _apiget('IDOTA2Match_570/GetMatchHistory/V001/?key=%s&matches_requested=1&account_id=%s' % (apikey,idnum))
+    return r['result']['matches'][0]
 
 def setup(bot):
     return
