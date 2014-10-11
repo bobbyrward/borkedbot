@@ -6,7 +6,6 @@ import os, cPickle
 LOAD_ORDER = 50
 
 datafilename = 'settings.data'
-data = {}
 
 if not os.path.isfile(datafilename):
     with open(datafilename, 'w') as f:
@@ -14,22 +13,21 @@ if not os.path.isfile(datafilename):
 
 
 def loadsettings():
-    global data
     with open(datafilename, 'r') as f:
         data = cPickle.load(f)
+    return data
 
 
-def savesettings():
+def savesettings(data):
     with open(datafilename, 'w') as f:
         cPickle.dump(data, f)
 
 def getdata(key):
-    loadsettings()
+    data = loadsettings()
     return data[key]
 
 def setdata(key, value, announce=True):
-    loadsettings()
-    global data
+    data = loadsettings()
 
     if key in data.keys():
         if data[key] != value and announce:
@@ -40,22 +38,25 @@ def setdata(key, value, announce=True):
 
     data[key] = value
     
-    savesettings()
+    savesettings(data)
 
 def trygetset(key, value, announce=True):
-    loadsettings()
+    data = loadsettings()
     try:
         return data[key]
     except:
         setdata(key, value, announce)
         return data[key] 
 
+def deldata(key, announce=True):
+    data = loadsettings()
+    if announce:
+        print "[Settings] Key deleted: %s" % key
+    data.pop(key)
+    savesettings(data)
 
 def setup(bot):
     return
 
 def alert(event):
     return
-
-
-loadsettings()

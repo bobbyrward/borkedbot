@@ -70,6 +70,9 @@ def _manage_modules():
         print "Cannot import modules."
         print traceback.format_exc()
     else:
+
+        # TODO: Add __import__(channelname.py) or whatever
+
         fresh_imports = modules._m_imports
         
         for fi in fresh_imports:
@@ -168,10 +171,7 @@ def event(channel, user, etype, data, bot, isop):
     if etype not in ['msg', 'timer']:
         print "Received event, %s: %s" % (etype, data)
 
-
     doreload(bot)
-
-    if channel is not None: channel = channel.replace('#','')
 
     event = IRCevent(bot, channel, user, etype, data, isop)
 

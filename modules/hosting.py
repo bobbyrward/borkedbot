@@ -13,8 +13,8 @@ CHECK_THRESHOLD = settings.trygetset('hosting_check_threshold', 30)
 OFFLINE_THRESHOLD = settings.trygetset('hosting_offline_threshold', 300)
 
 def setup(bot):
-    settings.setdata('%s_is_hosting' % bot.channel, False)
-    settings.setdata('%s_hosted_channel' % bot.channel, '')
+    settings.setdata('%s_is_hosting' % bot.channel.replace('#',''), False)
+    settings.setdata('%s_hosted_channel' % bot.channel.replace('#',''), '')
 
 def alert(event):
 

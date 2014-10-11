@@ -100,7 +100,7 @@ salem_neutrals = {
         'Kill someone each night. If you are role blocked you will attack the blocker instead (Escort, Consort, and Jailor). You can not be killed at night.'),
     'survivor' : ('Survivor', 'Neutral Benign', 
         'Put on a bulletproof vest at night, protecting yourself from attacks. You can only use the bulletproof vest 4 times. '+
-        'Your vest will be destroyed regardless if you are attacked or not. You cannot protect yourself from the Arsonist\'s ignite, Jailor\'s execution, and Jester\'s haunt.'),
+        'Your vest will be destroyed regardless if you are attacked or not. You cannot protect yourself from the Arsonist\'s ignite, Jailor\'s execution, or Jester\'s haunt.'),
     'witch' : ('Witch', 'Neutral Evil', 
         'Control someone each night. You can only control targetable actions such as detection and killing. You can force people to target themselves. '+
         'Your victim will know they are being controlled. You are immune to roleblocking. You win if you live to see the town lose.')}
@@ -198,8 +198,8 @@ def generate_message_commands(bot):
 
         if len(args):
             if args[0] in ['len', 'size', 'keys']:
-                print settings.data
-                return str(len(settings.data))
+                print settings.loadsettings()
+                return str(len(settings.loadsettings()))
             if args[0] in ['get']:
                 return str(settings.getdata(args[1]))
             if args[0] in ['set']:
@@ -211,8 +211,17 @@ def generate_message_commands(bot):
                 else:
                     settings.setdata(args[1], args[2])
                     return "Key %s changed: %s -> %s" % (args[1], oldval, args[2])
-
+            if args[0] in ['remove', 'delete', 'del']:
+                try:
+                    settings.deldata(args[1])
+                except:
+                    return "Key %s does not exist." % args[1]
+                else:
+                    return "Key %s deleted." % args[1]
+        return 'Huh?'
     coms.append(command.Command('#!settings', f, bot, groups=me_only_group))
+
+    coms.append(command.SimpleCommand('!battlestation', 'HONK http://i.imgur.com/MRuOzd2.jpg', bot, True, groups=me_only_group))
 
     ######################################################################
     # Mod message_commands
@@ -308,10 +317,23 @@ def generate_message_commands(bot):
     #coms.append(command.Command('!amisub', f, bot))
  
     def f(channel, user, message, args, data, bot):
-        import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi
-        if len(args):
+        import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi, settings
+        if args:
             channel = args[0].lower()
         streamdata = twitchapi.get('streams/%s' % channel.replace('#',''), 'stream')
+
+        day_str = "{0}, {1} has been streaming for approximately {2.days} days, {2.hours} hours and {2.minutes} minutes."
+        hour_str = "{0}, {1} has been streaming for approximately {2.hours} hours and {2.minutes} minutes."
+        
+        if settings.getdata('%s_is_hosting' % channel):
+            hc = settings.getdata('%s_hosted_channel' % channel)
+        
+            if hc and not args:
+                streamdata = twitchapi.get('streams/%s' % hc, 'stream')
+                channel = hc
+                day_str += ' (hosted channel)'
+                hour_str += ' (hosted channel)'
+
         if streamdata is None:
             return "There is no stream D:"
 
@@ -322,10 +344,10 @@ def generate_message_commands(bot):
 
         reldelta = dateutil.relativedelta.relativedelta(t_now, t_0)
 
-        if not reldelta.days:
-            return "{0}, {1} has been streaming for approximately {2.hours} hours and {2.minutes} minutes.".format(user, channel, reldelta)
+        if reldelta.days:
+            return day_str.format(user, channel, reldelta)
         else:
-            return "{0}, {1} has been streaming for approximately {2.days} days, {2.hours} hours and {2.minutes} minutes.".format(user, channel, reldelta) 
+            return hour_str.format(user, channel, reldelta) 
 
     coms.append(command.Command('!uptime', f, bot, repeatdelay=8))
 
@@ -455,6 +477,10 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('!ytmnd', 'http://superjoe.ytmnd.com (courtesy of Slayerx1177)', 
         bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
 
+    coms.append(command.SimpleCommand('!plugs', 'Youtube: https://youtube.com/user/WatchSuperjoe | Twitter: http://twitter.com/superjoeplays | ' +
+        'Like/Follow/Subscribe/whatever you want, that\'s where you can find me!', 
+        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
+
     
     def f(channel, user, message, args, data, bot):
         return 'It is currently %s in Superjoe Land.' % time.asctime()
@@ -582,6 +608,59 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('#!unregistersalem', f, bot, True, channels=['superjoe'], groups=['salem']))
 
+    ## Salem role curses
+    
+    # Medium 
+
+    def f(channel, user, message, args, data, bot):
+        import settings
+        cursecount = int(settings.trygetset('superjoe_mediums_curse', 0))
+        cursestring = "Oh noes!  The medium has died %s times on night 1."
+
+        if user in bot.oplist:
+            try:
+                if args:
+                    watdo = args[0][0]
+                    if watdo in ['+','-']:
+                        cursecount += int(args[0][1:])
+                    else:
+                        cursecount = int(args[0][1:])
+            except: pass
+            else:
+                settings.setdata('superjoe_mediums_curse', cursecount)
+        elif args:
+            cursestring += '  (Only mods can change the count)'
+
+        return cursestring % cursecount
+                
+    coms.append(command.Command(['!mediumscurse', '!mediumcurse'], f, bot, channels=['superjoe'], groups=['salem'], repeatdelay=10))
+
+    # Escort
+
+    def f(channel, user, message, args, data, bot):
+        import settings
+        cursecount = int(settings.trygetset('superjoe_escorts_curse', 0))
+        cursestring = "Oh noes!  The Escort has found the Serial Killer on the first night %s times."
+
+        if user in bot.oplist:
+            try:
+                if args:
+                    watdo = args[0][0]
+                    if watdo in ['+','-']:
+                        cursecount += int(args[0][1:])
+                    else:
+                        cursecount = int(args[0][1:])
+            except: pass
+            else:
+                settings.setdata('superjoe_escorts_curse', cursecount)
+        elif args:
+            cursestring += '  (Only mods can change the count)'
+
+        return  cursestring % cursecount
+    coms.append(command.Command(['!escortscurse', '!escortcurse'], f, bot, channels=['superjoe'], groups=['salem'], repeatdelay=10))
+
+    ####################
+
     coms.append(command.SimpleCommand(['!salem', '!salemhelp', '!saleminfo'], 
         "Play Town of Salem here: http://www.blankmediagames.com/TownOfSalem/ Make an account, "+
         "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  "+
@@ -591,7 +670,6 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!salemnames', 'http://doc.asdfxyz.de:81/twitch/superjoe/salem/', 
         bot, channels=['superjoe'], groups=['salem'], repeatdelay=8, targeted=True))
-
 
     def f(channel, user, message, args, data, bot):
         if not len(args) or 'wiki' in args[0]:

@@ -157,16 +157,16 @@ class SimpleCommand(Command):
 
         if self.prependuser:
             if self.targeted:
-                if len(args):
-                    res = res % (args[-1:][0] + ': ', self.output)
+                if args:
+                    res = res % (args[0] + ': ', self.output)
                 else:
                     res = res % (user + ': ', self.output)
             else:
                 res = res % (user + ': ', self.output)
         else:
             if self.targeted:
-                if len(args):
-                    res = res % (args[-1:][0] + ': ', self.output)
+                if args:
+                    res = res % (args[0] + ': ', self.output)
                 else:
                     res = res % ('', self.output)
             else:

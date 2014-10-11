@@ -36,7 +36,7 @@ class MyBot(irc.IRCClient):
 
 
     def timer(self):
-        chatmanager.event(self.channel, None, 'timer', time.time(), self, None)
+        chatmanager.event(self.chan(self.channel), None, 'timer', time.time(), self, None)
 
     def signedOn(self):
         self.join(self.factory.channel)

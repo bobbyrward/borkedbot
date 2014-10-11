@@ -58,6 +58,10 @@ def get(path='', key=None):
 
 def getlastdotamatch(idnum):
     r = _apiget('IDOTA2Match_570/GetMatchHistory/V001/?key=%s&matches_requested=1&account_id=%s' % (apikey,idnum))
+    try:
+        r['result']['matches'][0]
+    except:
+        print r
     return r['result']['matches'][0]
 
 def setup(bot):
