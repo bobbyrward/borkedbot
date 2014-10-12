@@ -9,7 +9,7 @@ LOAD_ORDER = 40
 
 WHITELIST = ['monkeys_forever', 'superjoe', 'imayhaveborkedit']
 
-CHECK_THRESHOLD = settings.trygetset('hosting_check_threshold', 30)
+CHECK_THRESHOLD = settings.trygetset('hosting_check_threshold', 60)
 OFFLINE_THRESHOLD = settings.trygetset('hosting_offline_threshold', 300)
 
 def setup(bot):
@@ -17,7 +17,6 @@ def setup(bot):
     settings.setdata('%s_hosted_channel' % bot.channel.replace('#',''), '')
 
 def alert(event):
-
     if event.channel:
         if event.etype == 'jtvmsg':
             if 'Only the channel owner and channel editors can use the /unhost command.' in event.data:
@@ -35,6 +34,8 @@ def alert(event):
 def nowhosting(event):    
     if event.data.startswith('HOSTTARGET') and event.data.split()[1] != '-':
         HOSTED_CHANNEL = event.data.split()[1]
+
+        print event.etype, event.channel, event.data
 
         settings.setdata('%s_is_hosting' % event.channel, True)
         settings.setdata('%s_hosted_channel' % event.channel, event.data.split()[1])
@@ -58,7 +59,7 @@ def nowhosting(event):
 def checkifhostonline(event):
     HOSTED_CHANNEL = settings.getdata('%s_hosted_channel' % event.channel)
 
-    IS_HOSTING = settings.trygetset('%s_is_hosting' % event.channel, False)
+    IS_HOSTING = settings.trygetset('%s_is_hosting' % event.channel, True)
     AUTO_UNHOST = settings.trygetset('%s_auto_unhost' % event.channel, True)
     WHITELIST = settings.trygetset('hosting_whitelist', ['monkeys_forever', 'superjoe', 'imayhaveborkedit']) # This should only be temp
 
@@ -70,10 +71,12 @@ def checkifhostonline(event):
             settings.setdata('%s_last_hosting_check' % event.channel, time.time())
 
         elif check_check_threshold(event.channel):
+            print '[Hosting] Checking if host is online'
             try:
                 streamdata = twitchapi.get('streams/%s' % HOSTED_CHANNEL, 'stream')
             except:
                 print "[Hosting] Error grabbing stream data, probably a bad stream."
+                event.bot.botsay("%s, I don't think that's a real stream.  If it is, the twitch api is kaput." % event.channel)
             else:
                 if streamdata:
                     settings.setdata('%s_last_hosting_check' % event.channel, time.time())

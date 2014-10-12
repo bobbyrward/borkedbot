@@ -92,7 +92,7 @@ salem_neutrals = {
         'Death from fire can\'t be prevented by healing or night immunities. You cannot affect jailed targets. Try not to light yourself on fire.'),
     'executioner' : ('Executioner', 'Neutral Evil', 
         'Trick the Town into lynching your target. Your target is always a Town member. If your target is killed at night you will become a Jester that morning. '+
-        'You cannot be killed at night (retained after target dies, but lost if you turn into a Jester). You win if your target is lynched before the game ends.'),
+        'You cannot be killed at night (retained after target dies, but lost if you turn into a Jester). You win if your target is lynched (while you\'re alive?) before the game ends.'),
     'jester' : ('Jester', 'Neutral Evil', 
         'Trick the Town into lynching you. If you are lynched, you may kill one of the GUILTY voters the following night. '+
         'This goes through any night immunity, however a transporter can swap your target with somebody else and get them killed instead.'),
@@ -349,8 +349,18 @@ def generate_message_commands(bot):
         else:
             return hour_str.format(user, channel, reldelta) 
 
-    coms.append(command.Command('!uptime', f, bot, repeatdelay=8))
+    coms.append(command.Command('!uptime', f, bot, repeatdelay=10))
 
+    def f(channel, user, message, args, data, bot):
+        if args:
+            if bot.usercolors.has_key(args[0].lower()):
+                return bot.usercolors[args[0].lower()]
+            else: 
+                return "No data for %s" % args[0].lower()
+        else:
+            return "Use the command properly, idiot."
+    
+    coms.append(command.Command('!usercolor', f, bot, True, repeatdelay=8))
 
     ######################################################################
     #
@@ -363,11 +373,19 @@ def generate_message_commands(bot):
         import json, os, time, settings, mmr
 
         if channel not in mmr.enabled_channels:
-            return
+            print user, channel
+            if user == channel:
+                rs = '''Hi %s, I can provide accurate MMR and automatically announce ranked \
+                games when they are finished with mmr change and totals.  \
+                All that is required is that you add me on steam and that your dota profile isn't private.  \
+                Type "!mmrsetup" to get started (broadcaster only command).''' % channel
+                return rs
+            else:
+                return
 
-        isupdate = len(args) and args[0].lower() == 'update' and user in bot.oplist
+        isupdate = args and args[0].lower() == 'update' and user in bot.oplist + ['imayhaveborkedit']
 
-        if len(args) and 'update' in args[0].lower() and not isupdate:
+        if args and 'update' in args[0].lower() and not isupdate:
             outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
         else:
             outputstring = "Solo: %s | Party: %s"
@@ -406,7 +424,12 @@ def generate_message_commands(bot):
     
             return outputstring % (mmr,mmrp)
 
-    coms.append(command.Command('!mmr', f, bot, channels=['monkeys_forever', 'kizzmett'], repeatdelay=25))
+    coms.append(command.Command('!mmr', f, bot, repeatdelay=25))
+
+    def f(channel, user, message, args, data, bot):
+        return 'Not yet implemented.'
+
+    coms.append(command.Command('!mmrsetup', f, bot, groups=['broadcaster'],repeatdelay=15))
 
     coms.append(command.SimpleCommand('!mumble', 'doc.asdfxyz.de (default port) 100 slot open server, on 24/7.  Try not to be toxic, or bork will ban you.', 
         bot, channels=['superjoe', 'monkeys_forever'], repeatdelay=10, targeted=True))
@@ -478,14 +501,18 @@ def generate_message_commands(bot):
         bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
 
     coms.append(command.SimpleCommand('!plugs', 'Youtube: https://youtube.com/user/WatchSuperjoe | Twitter: http://twitter.com/superjoeplays | ' +
-        'Like/Follow/Subscribe/whatever you want, that\'s where you can find me!', 
+        'Like/Follow/Subscribe/whatever you want, that\'s where you can find Superjoe!', 
         bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
 
-    
-    def f(channel, user, message, args, data, bot):
-        return 'It is currently %s in Superjoe Land.' % time.asctime()
 
-    coms.append(command.Command('!time', f, bot, channels=['superjoe'], repeatdelay=8))
+    def f(channel, user, message, args, data, bot):
+        import random
+        places = ["Superjoe Land.", "Superjoe's dirty hovel.", "Superjoe's shining kingdom.", "Superjoe's murky swamp.", "Superjoe's haunted house.", 
+        "Superjoe's secret cave under monkeys_forever's house.", "Superjoe's bathtub.", "Superjoe's slave dungeon.", "Superjoe's deflated bouncy castle."]
+
+        return 'It is currently %s in %s' % (time.asctime(), random.choice(places))
+
+    coms.append(command.Command('!time', f, bot, channels=['superjoe'], repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
         try:
@@ -519,10 +546,11 @@ def generate_message_commands(bot):
         
         # Rewrite the file
         with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
-            fi.write("<html><pre>\n")
-            fi.write("Superjoe Town of Salem chat names\nLast update: %s\n\n" % time.asctime())
-            fi.write("Name Format:\nTwitch name: Salem name\n\n")
-            fi.write("superjoe: SuperJoe\n\n")
+            fi.write('<html>\n<link rel="stylesheet" type="text/css" href="main.css">\n<body>\n')
+            fi.write("<h1>Superjoe Town of Salem chat names</h1>\n<h5>Last update: %s</h5>\n\n" % time.asctime())
+
+            fi.write("<p>Name Format:<br />Twitch name: Salem name</p>\n")
+            fi.write("<p>superjoe: SuperJoe</p>\n\n")
 
             normals = []
             subs = []
@@ -530,17 +558,29 @@ def generate_message_commands(bot):
             for u in nameDB.keys():
                 (subs if u in sublist else normals).append(u)
 
-            fi.write('== Subs (%s) ==\n\n' % len(subs))
+            fi.write('<h2>Subs (%s)</h2>\n' % len(subs))
+            fi.write('<ul>\n')
 
             for d in sorted(subs):
-                fi.write('%s: %s\n'%(d, nameDB[d]))
+                if bot.usercolors.has_key(d):
+                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
+                else:
+                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
 
-            fi.write('\n== Non-Subs (%s) ==\n\n' % len(normals))
+            fi.write('\n</ul>\n\n')
+
+            fi.write('<h2>Non-Subs (%s)</h2>\n' % len(normals))
 
             for d in sorted(normals):
-                fi.write('%s: %s\n'%(d, nameDB[d]))
+                # fi.write('<li>%s: %s</li>\n'%(d, nameDB[d]))
+                if bot.usercolors.has_key(d):
+                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
+                else:
+                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
+            
+            fi.write('\n</ul>\n')
 
-            fi.write("</pre></html>")
+            fi.write("</body></html>")
 
         with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
             cPickle.dump(nameDB, fi2)
@@ -574,10 +614,11 @@ def generate_message_commands(bot):
         open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
         
         with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
-            fi.write("<html><pre>\n")
-            fi.write("Superjoe Town of Salem chat names\nLast update: %s\n\n" % time.asctime())
-            fi.write("Name Format:\nTwitch name: Salem name\n\n")
-            fi.write("superjoe: SuperJoe\n\n")
+            fi.write('<html>\n<link rel="stylesheet" type="text/css" href="main.css">\n<body>\n')
+            fi.write("<h1>Superjoe Town of Salem chat names</h1>\n<h5>Last update: %s</h5>\n\n" % time.asctime())
+
+            fi.write("<p>Name Format:<br />Twitch name: Salem name</p>\n")
+            fi.write("<p>superjoe: SuperJoe</p>\n\n")
 
             normals = []
             subs = []
@@ -585,17 +626,30 @@ def generate_message_commands(bot):
             for u in nameDB.keys():
                 (subs if u in sublist else normals).append(u)
 
-            fi.write('== Subs (%s) ==\n\n' % len(subs))
+            fi.write('<h2>Subs (%s)</h2>\n' % len(subs))
+            fi.write('<ul>\n')
 
             for d in sorted(subs):
-                fi.write('%s: %s\n'%(d, nameDB[d]))
+                # fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
+                if bot.usercolors.has_key(d):
+                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
+                else:
+                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
 
-            fi.write('\n== Non-Subs (%s) ==\n\n' % len(normals))
+            fi.write('\n</ul>\n\n')
+
+            fi.write('<h2>Non-Subs (%s)</h2>\n' % len(normals))
 
             for d in sorted(normals):
-                fi.write('%s: %s\n'%(d, nameDB[d]))
+                # fi.write('<li>%s: %s</li>\n'%(d, nameDB[d]))
+                if bot.usercolors.has_key(d):
+                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
+                else:
+                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
+            
+            fi.write('\n</ul>\n')
 
-            fi.write("</pre></html>")
+            fi.write("</body></html>")
 
         with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
             cPickle.dump(nameDB, fi2)
@@ -647,9 +701,9 @@ def generate_message_commands(bot):
                 if args:
                     watdo = args[0][0]
                     if watdo in ['+','-']:
-                        cursecount += int(args[0][1:])
+                        cursecount += int(args[0])
                     else:
-                        cursecount = int(args[0][1:])
+                        cursecount = int(args[0])
             except: pass
             else:
                 settings.setdata('superjoe_escorts_curse', cursecount)

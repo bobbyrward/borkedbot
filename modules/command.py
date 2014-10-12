@@ -80,7 +80,7 @@ class Command(object):
         if 'special' in self.groups and user != 'imayhaveborkedit':
             return SPECIAL_RESTRICTED
 
-        if 'host' in self.groups and user not in [channel, 'imayhaveborkedit']:
+        if 'broadcaster' in self.groups and user not in [channel, 'imayhaveborkedit']:
             return HOST_RESTRICTED
 
         if self.opcom and user not in self.bot.oplist + ['imayhaveborkedit']:
@@ -112,7 +112,11 @@ class Command(object):
         self.lastuse = self._htime()
 
         if self.outfunc is not None:
-            return (self.outfunc(channel, user, message, args, self.data, self.bot), OK)
+            fout = self.outfunc(channel, user, message, args, self.data, self.bot)
+            if fout is not None:
+                return (fout, OK)
+            else:
+                return (None, None)
         else: 
             raise RuntimeError("No function specified")
 

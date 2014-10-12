@@ -16,6 +16,7 @@ class MyBot(irc.IRCClient):
     oplist = []
     userlist = [] # RIP TWITCHCLENT 1
     channelsubs = []
+    usercolors = {}
 
     gotops = False
 
@@ -56,6 +57,8 @@ class MyBot(irc.IRCClient):
         self.timertask = task.LoopingCall(self.timer)
         self.timertask.start(15, True)
 
+        self.botsay('/mods')
+
     def receivedMOTD(self, motd):
         print '\n### MOTD ###'
         print '\n'.join(motd)
@@ -76,12 +79,12 @@ class MyBot(irc.IRCClient):
 
         if sett and modes == 'o':
             for u in args:
-                self.oplist.append(u)
+                self.oplist.append(u) # Not sure if should leave in or not
                 chatmanager.event(self.chan(channel), user, 'op', u, self, True)
         elif not sett and modes == 'o':
             for u in args:
                 try:
-                    self.oplist.remove(u)
+                    self.oplist.remove(u) # Not sure if should leave in or not
                 except: pass
                 chatmanager.event(self.chan(channel), user, 'deop', u, self, True)
 
@@ -90,7 +93,7 @@ class MyBot(irc.IRCClient):
     def privmsg(self, user, channel, msg):
         fulluser = user
         user = user.split("!")[0]
-        
+
         if channel != self.factory.channel:
             if msg.split()[0] in ['EMOTESET', 'USERCOLOR']:
                 return
@@ -101,12 +104,15 @@ class MyBot(irc.IRCClient):
             elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'turbo':
                 return
 
-            print "INFO (%s): %s" % (channel, msg)
-            chatmanager.event(self.chan(channel), None, 'infomsg', msg, self, user in self.oplist)
+            # print "INFO (#%s): %s" % (channel, msg)
+            chatmanager.event(self.chan(self.channel), None, 'infomsg', msg, self, user in self.oplist)
             return
 
         if user == 'jtv':
-            if msg.split()[0] in ['EMOTESET', 'USERCOLOR']:
+            if msg.split()[0] in ['EMOTESET']:
+                return
+            if msg.split()[0] in ['USERCOLOR']:
+                self.usercolors[msg.split()[1]] =  msg.split()[2]
                 return
             elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'subscriber':
                 self.channelsubs.append(msg.split()[1])
@@ -116,7 +122,11 @@ class MyBot(irc.IRCClient):
                 return
 
 
-            print "INFO from ttv (%s): %s" % (channel, msg)
+            # print "INFO from ttv (%s): %s" % (channel, msg)
+            
+            if 'The moderators of this room are:' in msg:
+                self.oplist = msg.split(': ')[1].split(', ')
+            
             chatmanager.event(self.chan(channel), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
             return
 

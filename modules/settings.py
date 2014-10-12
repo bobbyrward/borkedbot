@@ -29,7 +29,7 @@ def getdata(key):
 def setdata(key, value, announce=True):
     data = loadsettings()
 
-    if key in data.keys():
+    if data.has_key(key):
         if data[key] != value and announce:
             print "[Settings] Key %s changed: %s -> %s" % (key, data[key], value)
     
@@ -45,7 +45,12 @@ def trygetset(key, value, announce=True):
     try:
         return data[key]
     except:
-        setdata(key, value, announce)
+        if key not in data.keys():
+            print "[Settings] Key added: %s (%s)" % (key, value)
+
+        data[key] = value
+        
+        savesettings(data)
         return data[key] 
 
 def deldata(key, announce=True):
