@@ -386,7 +386,10 @@ def generate_message_commands(bot):
         isupdate = args and args[0].lower() == 'update' and user in bot.oplist + ['imayhaveborkedit']
 
         if args and 'update' in args[0].lower() and not isupdate:
-            outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
+            if user == 'gggccca7x':
+                outputstring = "stfu gggccca7x"
+            else:
+                outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
         else:
             outputstring = "Solo: %s | Party: %s"
 
@@ -421,13 +424,13 @@ def generate_message_commands(bot):
     
             mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
             mmrp = dotadata['gameAccountClient']['competitiveRank']
-    
+
             return outputstring % (mmr,mmrp)
 
     coms.append(command.Command('!mmr', f, bot, repeatdelay=25))
 
     def f(channel, user, message, args, data, bot):
-        return 'Not yet implemented.'
+        return 'Not yet implemented.  Must be done manually.  Ask imayhaveborkedit to help set it up.'
 
     coms.append(command.Command('!mmrsetup', f, bot, groups=['broadcaster'],repeatdelay=15))
 

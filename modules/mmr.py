@@ -78,7 +78,6 @@ def checktimeout(channel):
         settings.setdata('%s_last_is_streaming_check' % channel, time.time(), False)
 
     getmatchtimeout = settings.trygetset('%s_get_match_timeout' % channel, 30)
-
     lastmatchfetch = settings.trygetset('%s_last_match_fetch' % channel, time.time())
     
     return time.time() - int(getmatchtimeout) > float(lastmatchfetch)
