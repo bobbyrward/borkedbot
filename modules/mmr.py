@@ -21,7 +21,7 @@ def alert(event):
 
 def mmr(channel):
     if checktimeout(channel):
-        settings.setdata('%s_last_match_fetch' % channel, time.time(), False)
+        settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
         
         dotaid = settings.getdata('%s_dota_id' % channel)
 
@@ -35,7 +35,7 @@ def mmr(channel):
         
         if previousmatch['match_id'] != latestmatch['match_id'] and str(latestmatch['lobby_type']) == '7':
             print "[MMR] Match ID change found (%s:%s)" % (previousmatch['match_id'], latestmatch['match_id'])
-            settings.setdata('%s_last_match' % channel, latestmatch, False)
+            settings.setdata('%s_last_match' % channel, latestmatch, announce=False)
 
             outputstring = "Solo: %s | Party: %s"
 
@@ -75,7 +75,7 @@ def checktimeout(channel):
         else:
            getmatchtimeout = settings.trygetset('%s_get_offline_match_timeout' % channel, 90)
 
-        settings.setdata('%s_last_is_streaming_check' % channel, time.time(), False)
+        settings.setdata('%s_last_is_streaming_check' % channel, time.time(), announce=False)
 
     getmatchtimeout = settings.trygetset('%s_get_match_timeout' % channel, 30)
     lastmatchfetch = settings.trygetset('%s_last_match_fetch' % channel, time.time())

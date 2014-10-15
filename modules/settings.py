@@ -1,64 +1,42 @@
 import sys
 sys.dont_write_bytecode = True
 
-import os, cPickle
+import os, cPickle, redis
 
 LOAD_ORDER = 50
 
-datafilename = 'settings.data'
-
-if not os.path.isfile(datafilename):
-    with open(datafilename, 'w') as f:
-        cPickle.dump(dict(), f)
+redisdb = redis.StrictRedis(db=3)
 
 
-def loadsettings():
-    with open(datafilename, 'r') as f:
-        data = cPickle.load(f)
-    return data
+def getdata(key, domain='settings-global', coerceto=None):
+    result = cPickle.loads(redisdb.hget(domain, key))
 
+    if coerceto:
+        return coerceto(result)
+    else:
+        return result
 
-def savesettings(data):
-    with open(datafilename, 'w') as f:
-        cPickle.dump(data, f)
-
-def getdata(key):
-    data = loadsettings()
-    return data[key]
-
-def setdata(key, value, announce=True):
-    data = loadsettings()
-
-    if data.has_key(key):
-        if data[key] != value and announce:
-            print "[Settings] Key %s changed: %s -> %s" % (key, data[key], value)
+def setdata(key, value, domain='settings-global', announce=True):
+    oldresult = cPickle.loads(redisdb.hget(domain, key))
+    isnew = redisdb.hset(domain, key, cPickle.dumps(value))
     
-    if key not in data.keys():
+    if isnew:
         print "[Settings] Key added: %s (%s)" % (key, value)
+    elif announce:
+        print "[Settings] Key %s changed: %s -> %s" % (key, oldresult, value)
 
-    data[key] = value
-    
-    savesettings(data)
+def trygetset(key, value, domain='settings-global', coerceto=None, announce=True):
+    if not redisdb.hexists(domain, key):
+        print "[Settings] Key added: %s (%s)" % (key, value)
+        setdata(key, value, domain, announce)
 
-def trygetset(key, value, announce=True):
-    data = loadsettings()
-    try:
-        return data[key]
-    except:
-        if key not in data.keys():
-            print "[Settings] Key added: %s (%s)" % (key, value)
+    return getdata(key, domain, coerceto)
 
-        data[key] = value
-        
-        savesettings(data)
-        return data[key] 
 
-def deldata(key, announce=True):
-    data = loadsettings()
+def deldata(key, domain='settings-global', announce=True):
     if announce:
         print "[Settings] Key deleted: %s" % key
-    data.pop(key)
-    savesettings(data)
+    redisdb.hdel(key)
 
 def setup(bot):
     return

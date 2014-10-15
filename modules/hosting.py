@@ -87,8 +87,8 @@ def checkifhostonline(event):
 
 
 def check_check_threshold(chan):
-    return time.time() - settings.getdata('%s_last_hosting_check' % chan) > CHECK_THRESHOLD
+    return time.time() - settings.getdata('%s_last_hosting_check' % chan, coerceto=float) > CHECK_THRESHOLD
 
 def check_offline_threshold(chan):
-    return time.time() - settings.getdata('%s_last_hosting_check' % chan) > OFFLINE_THRESHOLD
+    return time.time() - settings.getdata('%s_last_hosting_check' % chan, coerceto=float) > OFFLINE_THRESHOLD
 
