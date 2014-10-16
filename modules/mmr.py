@@ -40,9 +40,9 @@ def mmr(channel):
             matchdata = steamapi.GetMatchDetails(latestmatch['match_id'])
 
             for p in matchdata['result']['players']:
-               if int(p['account_id']) == 86811043:
-                   playerdata = p
-                   break
+                if p['account_id'] == dotaid:
+                    playerdata = p
+                    break
 
             dota_gpm = playerdata['gold_per_min']
             dota_xpm = playerdata['xp_per_min']
