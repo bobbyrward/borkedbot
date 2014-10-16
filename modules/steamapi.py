@@ -53,23 +53,31 @@ DOTA_MATCH_TYPES = {
 
 
 def _apiget(path):
-    return requests.get(root+path).json()
+    rrr = requests.get(root+path)
+    if rrr.status_code != 200: 
+        print rrr, rrr.reason, '\n', rrr.text
+    return rrr
 
 def get(path='', key=None):
+    print 'WHY IS THIS BEING USED'
     return _apiget(path) if not key else _apiget(path)[key]
 
-def get_call(apipath, **args):
-    apicall = apipath + '?key=%s' % key
+def _get_call(apipath, **args):
+    apicall = apipath + '?key=%s' % apikey
     for a in args:
         apicall += '&%s=%s' % (a, args[a])
-    return _apiget(apicall)
+
+    requestdata = requests.get(apicall)
+    if requestdata.status_code != 200:
+        print requestdata, requestdata.reason, '\n', requestdata.text
+    return requestdata.json()
 
 def getlastdotamatch(idnum):
-    r = _apiget('IDOTA2Match_570/GetMatchHistory/V001/?key=%s&matches_requested=1&account_id=%s' % (apikey,idnum))
+    r = _apiget('IDOTA2Match_570/GetMatchHistory/V001/?key=%s&matches_requested=1&account_id=%s' % (apikey,idnum)).json()
     try:
         r['result']['matches'][0]
     except:
-        print r
+        print 'HELP', r
     return r['result']['matches'][0]
 
 
@@ -81,42 +89,42 @@ def GetMatchHistory(
     
     args = {k:v for k,v in locals().items() if v is not None}
     p = "https://api.steampowered.com/IDOTA2Match_570/GetMatchHistory/v001/"
-    return get_call(p, **args)
+    return _get_call(p, **args)
 
 def GetMatchDetails(match_id=None):
     args = {k:v for k,v in locals().items() if v is not None}
     p = "https://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v001/"
-    return get_call(p, **args)
+    return _get_call(p, **args)
 
 def GetMatchHistoryBySequenceNum(start_at_match_seq_num=None, matches_requested=None):
     args = {k:v for k,v in locals().items() if v is not None}
     p = "https://api.steampowered.com/IDOTA2Match_570/GetMatchHistoryBySequenceNum/v0001/"
-    return get_call(p, **args)
+    return _get_call(p, **args)
 
 def GetHeroes():
     p = "https://api.steampowered.com/IEconDOTA2_570/GetHeroes/v0001/"
-    return get_call(p)
+    return _get_call(p)
 
 def GetLeagueListing():
     p = "https://api.steampowered.com/IDOTA2Match_570/GetLeagueListing/v0001/"
-    return get_call(p)
+    return _get_call(p)
 
 def GetLiveLeagueGames():
     p = "https://api.steampowered.com/IDOTA2Match_570/GetLiveLeagueGames/v0001/"
-    return get_call(p)
+    return _get_call(p)
 
 def GetTeamInfoByTeamID(start_at_team_id = None, teams_requested = None):
     args = {k:v for k,v in locals().items() if v is not None}
     p = "https://api.steampowered.com/IDOTA2Match_570/GetTeamInfoByTeamID/v001/"
-    return get_call(p, **args)
+    return _get_call(p, **args)
 
 def GetPlayerSummaries():
     p = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/"
-    return get_call(p)
+    return _get_call(p)
 
 def GetSchema():
     p = "https://api.steampowered.com/IEconItems_570/GetSchema/v0001/"
-    return get_call(p)
+    return _get_call(p)
 
 
 

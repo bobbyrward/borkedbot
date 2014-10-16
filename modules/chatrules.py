@@ -197,11 +197,12 @@ def generate_message_commands(bot):
         import settings
 
         if len(args):
-            if args[0] in ['len', 'size', 'keys']:
-                print settings.loadsettings()
-                return str(len(settings.loadsettings()))
+            if args[0] in ['len', 'size']:
+                return str(settings.numkeys())
+            
             if args[0] in ['get']:
                 return str(settings.getdata(args[1]))
+            
             if args[0] in ['set']:
                 try:
                     oldval = settings.getdata(args[1])
@@ -211,6 +212,7 @@ def generate_message_commands(bot):
                 else:
                     settings.setdata(args[1], args[2])
                     return "Key %s changed: %s -> %s" % (args[1], oldval, args[2])
+            
             if args[0] in ['remove', 'delete', 'del']:
                 try:
                     settings.deldata(args[1])
@@ -218,6 +220,10 @@ def generate_message_commands(bot):
                     return "Key %s does not exist." % args[1]
                 else:
                     return "Key %s deleted." % args[1]
+            
+            if args[0] in ['dump']:
+                print settings.dumpkeys()
+                return 'Done, see console.'
         return 'Huh?'
     coms.append(command.Command('#!settings', f, bot, groups=me_only_group))
 

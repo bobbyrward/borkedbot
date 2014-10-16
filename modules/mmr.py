@@ -37,6 +37,25 @@ def mmr(channel):
             print "[MMR] Match ID change found (%s:%s)" % (previousmatch['match_id'], latestmatch['match_id'])
             settings.setdata('%s_last_match' % channel, latestmatch, announce=False)
 
+            matchdata = steamapi.GetMatchDetails(latestmatch['match_id'])
+
+            for p in matchdata['result']['players']:
+               if int(p['account_id']) == 86811043:
+                   playerdata = p
+                   break
+
+            dota_gpm = playerdata['gold_per_min']
+            dota_xpm = playerdata['xp_per_min']
+
+            dota_level = playerdata['level']
+
+            dota_kills = playerdata['kills']
+            dota_deaths = playerdata['deaths']
+            dota_assists = playerdata['assists']
+
+            dota_lasthits = playerdata['last_hits']
+            dota_denies = playerdata['denies']
+
             outputstring = "Solo: %s | Party: %s"
 
             print "[MMR] Updating mmr"
@@ -62,8 +81,13 @@ def mmr(channel):
             if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
 
             newmmrstring = outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
-            print "[MMR] %s has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
-            return "%s has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
+
+            extramatchdata = " | KDA: %s/%s/%s | CS: %s/%s | GPM: %s | XPM: %s"
+
+            finaloutput = "%s has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
+
+            print "[MMR] " + finaloutput + extramatchdata
+            return finaloutput
 
 def checktimeout(channel):
     laststreamcheck = settings.trygetset('%s_last_is_streaming_check' % channel, time.time())
