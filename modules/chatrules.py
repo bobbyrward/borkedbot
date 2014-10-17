@@ -241,6 +241,7 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('#!bursday', "Happy Bursday! http://www.youtube.com/watch?v=WCYzk67y_wc", bot, True))
 
     coms.append(command.SimpleCommand('#!riot', 'ヽ༼ຈل͜ຈ༽ﾉ', bot, True, prependuser = False))
+    coms.append(command.SimpleCommand('#!shrug', '¯\_(ツ)_/¯', bot, True, prependuser = False))
 
     #coms.append(command.SimpleCommand('#!subcount', '%s' % len(bot.channelsubs), bot, True))
 
@@ -307,7 +308,6 @@ def generate_message_commands(bot):
             return "Uhhh... I got nothing."
         else:
             return thing
-            # Might add a cooldown message
 
     coms.append(command.Command('!saysomething', f, bot, repeatdelay=30))
 
@@ -317,11 +317,6 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever'], data=magic8ball))
 
-    #def f(channel, user, message, args, data, bot):
-    #    return '%s: %s' % (user, 'yes' if user in bot.channelsubs else 'no')
-#
-    #coms.append(command.Command('!amisub', f, bot))
- 
     def f(channel, user, message, args, data, bot):
         import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi, settings
         if args:
@@ -355,7 +350,7 @@ def generate_message_commands(bot):
         else:
             return hour_str.format(user, channel, reldelta) 
 
-    coms.append(command.Command('!uptime', f, bot, repeatdelay=10))
+    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=10))
 
     def f(channel, user, message, args, data, bot):
         if args:
@@ -436,6 +431,30 @@ def generate_message_commands(bot):
     coms.append(command.Command('!mmr', f, bot, repeatdelay=25))
 
     def f(channel, user, message, args, data, bot):
+        '''
+
+
+        mmmm    mmmm        mmmmmmm m    m mmmmm   mmmm
+        #   "m m"  "m          #    #    #   #    #"   "
+        #    # #    #          #    #mmmm#   #    "#mmm
+        #    # #    #          #    #    #   #        "#
+        #mmm"   #mm#           #    #    # mm#mm  "mmm#"
+
+
+
+        Two options: 
+            !mmrsetup addme <link or id>
+            !mmrsetup addyou
+
+        addme:
+            Parse link or id, add them as friend
+
+        addyou:
+            Link to steam profile and steam://friends/add/76561198153108180
+
+        I need to figure out what happens when you try to get a non friend mmr, catch that, and whatever else afterwards.
+
+        ''' 
         return 'Not yet implemented.  Must be done manually.  Ask imayhaveborkedit to help set it up.'
 
     coms.append(command.Command('!mmrsetup', f, bot, groups=['broadcaster'],repeatdelay=15))

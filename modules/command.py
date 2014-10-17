@@ -83,7 +83,7 @@ class Command(object):
         if 'broadcaster' in self.groups and user not in [channel, 'imayhaveborkedit']:
             return HOST_RESTRICTED
 
-        if self.opcom and user not in self.bot.oplist + ['imayhaveborkedit']:
+        if self.opcom and user not in self.bot.oplist | {'imayhaveborkedit'}:
             return OP_RESTRICTED
 
         if not self._checkdelay():
@@ -201,3 +201,8 @@ def alert(event):
 #        self.data = data
 #        self.groups = groups
 #        self.repeatdelay = repeatdelay
+
+
+class Commander(object):
+    def __init__(self):
+        self.commands = set()

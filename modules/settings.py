@@ -19,7 +19,13 @@ def getdata(key, domain='settings-global', coerceto=None):
 
 
 def setdata(key, value, domain='settings-global', announce=True):
-    oldresult = cPickle.loads(redisdb.hget(domain, key))
+    oldr = redisdb.hget(domain, key)
+    
+    if oldr:
+        oldresult = cPickle.loads(oldr)
+    else:
+        oldresult = oldr
+
     isnew = redisdb.hset(domain, key, cPickle.dumps(value))
     
     if isnew:

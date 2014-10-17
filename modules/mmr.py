@@ -22,7 +22,7 @@ def alert(event):
 def mmr(channel):
     if checktimeout(channel):
         settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
-        
+
         dotaid = settings.getdata('%s_dota_id' % channel)
 
         if dotaid is None:
@@ -32,7 +32,7 @@ def mmr(channel):
         latestmatch = steamapi.getlastdotamatch(dotaid)
         previousmatch = settings.trygetset('%s_last_match' % channel, latestmatch)
 
-        
+
         if previousmatch['match_id'] != latestmatch['match_id'] and str(latestmatch['lobby_type']) == '7':
             print "[MMR] Match ID change found (%s:%s)" % (previousmatch['match_id'], latestmatch['match_id'])
             settings.setdata('%s_last_match' % channel, latestmatch, announce=False)
@@ -82,17 +82,17 @@ def mmr(channel):
 
             newmmrstring = outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
 
-            extramatchdata = " | KDA: %s/%s/%s | CS: %s/%s | GPM: %s | XPM: %s"
+            extramatchdata = " | KDA: %s/%s/%s | CS: %s/%s | GPM: %s | XPM: %s" % (dota_kills, dota_deaths, dota_assists, dota_lasthits, dota_denies, dota_gpm, dota_xpm)
 
             finaloutput = "%s has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
 
             print "[MMR] " + finaloutput + extramatchdata
-            return finaloutput
+            return finaloutput + extramatchdata
 
 def checktimeout(channel):
     laststreamcheck = settings.trygetset('%s_last_is_streaming_check' % channel, time.time())
     streamchecktimeout = settings.trygetset('%s_is_streaming_timeout' % channel, 30)
-    
+
     if time.time() - int(streamchecktimeout) > float(laststreamcheck):
         if twitchapi.is_streaming(channel):
            getmatchtimeout = settings.trygetset('%s_get_online_match_timeout' % channel, 20)
@@ -103,5 +103,5 @@ def checktimeout(channel):
 
     getmatchtimeout = settings.trygetset('%s_get_match_timeout' % channel, 30)
     lastmatchfetch = settings.trygetset('%s_last_match_fetch' % channel, time.time())
-    
+
     return time.time() - int(getmatchtimeout) > float(lastmatchfetch)

@@ -13,7 +13,8 @@ import chatmanager
 class MyBot(irc.IRCClient):
     lineRate = 3
 
-    oplist = []
+    opsinchan = set()
+    oplist = set()
     userlist = [] # RIP TWITCHCLENT 1
     channelsubs = []
     usercolors = {}
@@ -37,15 +38,15 @@ class MyBot(irc.IRCClient):
 
 
     def timer(self):
-        chatmanager.event(self.chan(self.channel), None, 'timer', time.time(), self, None)
+        chatmanager.event(self.chan(), None, 'timer', time.time(), self, None)
 
     def signedOn(self):
         self.join(self.factory.channel)
         print "Signed on as %s.\n" % self.nickname
-        self.oplist.append(self.factory.channel.replace('#', ''))
-        
+        self.oplist.add(self.chan())
+
         self.sendLine('TWITCHCLIENT 3') # Oh boy here we go
-        
+
         chatmanager.setup(self)
         chatmanager.event(None, None, 'serverjoin', None, self, None)
 
@@ -79,16 +80,19 @@ class MyBot(irc.IRCClient):
 
         if sett and modes == 'o':
             for u in args:
-                self.oplist.append(u) # Not sure if should leave in or not
+                self.opsinchan.add(u)
                 chatmanager.event(self.chan(channel), user, 'op', u, self, True)
+        
         elif not sett and modes == 'o':
             for u in args:
-                try:
-                    self.oplist.remove(u) # Not sure if should leave in or not
-                except: pass
+                self.opsinchan.discard(u)
                 chatmanager.event(self.chan(channel), user, 'deop', u, self, True)
 
-        self.oplist = list(set(self.oplist))
+        if self.opsinchan - self.oplist:
+            print "WE HAVE A MOD DISCREPANCY HERE:"
+            print self.opsinchan - self.oplist
+            print
+
 
     def privmsg(self, user, channel, msg):
         fulluser = user
@@ -105,7 +109,7 @@ class MyBot(irc.IRCClient):
                 return
 
             # print "INFO (#%s): %s" % (channel, msg)
-            chatmanager.event(self.chan(self.channel), None, 'infomsg', msg, self, user in self.oplist)
+            chatmanager.event(self.chan(), None, 'infomsg', msg, self, user in self.oplist)
             return
 
         if user == 'jtv':
@@ -125,7 +129,7 @@ class MyBot(irc.IRCClient):
             # print "INFO from ttv (%s): %s" % (channel, msg)
             
             if 'The moderators of this room are:' in msg:
-                self.oplist = msg.split(': ')[1].split(', ')
+                self.oplist = set(msg.split(': ')[1].split(', '))
             
             chatmanager.event(self.chan(channel), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
             return
@@ -138,7 +142,8 @@ class MyBot(irc.IRCClient):
         #       def event(channel, user, etype, data, bot, isop):
         chatmanager.event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
 
-    def chan(self, c):
+    def chan(self, c=None):
+        if c is None: c = self.channel
         return c.replace('#','')
 
     def userJoined(self, user, channel):

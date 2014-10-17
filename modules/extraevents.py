@@ -15,7 +15,7 @@ def alert(event):
     if event.etype == 'twitchnotify':
         if event.channel in ['unsanitylive', 'monkeys_forever', 'superjoe', 'kizzmett']:
             if 'just subscribed!' in event.data:
-                event.bot.botsay('SUB HYPE! PRAISE %s ヽ༼ຈل͜ຈ༽ﾉ' % event.data.split()[0].upper())
+                event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s' % event.data.split()[0].upper())
 
 
     if event.etype == 'msg' and 'borkedbot' in event.bot.oplist: 
