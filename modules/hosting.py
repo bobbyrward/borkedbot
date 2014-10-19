@@ -7,7 +7,7 @@ import twitchapi, settings
 
 LOAD_ORDER = 40
 
-WHITELIST = ['monkeys_forever', 'superjoe', 'imayhaveborkedit']
+WHITELIST = ['monkeys_forever', 'superjoe', 'imayhaveborkedit', 'mynameisamanda']
 
 CHECK_THRESHOLD = settings.trygetset('hosting_check_threshold', 60)
 OFFLINE_THRESHOLD = settings.trygetset('hosting_offline_threshold', 300)
@@ -31,7 +31,7 @@ def alert(event):
             checkifhostonline(event)
 
 
-def nowhosting(event):    
+def nowhosting(event):
     if event.data.startswith('HOSTTARGET') and event.data.split()[1] != '-':
         HOSTED_CHANNEL = event.data.split()[1]
 
@@ -45,7 +45,7 @@ def nowhosting(event):
         print '[Hosting] WE ARE NOW HOSTING %s' % HOSTED_CHANNEL
 
         if streamdata:
-            event.bot.botsay("Now hosting %s, playing %s.  All %s of you, go check it out! %s" % 
+            event.bot.botsay("Now hosting %s, playing %s.  All %s of you, go check it out! %s" %
                 (HOSTED_CHANNEL, str(streamdata['game']), event.data.split()[2],'http://twitch.tv/%s' % HOSTED_CHANNEL))
         else:
             print "[Hosting] %s is not streaming." % HOSTED_CHANNEL

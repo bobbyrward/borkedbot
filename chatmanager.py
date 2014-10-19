@@ -21,10 +21,10 @@ INFO_OUTPUT = True
 RELOAD_MODULES = True
 
 def doreload(bot):
-    if RELOAD_MODULES: 
+    if RELOAD_MODULES:
         _manage_modules()
 
-        for m in imported_modules:            
+        for m in imported_modules:
             if os.path.getmtime(m.__file__) > modules_mtime[m]:
                 _info("Reloading %s" % m.__name__)
                 try:
@@ -42,7 +42,7 @@ def doreload(bot):
 # This is the entry point for a bot using this
 def setup(bot):
     import_time = time.time()
-    
+
     _manage_modules()
 
     import_time2 = ((time.time() - import_time) * 1000)
@@ -74,7 +74,7 @@ def _manage_modules():
         # TODO: Add __import__(channelname.py) or whatever
 
         fresh_imports = modules._m_imports
-        
+
         for fi in fresh_imports:
             if getattr(fi, 'DISABLE_MODULE', False):
                 _info("%s has been disabled and will be disregarded." % fi.__name__)
@@ -115,7 +115,7 @@ def _manage_modules():
 
             for mm in imported_modules:
                 modules_mtime[mm] = os.path.getmtime(mm.__file__)
-            
+
         if len(removed_imports):
             _info("Removing %s modules:" % len(removed_imports))
             [_info('- %s'%m.__name__) for m in removed_imports]
@@ -131,11 +131,11 @@ def _init_modules(bot):
 
     for m in imported_modules:
         start_time = time.time()
-        
+
         _init_module(m, bot)
-        
+
         _debug('Done in', False)
-        
+
         stop_time = ((time.time() - start_time) * 1000)
         _debug("%4.4f ms" % stop_time)
 
@@ -148,14 +148,14 @@ def _init_module(m, bot):
     _debug("- %s..." % m.__name__,False)
 
     setup_result = True
-    
+
     try:
         setup_result = m.setup(bot)
     except Exception as ee:
         print "Setup failure for %s" % m.__name__
         print traceback.format_exc()
         print
-        
+
         setup_result = False
 
     if not setup_result and setup_result is not None:
@@ -217,7 +217,7 @@ def _info(o, nl=True):
             print o,
 
 
-def _pr(xx): 
+def _pr(xx):
     print xx
 
 

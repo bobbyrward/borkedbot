@@ -101,9 +101,10 @@ def GetMatchHistoryBySequenceNum(start_at_match_seq_num=None, matches_requested=
     p = "https://api.steampowered.com/IDOTA2Match_570/GetMatchHistoryBySequenceNum/v0001/"
     return _get_call(p, **args)
 
-def GetHeroes():
+def GetHeroes(language='en_us'):
+    args = {k:v for k,v in locals().items() if v is not None}
     p = "https://api.steampowered.com/IEconDOTA2_570/GetHeroes/v0001/"
-    return _get_call(p)
+    return _get_call(p, **args)
 
 def GetLeagueListing():
     p = "https://api.steampowered.com/IDOTA2Match_570/GetLeagueListing/v0001/"

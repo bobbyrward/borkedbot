@@ -18,7 +18,7 @@ def alert(event):
                 event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s' % event.data.split()[0].upper())
 
 
-    if event.etype == 'msg' and 'borkedbot' in event.bot.oplist: 
+    if event.etype == 'msg' and 'borkedbot' in event.bot.oplist:
         if 'http://steamcommumlity.com' in event.data:
             event.bot.botsay(".timeout %s 900000" % event.user)
             event.bot.botsay(".ban %s" % event.user)

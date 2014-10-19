@@ -17,7 +17,7 @@ class SPECIAL_RESTRICTED(): pass    # Only I can use these
 
 
 class Command(object):
-    def __init__(self, trigger, outfunc, bot, opcom = False, channels = [], chanblacklist = [], data = None, groups = [], 
+    def __init__(self, trigger, outfunc, bot, opcom = False, channels = [], chanblacklist = [], data = None, groups = [],
         repeatdelay = 0, casesensitive = False):
 
         self.trigger = trigger
@@ -34,7 +34,7 @@ class Command(object):
         self.blacklist = chanblacklist
         self.groups = []
 
-        if groups is None: 
+        if groups is None:
             return
 
         if type(groups) is str:
@@ -117,12 +117,12 @@ class Command(object):
                 return (fout, OK)
             else:
                 return (None, None)
-        else: 
+        else:
             raise RuntimeError("No function specified")
 
 
 class SimpleCommand(Command):
-    def __init__(self, trigger, output, bot, opcom = False, channels = [], chanblacklist = [], data = None, groups = [], 
+    def __init__(self, trigger, output, bot, opcom = False, channels = [], chanblacklist = [], data = None, groups = [],
         repeatdelay = 0, casesensitive = False, prependuser = True, targeted = False):
 
         self.trigger = trigger
@@ -137,13 +137,13 @@ class SimpleCommand(Command):
         self.targeted = targeted
 
         self.lastuse = None
-        
+
         self.blacklist = chanblacklist
         self.groups = []
 
-        if groups is None: 
+        if groups is None:
             return
-        
+
         if type(groups) is str:
             self.groups.append(groups)
         else:
@@ -156,7 +156,7 @@ class SimpleCommand(Command):
             return (None, err)
 
         self.lastuse = self._htime()
-    
+
         res = "%s%s"
 
         if self.prependuser:
@@ -204,5 +204,31 @@ def alert(event):
 
 
 class Commander(object):
-    def __init__(self):
+    def __init__(self, modulename):
+        import time, command
+
         self.commands = set()
+        self.modulename = modulename
+
+
+    def processEvent(self, event):
+        if event.etype == 'msg': # This might need to change to allow for more diverse commands
+            tstart = time.time()
+            for comm in self.commands:
+                t1 = time.time()
+                output = comm.process(event.channel, event.user, event.data, self._getargs(event.data))
+                t2 = time.time()
+                if output[1] is command.OK:
+                    print "[%s] Command time: %4.4fms, Total time: %4.4fms" % (self.modulename, (t2-t1)*1000,(t2-tstart)*1000)
+                    print "[%s] Output for %s: %s" % (self.modulename, comm.trigger, output[0])
+                    event.bot.say(event.channel, output[0])
+
+    def _getargs(self, msg):
+        try:
+            a = msg.split()
+        except:
+            return list()
+        if len(a) == 1:
+            return list()
+        else:
+            return a[1:]

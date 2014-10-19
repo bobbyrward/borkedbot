@@ -32,29 +32,35 @@ def mmr(channel):
         latestmatch = steamapi.getlastdotamatch(dotaid)
         previousmatch = settings.trygetset('%s_last_match' % channel, latestmatch)
 
-
         if previousmatch['match_id'] != latestmatch['match_id'] and str(latestmatch['lobby_type']) == '7':
             print "[MMR] Match ID change found (%s:%s)" % (previousmatch['match_id'], latestmatch['match_id'])
             settings.setdata('%s_last_match' % channel, latestmatch, announce=False)
 
             matchdata = steamapi.GetMatchDetails(latestmatch['match_id'])
+            herodata = steamapi.GetHeroes()
 
             for p in matchdata['result']['players']:
-                if p['account_id'] == dotaid:
+                if str(p['account_id']) == str(dotaid):
                     playerdata = p
                     break
 
-            dota_gpm = playerdata['gold_per_min']
-            dota_xpm = playerdata['xp_per_min']
+            try:
+                d_hero = [h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == playerdata['hero_id']][0]
+            except:
+                d_hero = 'Unknown Hero'
 
-            dota_level = playerdata['level']
+            d_level = playerdata['level']
+            d_team = 'Radiant' if int(playerdata['player_slot']) < 128 else 'Dire'
 
-            dota_kills = playerdata['kills']
-            dota_deaths = playerdata['deaths']
-            dota_assists = playerdata['assists']
+            d_kills = playerdata['kills']
+            d_deaths = playerdata['deaths']
+            d_assists = playerdata['assists']
 
-            dota_lasthits = playerdata['last_hits']
-            dota_denies = playerdata['denies']
+            d_lasthits = playerdata['last_hits']
+            d_denies = playerdata['denies']
+
+            d_gpm = playerdata['gold_per_min']
+            d_xpm = playerdata['xp_per_min']
 
             outputstring = "Solo: %s | Party: %s"
 
@@ -82,12 +88,14 @@ def mmr(channel):
 
             newmmrstring = outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
 
-            extramatchdata = " | KDA: %s/%s/%s | CS: %s/%s | GPM: %s | XPM: %s" % (dota_kills, dota_deaths, dota_assists, dota_lasthits, dota_denies, dota_gpm, dota_xpm)
+            extramatchdata = " | Level {} {} on {} ~ KDA: {}/{}/{} ~ CS: {}/{} ~ GPM: {} ~ XPM: {}".format(
+                d_level, d_hero, d_team, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
 
             finaloutput = "%s has finished a game.  http://www.dotabuff.com/matches/%s  Updated mmr: %s" % (enabled_channels[channel], latestmatch['match_id'], newmmrstring)
 
             print "[MMR] " + finaloutput + extramatchdata
             return finaloutput + extramatchdata
+
 
 def checktimeout(channel):
     laststreamcheck = settings.trygetset('%s_last_is_streaming_check' % channel, time.time())

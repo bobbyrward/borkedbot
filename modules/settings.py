@@ -20,14 +20,14 @@ def getdata(key, domain='settings-global', coerceto=None):
 
 def setdata(key, value, domain='settings-global', announce=True):
     oldr = redisdb.hget(domain, key)
-    
+
     if oldr:
         oldresult = cPickle.loads(oldr)
     else:
         oldresult = oldr
 
     isnew = redisdb.hset(domain, key, cPickle.dumps(value))
-    
+
     if isnew:
         print "[Settings] Key added: %s (%s)" % (key, value)
     elif announce:

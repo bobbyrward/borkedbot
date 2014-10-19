@@ -41,11 +41,11 @@ class MyBot(irc.IRCClient):
         chatmanager.event(self.chan(), None, 'timer', time.time(), self, None)
 
     def signedOn(self):
-        self.join(self.factory.channel)
-        print "Signed on as %s.\n" % self.nickname
-        self.oplist.add(self.chan())
-
         self.sendLine('TWITCHCLIENT 3') # Oh boy here we go
+
+        self.join(self.factory.channel)
+        self.oplist.add(self.chan())
+        print "Signed on as %s.\n" % self.nickname
 
         chatmanager.setup(self)
         chatmanager.event(None, None, 'serverjoin', None, self, None)
@@ -72,9 +72,6 @@ class MyBot(irc.IRCClient):
     def modeChanged(self, user, channel, sett, modes, args):
         # user channel           set  modes args
         # jtv  #imayhaveborkedit True o     ('borkedbot',)
-        if not self.gotops:
-            print "Received initial list of ops"
-            self.gotops = True
 
         #print "Modes changed by %s in %s: %s%s for %s" % (user, channel, '+' if sett else '-', modes, list(args))
 
@@ -82,13 +79,13 @@ class MyBot(irc.IRCClient):
             for u in args:
                 self.opsinchan.add(u)
                 chatmanager.event(self.chan(channel), user, 'op', u, self, True)
-        
+
         elif not sett and modes == 'o':
             for u in args:
                 self.opsinchan.discard(u)
                 chatmanager.event(self.chan(channel), user, 'deop', u, self, True)
 
-        if self.opsinchan - self.oplist:
+        if self.opsinchan - self.oplist and self.gotops:
             print "WE HAVE A MOD DISCREPANCY HERE:"
             print self.opsinchan - self.oplist
             print
@@ -127,10 +124,13 @@ class MyBot(irc.IRCClient):
 
 
             # print "INFO from ttv (%s): %s" % (channel, msg)
-            
+
             if 'The moderators of this room are:' in msg:
-                self.oplist = set(msg.split(': ')[1].split(', '))
-            
+                self.oplist = set(msg.split(': ')[1].split(', ')) | {self.chan()}
+                if not self.gotops:
+                    print "Received initial list of ops"
+                    self.gotops = True
+
             chatmanager.event(self.chan(channel), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
             return
 
@@ -174,7 +174,7 @@ class MyBot(irc.IRCClient):
 class MyBotFactory(protocol.ClientFactory):
     protocol = MyBot
 
-    def __init__(self, channel, nickname='borkedbot'):
+    def __init__(self, channel, nickname):
         self.channel = channel
         self.nickname = nickname
 
@@ -194,9 +194,10 @@ if __name__ == "__main__":
         print "Usage: python borkedbot.py [channel]"
     else:
         starttime = time.time()
+
         server = 'irc.twitch.tv'
         chan = sys.argv[1]
-        mbf = MyBotFactory('#' + chan)
+        mbf = MyBotFactory('#' + chan, 'borkedbot')
 
         reactor.connectTCP(server, 6667, mbf)
 
