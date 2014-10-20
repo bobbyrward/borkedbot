@@ -6,7 +6,7 @@ import steamapi, twitchapi, settings
 
 LOAD_ORDER = 35
 
-enabled_channels = {'monkeys_forever': 'Monkeys', 'kizzmett': 'Kizzmett'}
+enabled_channels = {}#{'monkeys_forever': 'Monkeys'}#, 'kizzmett': 'Kizzmett'}
 
 def setup(bot):
     # checks?

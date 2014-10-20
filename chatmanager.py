@@ -122,7 +122,9 @@ def _manage_modules():
             _info('')
 
             for mm in removed_imports:
-                modules_mtime.pop(mm, None)
+                mpop = modules_mtime.pop(mm, None)
+                if mpop == None:
+                    print "Something has gone wrong removing mtime"
 
 
 # This gets called after modules are imported to activate them

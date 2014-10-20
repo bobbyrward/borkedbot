@@ -18,7 +18,7 @@ class SPECIAL_RESTRICTED(): pass    # Only I can use these
 
 class Command(object):
     def __init__(self, trigger, outfunc, bot, opcom = False, channels = [], chanblacklist = [], data = None, groups = [],
-        repeatdelay = 0, casesensitive = False):
+        repeatdelay = 0, casesensitive = False, helpstring=None):
 
         self.trigger = trigger
         self.outfunc = outfunc
@@ -28,6 +28,7 @@ class Command(object):
         self.data = data
         self.repeatdelay = repeatdelay
         self.casesensitive = casesensitive
+        self.helpstring = helpstring
 
         self.lastuse = None
 
@@ -123,7 +124,7 @@ class Command(object):
 
 class SimpleCommand(Command):
     def __init__(self, trigger, output, bot, opcom = False, channels = [], chanblacklist = [], data = None, groups = [],
-        repeatdelay = 0, casesensitive = False, prependuser = True, targeted = False):
+        repeatdelay = 0, casesensitive = False, prependuser = True, targeted = False, helpstring=None):
 
         self.trigger = trigger
         self.output = output
@@ -135,6 +136,7 @@ class SimpleCommand(Command):
         self.casesensitive = casesensitive
         self.prependuser = prependuser
         self.targeted = targeted
+        self.helpstring = helpstring
 
         self.lastuse = None
 
@@ -204,15 +206,27 @@ def alert(event):
 
 
 class Commander(object):
-    def __init__(self, modulename):
+    def __init__(self, modulename, eventtypes=['msg']):
         import time, command
 
-        self.commands = set()
+        self.commands = []
         self.modulename = modulename
+        self.eventtypes = eventtypes
 
+
+    def addCommand(self, newcom):
+        self.commands.append(newcom)
+
+    def getCommand(self, tigger):
+        for c in self.commands:
+            if trigger in c.trigger:
+                return c
+
+    def removeCommand(self, trigger):
+        self.commands.remove(self.getCommand(trigger))
 
     def processEvent(self, event):
-        if event.etype == 'msg': # This might need to change to allow for more diverse commands
+        if event.etype in self.eventtypes: # This might need to change to allow for more diverse commands
             tstart = time.time()
             for comm in self.commands:
                 t1 = time.time()

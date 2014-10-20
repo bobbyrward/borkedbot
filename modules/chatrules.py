@@ -126,8 +126,8 @@ def alert(event):
             output = comm.process(event.channel, event.user, event.data, _getargs(event.data))
             t2 = time.time()
             if output[1] is command.OK:
-                print "[Chatrules] Command time: %4.4fms, Total time: %4.4fms" % ((t2-t1)*1000,(t2-tstart)*1000)
                 print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
+                print "[Chatrules] Command time: %4.4fms, Total time: %4.4fms" % ((t2-t1)*1000,(t2-tstart)*1000)
                 event.bot.say(event.channel, output[0])
 
     #if event.etype in ['join', 'part']:
@@ -371,9 +371,9 @@ def generate_message_commands(bot):
     # Sort of general ######################################################
 
     def f(channel, user, message, args, data, bot):
-        import json, os, time, settings, mmr
+        import json, os, time, settings, dota
 
-        if channel not in mmr.enabled_channels:
+        if channel in dota.enabled_channels.keys() and not dota.enabled_channels[channel][1]:
             if user == channel:
                 rs = '''Hi %s, I can provide accurate MMR and automatically announce ranked \
                 games when they are finished with mmr change and totals.  \
@@ -440,6 +440,8 @@ def generate_message_commands(bot):
         #mmm"   #mm#           #    #    # mm#mm  "mmm#"
 
 
+
+        76561197960265728 <- THAT IS THE NUMBER TO SUBTRACT FROM STEAM ID'S TO MAKE A DOTA ID
 
         Two options:
             !mmrsetup addme <link or id>
