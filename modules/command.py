@@ -88,6 +88,7 @@ class Command(object):
             return OP_RESTRICTED
 
         if not self._checkdelay():
+            print "%s: Time requested: %s Last use: %s Difference: %s " % (self, time.time(), self.lastuse, time.time()-self.lastuse)
             return DELAY_LOCKED
 
         if channel in self.blacklist:

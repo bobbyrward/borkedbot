@@ -2,10 +2,8 @@
 import sys
 sys.dont_write_bytecode = True
 
-import os, time
-import math, random, re, redis
-import markov
-import command, chatlogger, settings, steamapi, twitchapi
+import os, time, math, random, re, redis
+import markov, command, chatlogger, settings, steamapi, twitchapi
 from command import get_process_output
 
 LOAD_ORDER = 20
@@ -229,6 +227,30 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!battlestation', 'HONK http://i.imgur.com/MRuOzd2.jpg', bot, True, groups=me_only_group))
 
+    
+    ## Node related message_commands ##
+
+
+    def f(channel, user, message, args, data, bot):
+        import node
+
+        con_steam, con_dota = node.status()
+
+        status_steam = "Ok" if con_steam else "Not ok"
+        status_dota = "Ok" if con_dota else "Not ok"
+
+        return "Steam: %s | Dota: %s" % (status_steam, status_dota)
+
+
+    coms.append(command.Command('#!nodestatus', f, bot, groups=me_only_group))
+
+
+    ######################################################################
+    # Broadcaster/me message_commands
+    #
+
+
+
     ######################################################################
     # Mod message_commands
     #
@@ -319,6 +341,10 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi, settings
+
+        if user in ['jewishoverlord']:
+            return
+
         if args:
             channel = args[0].lower()
         streamdata = twitchapi.get('streams/%s' % channel.replace('#',''), 'stream')
@@ -350,7 +376,8 @@ def generate_message_commands(bot):
         else:
             return hour_str.format(user, channel, reldelta)
 
-    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=10))
+    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
+    # TODO: Meh idiots
 
     def f(channel, user, message, args, data, bot):
         if args:
@@ -383,7 +410,7 @@ def generate_message_commands(bot):
             else:
                 return
 
-        isupdate = args and args[0].lower() == 'update' and user in bot.oplist + ['imayhaveborkedit']
+        isupdate = args and args[0].lower() == 'update' and user in bot.oplist | {'imayhaveborkedit'}
 
         if args and 'update' in args[0].lower() and not isupdate:
             if user == 'gggccca7x':
@@ -399,7 +426,8 @@ def generate_message_commands(bot):
             with open('/var/www/twitch/%s/data' % channel, 'r') as d:
                 olddotadata = json.loads(d.readline())
 
-            os.system('cd modules/node; nodejs mmr.js %s %s' % (channel, settings.getdata('%s_dota_id' % channel)))
+            # os.system('cd modules/node; nodejs mmr.js %s %s' % (channel, settings.getdata('%s_dota_id' % channel)))
+            wentok = dota.updateMMR(channel)
 
             with open('/var/www/twitch/%s/data' % channel, 'r') as d:
                 dotadata = json.loads(d.readline())

@@ -2,13 +2,13 @@ import sys
 sys.dont_write_bytecode = True
 
 import os, time, json, subprocess, shlex
-import steamapi, twitchapi, settings
+import steamapi, twitchapi, settings, node
 
-LOAD_ORDER = 36
+LOAD_ORDER = 35
 
 enabled_channels = {
     # channel name : (Display name, get mmr)
-    'mynameisamanda': ('Amanda', False), 
+    'mynameisamanda': ('Amanda', False),
     'kizzmett': ('Kizzmett', True),
     'monkeys_forever': ('Monkeys', True),
     'barnyyy': ('Barny', False)
@@ -119,7 +119,10 @@ def getMMRData(channel, dotaid):
     with open('/var/www/twitch/%s/data' % channel, 'r') as d:
         olddotadata = json.loads(d.readline())
 
-    os.system('cd modules/node; nodejs mmr.js %s %s' % (channel, dotaid))
+    # os.system('cd modules/node; nodejs mmr.js %s %s' % (channel, dotaid))
+    wentok = updateMMR(channel)
+    if not wentok:
+        print "[MMR] SOMETHING MAY HAVE GONE HORRIBLY WRONG GETTING MMR"
 
     with open('/var/www/twitch/%s/data' % channel, 'r') as d:
         dotadata = json.loads(d.readline())
@@ -137,3 +140,11 @@ def getMMRData(channel, dotaid):
     if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
 
     return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
+
+
+def updateMMR(channel):
+    dotaid = str(settings.getdata('%s_dota_id' % channel))
+    if not dotaid:
+        raise TypeError("No id on record")
+
+    return node.updateMMR(channel, dotaid)

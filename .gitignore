@@ -102,6 +102,6 @@ testfile
 joinpartbot.py
 *.p
 *.old
+
 modules/test
-modules/node
 modules/node-test

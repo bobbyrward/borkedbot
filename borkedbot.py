@@ -142,8 +142,8 @@ class MyBot(irc.IRCClient):
         #       def event(channel, user, etype, data, bot, isop):
         chatmanager.event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
 
-    def chan(self, c=None):
-        if c is None: c = self.channel
+    def chan(self, ch=None):
+        c = ch or self.channel
         return c.replace('#','')
 
     def userJoined(self, user, channel):
