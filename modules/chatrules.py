@@ -239,8 +239,7 @@ def generate_message_commands(bot):
         status_steam = "Ok" if con_steam else "Not ok"
         status_dota = "Ok" if con_dota else "Not ok"
 
-        return "Steam: %s | Dota: %s" % (status_steam, status_dota)
-
+        return "Connection status: Steam: %s | Dota: %s" % (status_steam, status_dota)
 
     coms.append(command.Command('#!nodestatus', f, bot, groups=me_only_group))
 

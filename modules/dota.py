@@ -148,3 +148,81 @@ def updateMMR(channel):
         raise TypeError("No id on record")
 
     return node.updateMMR(channel, dotaid)
+
+
+
+class Lobby(object):
+
+    GAMEMODE_All_Pick          = 1
+    GAMEMODE_Captains_Mode     = 2
+    GAMEMODE_Random_Draft      = 3
+    GAMEMODE_Single_Draft      = 4
+    GAMEMODE_All_Random        = 5
+    GAMEMODE_Reverse_Captains  = 8
+    GAMEMODE_Mid_Only          = 11
+    GAMEMODE_Least_Played      = 12
+    GAMEMODE_Limited_Heroes    = 13
+    GAMEMODE_Ability_Draft     = 18
+    GAMEMODE_ARDM              = 20
+    GAMEMODE_1v1mid            = 21
+    GAMEMODE_All_Draft         = 22
+
+    SERVER_Unspecified         = 0 
+    SERVER_USWest              = 1 
+    SERVER_USEast              = 2 
+    SERVER_Europe              = 3 
+    SERVER_Korea               = 4 
+    SERVER_Singapore           = 5 
+    SERVER_Australia           = 7 
+    SERVER_Stockholm           = 8 
+    SERVER_Austria             = 9 
+    SERVER_Brazil              = 10 
+    SERVER_Southafrica         = 11 
+    SERVER_PerfectworldTelecom = 12 
+    SERVER_PerfectworldUnicom  = 13
+
+    def __init__(self, name=None, password=None, mode=None, region=None):
+        import node
+
+        self.name = name
+        self.password = password
+        self.mode = mode
+        self.region = region
+
+        self.lobby_id = None
+        self.created = False
+        self.started = False
+
+    def create(self):
+        lobbyid = node.create_lobby(self.name, self.mode, self.password, self.region)
+        
+        if lobbyid is None:
+            return False
+        
+        self.lobby_id = lobbyid
+        self.created = True
+
+    def remake(self, name=None, password=None, mode=None, region=None):
+        self.name = name or self.name
+        self.password = password or self.password
+        self.mode = mode or self.mode
+        self.region = region or self.region
+
+        node.leave_lobby()
+        self.create()
+
+    def start(self):
+        node.start_lobby()
+        self.started = True
+
+    def shuffle(self):
+        node.shuffle_lobby()
+
+    def flip(self):
+        node.flip_lobby()
+
+    def kick_from(self, steamid): # change to accept other inputs (chat names)
+        node.kick_lobby(steamid)
+
+    def config(self): # rjackson pls
+        return

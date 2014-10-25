@@ -15,7 +15,7 @@ var onSteamLogOn = function onSteamLogOn(){
         util.log("Logged on.");
 
         bot.setPersonaState(steam.EPersonaState.Online);
-        // Dota2.launch();
+        Dota2.launch();
 
         Dota2.on("ready", function() {
             console.log("Node-dota2 ready.");
@@ -98,6 +98,18 @@ var onSteamLogOn = function onSteamLogOn(){
     },
     onFriend = function onFriend(steamID, relation) {
         util.log(steamID + ':' + relation);
+    },
+    onSteamError = function onSteamError(err) {
+        console.error("steam: Help something borked ", err);
+        if (err.eresult == 34) {
+            console.log("we got logged out");
+            Dota2.exit();
+        };
+    },
+    onSteamLogoff = function onSteamLogoff() {
+        console.log("steam is derp and logged off");
+        console.log(arguments);
+        Dota2.exit();
     };
 
 
@@ -113,7 +125,13 @@ var sentry = fs.readFileSync('sentry');
 if (sentry.length) logOnDetails.shaSentryfile = sentry;
 
 bot.logOn(logOnDetails);
-bot.on("loggedOn", onSteamLogOn).on('sentry', onSteamSentry).on('servers', onSteamServers).on('webSessionID', onWebSessionID).on('message', onMessage);
+bot.on("loggedOn", onSteamLogOn)
+    .on('loggedOff', onSteamLogoff)
+    .on('sentry', onSteamSentry)
+    .on('servers', onSteamServers)
+    .on('webSessionID', onWebSessionID)
+    .on('message', onMessage)
+    .on('error', onSteamError);
 
 var zrpcserver = new zerorpc.Server({
 
@@ -286,7 +304,7 @@ var zrpcserver = new zerorpc.Server({
         gameName = typeof gameName !== 'function' ? gameName : undefined;
         password = typeof password !== 'function' ? password : undefined;
         serverRegion = typeof serverRegion !== 'function' ? serverRegion : undefined;
-        gameMode = typeof gameMode !== 'function' ? gameMode : undefined;
+        gameMode = typeof gameMode !== 'function' ? gameMode : 1; // All pick
 
         if (!Dota2._gcReady) {
             reply(null, false);
@@ -426,10 +444,3 @@ process.on('error', function(err) {
     console.error("Help something borked ", err);
 });
 
-bot.on('error', function(err) {
-    console.error("steam: Help something borked ", err);
-    if (err.eresult == 34) {
-        console.log("we got logged out");
-    };
-  // This happens when a logon error happens, when I move it over it shouldn't matter
-});
