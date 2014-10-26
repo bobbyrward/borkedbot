@@ -125,7 +125,7 @@ def alert(event):
             t2 = time.time()
             if output[1] is command.OK:
                 print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
-                print "[Chatrules] Command time: %4.4fms, Total time: %4.4fms" % ((t2-t1)*1000,(t2-tstart)*1000)
+                print "[Chatrules] Command time: %4.4fs, Total time: %4.4fs" % ((t2-t1)*1000,(t2-tstart)*1000)
                 event.bot.say(event.channel, output[0])
 
     #if event.etype in ['join', 'part']:
@@ -227,28 +227,63 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!battlestation', 'HONK http://i.imgur.com/MRuOzd2.jpg', bot, True, groups=me_only_group))
 
-    
+
     ## Node related message_commands ##
 
 
     def f(channel, user, message, args, data, bot):
         import node
 
-        con_steam, con_dota = node.status()
+        if args:
+            if args[0].lower() == 'status':
+                con_steam, con_dota = node.status()
 
-        status_steam = "Ok" if con_steam else "Not ok"
-        status_dota = "Ok" if con_dota else "Not ok"
+                status_steam = "Ok" if con_steam else "Not ok"
+                status_dota = "Ok" if con_dota else "Not ok"
 
-        return "Connection status: Steam: %s | Dota: %s" % (status_steam, status_dota)
+                return "Connection status: Steam: %s | Dota: %s" % (status_steam, status_dota)
 
-    coms.append(command.Command('#!nodestatus', f, bot, groups=me_only_group))
+            if args[0].lower() == 'restart':
+                node.restart()
 
+                return "Restarting steam bot, this should only take a few seconds."
+
+
+    coms.append(command.Command('#!node', f, bot, groups=me_only_group))
+
+    def f(channel, user, message, args, data, bot):
+        import twitchapi, datetime, dateutil.parser, dateutil.relativedelta
+
+        isotime = twitchapi.get('users/%s' % args[0], 'created_at')
+        t_0 = dateutil.parser.parse(isotime)
+        t_now = datetime.datetime.now(dateutil.tz.tzutc())
+        reldelta = dateutil.relativedelta.relativedelta(t_now, t_0)
+        reldelta.microseconds = 0
+
+        return str(reldelta).replace('relativedelta','').replace('+','').replace('(','').replace(')','')
+
+    coms.append(command.Command('#!accountage', f, bot, groups=me_only_group))
 
     ######################################################################
     # Broadcaster/me message_commands
     #
 
+    def f(channel, user, message, args, data, bot):
+        import node, settings
+        from dota import Lobby
 
+        # BLARGH SET UP ARGPARSE
+
+        # IF A LOBBY ALREADY EXISTS
+        #   SAY SOMETHING ABOUT IT
+
+        lobby = Lobby(channel) # args
+
+        settings.setdata('latest_lobby', lobby)
+
+        return "A LOBBY HAS BEEN CREATED"
+
+    coms.append(command.Command('!createlobby', f, bot, groups=me_only_group))
 
     ######################################################################
     # Mod message_commands
@@ -399,6 +434,9 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import json, os, time, settings, dota
 
+        if channel not in dota.enabled_channels.keys():
+            return
+
         if channel in dota.enabled_channels.keys() and not dota.enabled_channels[channel][1]:
             if user == channel:
                 rs = '''Hi %s, I can provide accurate MMR and automatically announce ranked \
@@ -422,14 +460,12 @@ def generate_message_commands(bot):
         if isupdate:
             print "Updating mmr"
 
-            with open('/var/www/twitch/%s/data' % channel, 'r') as d:
-                olddotadata = json.loads(d.readline())
+            olddotadata = dota.getUserDotaData(channel)
 
             # os.system('cd modules/node; nodejs mmr.js %s %s' % (channel, settings.getdata('%s_dota_id' % channel)))
             wentok = dota.updateMMR(channel)
 
-            with open('/var/www/twitch/%s/data' % channel, 'r') as d:
-                dotadata = json.loads(d.readline())
+            dotadata = dota.getUserDotaData(channel)
 
             old_mmr_s = str(olddotadata['gameAccountClient']['soloCompetitiveRank'])
             old_mmr_p = str(olddotadata['gameAccountClient']['competitiveRank'])
@@ -446,17 +482,18 @@ def generate_message_commands(bot):
             return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
 
         else:
-            with open('/var/www/twitch/%s/data' % channel, 'r') as d:
-                dotadata = json.loads(d.readline())
+            dotadata = dota.getUserDotaData(channel)
 
             mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
             mmrp = dotadata['gameAccountClient']['competitiveRank']
 
+            # ???
             return outputstring % (mmr,mmrp)
 
-    coms.append(command.Command('!mmr', f, bot, repeatdelay=25))
+    coms.append(command.Command('!mmr', f, bot, repeatdelay=16))
 
     def f(channel, user, message, args, data, bot):
+        import node
         '''
 
 
@@ -485,23 +522,48 @@ def generate_message_commands(bot):
         '''
 
         if args:
-            if args[0] == 'addme' and len(arg) >= 2:
-                steamthing = args[1]
+            if args[0].lower() == 'addme' and len(arg) >= 2:
+                if args[1].lower() == 'help':
+                    return 'blah blah help'
+
+                steamthing = args[1] # might need to check for 'help'
+
+                # steamid | steam link | vanity name (api call to resolve)
                 # parse steamthing
 
-            if args[0] == 'addyou' and len(arg) >= 2: pass
+            if args[0].lower() == 'addyou' and len(arg) >= 2:
+                if args[1].lower() == 'help':
+                    return 'blah blah help'
+
+                return "I await your friend request and message.  https://steamcommunity.com/id/Borkedbot/ or Run -> steam://friends/add/76561198153108180"
+
                 # "You can find me on steam as Borkedbot or you can put this in your run dialog (Windows button + r): steam://friends/add/76561198153108180"
                 # "When you add me, send me the following as a message through steam: verifytwitch %s" % channel
                 # NODEJS REPLY TO MESSAGE: "To finish verification: say the following message in twitch chat: !mmrsetup verify {code}"
 
-            if args[0] == 'verify' and len(arg) >= 2: pass
+            if args[0].lower() == 'verify' and len(arg) >= 2:
+                if channel != user:
+                    return
+                elif user == 'imayhaveborkedit':
+                    pass
+
+                if args[1].lower() == 'help':
+                    return 'blah blah help'
+
+                verified = node.verify_code(channel, args[1].lower())
+
+                if verified:
+                    return "You did it!  Thanks for using this feature.  If you encounter any bugs or issues, let imayhaveborkedit know."
+                else:
+                    return "Bad code or something is borked."
                 # make sure codes match (probably a nodejs bridge call)
                 # if channel == user and checkCode(channel, args[1])
-                # "Thanks for using this feature.  If you encounter any bugs or issues, let imayhaveborkedit it know."
                 # set channel as enabled in settings
 
-
-        return 'Not yet implemented.  Must be done manually.  Ask imayhaveborkedit to help set it up.'
+                # maybe change to simple explainations and say use the help argument
+        return '''Hi.  You have two options.  1: You give me something to add you from (steam id, profile link)  or 2: you add me on steam.  \
+                Use these respective commands: !mmrsetup addme OR !mmrsetup addyou  \
+                Once added, send me a message saying this: enable mmr'''
 
     coms.append(command.Command('!mmrsetup', f, bot, groups=['broadcaster'], repeatdelay=15))
 

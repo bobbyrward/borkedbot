@@ -31,3 +31,5 @@ def alert(event):
             event.bot.botsay("Pls no")
             print '[Extra Events] Banning %s' % event.user
 
+        if '░' in event.data:
+            event.bot.botsay(".timeout %s 10" % event.user)

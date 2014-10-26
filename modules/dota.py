@@ -41,13 +41,13 @@ def latestBlurb(channel):
 
             # Somewhere in here is where I do the logic to check if we've skipped a game or not
 
-            print "[Dota] Match ID change found (%s:%s)" % (previousmatch['match_id'], latestmatch['match_id'])
+            print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previousmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
             return getLatestGameBlurb(channel, dotaid, latestmatch, enabled_channels[channel][1] and str(latestmatch['lobby_type']) == '7')
 
 
 def checktimeout(channel):
     if not twitchapi.is_streaming(channel):
-        return False
+       return False
 
     laststreamcheck = settings.trygetset('%s_last_is_streaming_check' % channel, time.time())
     streamchecktimeout = settings.trygetset('%s_is_streaming_timeout' % channel, 30)
@@ -142,6 +142,11 @@ def getMMRData(channel, dotaid):
     return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
 
 
+def getUserDotaData(channel):
+    with open('/var/www/twitch/%s/data' % channel, 'r') as d:
+        return json.loads(d.readline())
+
+
 def updateMMR(channel):
     dotaid = str(settings.getdata('%s_dota_id' % channel))
     if not dotaid:
@@ -181,7 +186,7 @@ class Lobby(object):
     SERVER_PerfectworldTelecom = 12 
     SERVER_PerfectworldUnicom  = 13
 
-    def __init__(self, name=None, password=None, mode=None, region=None):
+    def __init__(self, channel, name=None, password=None, mode=None, region=None):
         import node
 
         self.name = name
@@ -201,6 +206,9 @@ class Lobby(object):
         
         self.lobby_id = lobbyid
         self.created = True
+
+    def leave(self):
+        node.leave_lobby()
 
     def remake(self, name=None, password=None, mode=None, region=None):
         self.name = name or self.name

@@ -55,7 +55,7 @@ DOTA_MATCH_TYPES = {
 def _apiget(path):
     rrr = requests.get(root+path, timeout=4)
     if rrr.status_code != 200:
-        print rrr, rrr.reason, '\n', rrr.text
+        print rrr, rrr.reason
     return rrr
 
 def get(path='', key=None):

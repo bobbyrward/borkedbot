@@ -5,7 +5,9 @@ var steam = require("steam"),
     dota2 = require("dota2"),
     bot = new steam.SteamClient(),
     Dota2 = new dota2.Dota2Client(bot, true),
-    zerorpc = require("zerorpc");
+    zerorpc = require("zerorpc")
+
+    chatkeymap = {};
 
 
 global.config = require("./config");
@@ -83,17 +85,29 @@ var onSteamLogOn = function onSteamLogOn(){
         console.log('Received message');
         console.log(source + " : " + message + " : " + type + " : " + chatter)
 
+        lmessage = message.toLowerCase()
+
         // move over to switch eventually
-        if (message.toLowerCase() == 'test') {
+        if (lmessage == 'test') {
           bot.sendMessage(source, 'Yes hello this is test');
         }
 
-        if (message.toLowerCase() == 'help') {
+        if (lmessage == 'help') {
           bot.sendMessage(source, 'I\'m working on it!');
         }
 
-        if (message.toLowerCase().indexOf('enable mmr') > -1) {
+        if (lmessage.indexOf('enable mmr') > -1) {
             bot.sendMessage(source, 'Thank you for choosing BORK CORP (This feature is not yet implemented)');
+            if (lmessage.split(' ')[2] == undefined) {
+                bot.sendMessage(source, 'You need to give me your twitch channel.');
+                return;  
+            }
+
+            randomkey = (Math.random()+Math.random()).toString(36).substr(2,6);
+            chatkeymap[lmessage.split(' ')[2]] = randomkey;
+
+            bot.sendMessage(source, "Please use the following command in your chat to complete the verification: !mmrsetup verify " + randomkey);
+
         }
     },
     onFriend = function onFriend(steamID, relation) {
@@ -110,6 +124,8 @@ var onSteamLogOn = function onSteamLogOn(){
         console.log("steam is derp and logged off");
         console.log(arguments);
         Dota2.exit();
+
+        setTimeout(bot.logOn(logOnDetails), 5000);
     };
 
 
@@ -198,7 +214,7 @@ var zrpcserver = new zerorpc.Server({
     },
 
     /*
-        MMR function
+        MMR functions
     */
 
     updatemmr: function(channel, dotaid, reply) {
@@ -224,6 +240,14 @@ var zrpcserver = new zerorpc.Server({
             console.log(util.format('Wrote data for %s', channel));
             reply(null, true);
         });
+    },
+    verifycheck: function(channel, vkey, reply) {
+        reply = arguments[arguments.length - 1];
+
+        channel = typeof channel !== 'function' ? channel : null;
+        vkey = typeof vkey !== 'function' ? vkey : null;
+
+        reply(null, chatkeymap[channel] == vkey);
     },
 
     /*
@@ -317,7 +341,7 @@ var zrpcserver = new zerorpc.Server({
 
         if (Dota2._gcReady) {
             Dota2.createPracticeLobby(gameName, password, serverRegion, gameMode, function (err, body) {
-                console.log("Lobby created? ",err);
+                console.log("Lobby created? ",err); // DOTA_JOIN_RESULT_ALREADY_IN_GAME should mean OK
                 console.log(body);
             });
             Dota2.once("practiceLobbyCreateResponse", function(lobbyresponse, id) {
@@ -407,21 +431,26 @@ var zrpcserver = new zerorpc.Server({
         console.log("ZRPC: Terminating via zrpc/python command");
 
         try {
+            console.log("ZRPC: Leaving lobby");
             Dota2.leavePracticeLobby();
         } catch (e) {}
 
         try {
+            console.log("ZRPC: Exiting dota");
             Dota2.exit();
         } catch (e) {}
 
         try {
+            console.log("ZRPC: Logging off steam");
             bot.logOff();
         } catch (e) {}
 
         reply(null, true);
 
         setTimeout(function(){
-            zrpcserver.close();
+            try {
+                zrpcserver.close();
+            }catch (e) {}
             process.exit();
         }, 2000);
     },
@@ -444,3 +473,16 @@ process.on('error', function(err) {
     console.error("Help something borked ", err);
 });
 
+/*
+None = 0;
+Blocked = 1;
+PendingInvitee = 2; obsolete "renamed to RequestRecipient"
+RequestRecipient = 2;
+Friend = 3;
+RequestInitiator = 4;
+PendingInviter = 4;  obsolete "renamed to RequestInitiator"
+Ignored = 5;
+IgnoredFriend = 6;
+SuggestedFriend = 7;
+Max = 8;
+*/

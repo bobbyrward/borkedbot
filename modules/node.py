@@ -7,14 +7,19 @@ import settings
 LOAD_ORDER = 36
 
 zrpc = zerorpc.Client()
+zrpc.connect('tcp://127.0.0.1:29390')
 
 def setup(bot):
-    zrpc.connect('tcp://127.0.0.1:29390')
+    # zrpc.connect('tcp://127.0.0.1:29390')
+    pass
 
 def alert(event):
     return
 
 #####################
+
+def restart():
+    return zrpc.shutdown()
 
 def status():
     return zrpc.status()
@@ -31,6 +36,7 @@ def gc_status():
 def get_enum(name=None):
     return zrpc.getenum(name)
 
+########
 
 def updateMMR(channel, chid, autolaunch=True):
     if autolaunch:
@@ -42,6 +48,11 @@ def updateMMR(channel, chid, autolaunch=True):
         print e
         return False
 
+
+def verify_code(channel, code):
+    return zrpc.verifycheck(channel, code)
+
+
 ########
 
 def create_lobby(gameName, gameMode, password=None, serverRegion=None):
@@ -51,7 +62,7 @@ def create_lobby(gameName, gameMode, password=None, serverRegion=None):
         return None
 
     l_id = zrpc.createlobby(gameName, password, serverRegion, gameMode)
-    setting.setdata('current_lobby_id', str(l_id))
+    settings.setdata('current_lobby_id', str(l_id))
 
     return l_id
 
