@@ -142,14 +142,15 @@ def getMMRData(channel, dotaid):
     return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
 
 
-def getUserDotaData(channel):
-    with open('/var/www/twitch/%s/data' % channel, 'r') as d:
+def getUserDotaData(channel, datapath = '/var/www/twitch/%s/data'):
+    with open(datapath % channel, 'r') as d:
         return json.loads(d.readline())
 
 
 def updateMMR(channel):
-    dotaid = str(settings.getdata('%s_dota_id' % channel))
-    if not dotaid:
+    try:
+        dotaid = str(settings.getdata('%s_dota_id' % channel))
+    except:
         raise TypeError("No id on record")
 
     return node.updateMMR(channel, dotaid)
@@ -172,18 +173,18 @@ class Lobby(object):
     GAMEMODE_1v1mid            = 21
     GAMEMODE_All_Draft         = 22
 
-    SERVER_Unspecified         = 0 
-    SERVER_USWest              = 1 
-    SERVER_USEast              = 2 
-    SERVER_Europe              = 3 
-    SERVER_Korea               = 4 
-    SERVER_Singapore           = 5 
-    SERVER_Australia           = 7 
-    SERVER_Stockholm           = 8 
-    SERVER_Austria             = 9 
-    SERVER_Brazil              = 10 
-    SERVER_Southafrica         = 11 
-    SERVER_PerfectworldTelecom = 12 
+    SERVER_Unspecified         = 0
+    SERVER_USWest              = 1
+    SERVER_USEast              = 2
+    SERVER_Europe              = 3
+    SERVER_Korea               = 4
+    SERVER_Singapore           = 5
+    SERVER_Australia           = 7
+    SERVER_Stockholm           = 8
+    SERVER_Austria             = 9
+    SERVER_Brazil              = 10
+    SERVER_Southafrica         = 11
+    SERVER_PerfectworldTelecom = 12
     SERVER_PerfectworldUnicom  = 13
 
     def __init__(self, channel, name=None, password=None, mode=None, region=None):
@@ -200,10 +201,10 @@ class Lobby(object):
 
     def create(self):
         lobbyid = node.create_lobby(self.name, self.mode, self.password, self.region)
-        
+
         if lobbyid is None:
             return False
-        
+
         self.lobby_id = lobbyid
         self.created = True
 

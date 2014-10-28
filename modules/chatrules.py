@@ -125,7 +125,7 @@ def alert(event):
             t2 = time.time()
             if output[1] is command.OK:
                 print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
-                print "[Chatrules] Command time: %4.4fs, Total time: %4.4fs" % ((t2-t1)*1000,(t2-tstart)*1000)
+                print "[Chatrules] Command time: %4.4fms, Total time: %4.4fms" % ((t2-t1)*1000, (t2-tstart)*1000)
                 event.bot.say(event.channel, output[0])
 
     #if event.etype in ['join', 'part']:
@@ -247,6 +247,29 @@ def generate_message_commands(bot):
                 node.restart()
 
                 return "Restarting steam bot, this should only take a few seconds."
+
+            if args[0].lower() == 'matchmaking':
+                import difflib, time
+                mmdata = node.get_mm_stats()
+
+                try:
+                    args[1]
+                except:
+                    args.append('USEast')
+                
+                # region = difflib.get_close_matches(args[1], mmdata.keys(), 1)[0]
+
+                try:
+                    lnames = {n.lower():n for n in mmdata.keys()}
+                    region = [lnames[r] for r in difflib.get_close_matches(args[1].lower(), lnames, 1)][0]
+                except:
+                    return "No match for %s" % args[1]
+
+                waittimes, searchers = mmdata[region]
+                
+                return  "Matchmaking data for region %s: Average queue time: %s, In queue: %s" % (
+                    region, time.strftime("%M:%S", time.gmtime(waittimes)), searchers)
+
 
 
     coms.append(command.Command('#!node', f, bot, groups=me_only_group))
@@ -386,7 +409,7 @@ def generate_message_commands(bot):
         day_str = "{0}, {1} has been streaming for approximately {2.days} days, {2.hours} hours and {2.minutes} minutes."
         hour_str = "{0}, {1} has been streaming for approximately {2.hours} hours and {2.minutes} minutes."
 
-        if settings.getdata('%s_is_hosting' % channel):
+        if settings.getdata('%s_is_hosting' % channel) and not args:
             hc = settings.getdata('%s_hosted_channel' % channel)
 
             if hc and not args:
@@ -410,7 +433,7 @@ def generate_message_commands(bot):
         else:
             return hour_str.format(user, channel, reldelta)
 
-    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
+    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda', 'siractionslacks'], repeatdelay=15))
     # TODO: Meh idiots
 
     def f(channel, user, message, args, data, bot):
@@ -462,7 +485,6 @@ def generate_message_commands(bot):
 
             olddotadata = dota.getUserDotaData(channel)
 
-            # os.system('cd modules/node; nodejs mmr.js %s %s' % (channel, settings.getdata('%s_dota_id' % channel)))
             wentok = dota.updateMMR(channel)
 
             dotadata = dota.getUserDotaData(channel)
@@ -535,7 +557,7 @@ def generate_message_commands(bot):
                 if args[1].lower() == 'help':
                     return 'blah blah help'
 
-                return "I await your friend request and message.  https://steamcommunity.com/id/Borkedbot/ or Run -> steam://friends/add/76561198153108180"
+                return "I await your friend request and message (enable mmr).  https://steamcommunity.com/id/Borkedbot/ or Run -> steam://friends/add/76561198153108180"
 
                 # "You can find me on steam as Borkedbot or you can put this in your run dialog (Windows button + r): steam://friends/add/76561198153108180"
                 # "When you add me, send me the following as a message through steam: verifytwitch %s" % channel
@@ -562,7 +584,7 @@ def generate_message_commands(bot):
 
                 # maybe change to simple explainations and say use the help argument
         return '''Hi.  You have two options.  1: You give me something to add you from (steam id, profile link)  or 2: you add me on steam.  \
-                Use these respective commands: !mmrsetup addme OR !mmrsetup addyou  \
+                These are the commands, respectively: !mmrsetup addme OR !mmrsetup addyou  \
                 Once added, send me a message saying this: enable mmr'''
 
     coms.append(command.Command('!mmrsetup', f, bot, groups=['broadcaster'], repeatdelay=15))

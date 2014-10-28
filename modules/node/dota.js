@@ -5,12 +5,27 @@ var steam = require("steam"),
     dota2 = require("dota2"),
     bot = new steam.SteamClient(),
     Dota2 = new dota2.Dota2Client(bot, true),
-    zerorpc = require("zerorpc")
+    zerorpc = require("zerorpc"),
 
-    chatkeymap = {};
+    chatkeymap = {},
 
+    mmregions = ['USWest',
+                 'USEast',
+                 'Europe',
+                 'Singapore',
+                 'Shanghai',
+                 'Brazil',
+                 'Korea',
+                 'Austria',
+                 'Stockholm',
+                 'Australia',
+                 'SouthAfrica',
+                 'PerfectWorldTelecom',
+                 'PerfectWorldUnicom',
+                 'Dubai',
+                 'Chile',
+                 'Peru'];
 
-global.config = require("./config");
 
 /* Steam logic */
 var onSteamLogOn = function onSteamLogOn(){
@@ -52,6 +67,14 @@ var onSteamLogOn = function onSteamLogOn(){
         Dota2.on("practiceLobbyJoinResponse", function(result, response){
             console.log('MAYBE THIS IS WHAT I WANT');
             Dota2.joinChat(response.channelName, dota2.DOTAChatChannelType_t.DOTAChannelType_Lobby);
+        });
+
+        Dota2.on("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
+            console.log('Got matchmaking stats');
+            //console.log("Wait times:\n")
+            //console.log(waitTimesByGroup)
+            //console.log("Players searching:\n")
+            //console.log(searchingPlayersByGroup)
         });
 
         Dota2.on('error', function(err) {
@@ -100,7 +123,7 @@ var onSteamLogOn = function onSteamLogOn(){
             bot.sendMessage(source, 'Thank you for choosing BORK CORP (This feature is not yet implemented)');
             if (lmessage.split(' ')[2] == undefined) {
                 bot.sendMessage(source, 'You need to give me your twitch channel.');
-                return;  
+                return;
             }
 
             randomkey = (Math.random()+Math.random()).toString(36).substr(2,6);
@@ -128,6 +151,8 @@ var onSteamLogOn = function onSteamLogOn(){
         setTimeout(bot.logOn(logOnDetails), 5000);
     };
 
+
+global.config = require("./config");
 
 // Login, only passing authCode if it exists
 var logOnDetails = {
@@ -209,8 +234,20 @@ var zrpcserver = new zerorpc.Server({
             d2keys.splice(d2keys.indexOf('Dota2Client'));
             reply(null, d2keys);
         } else {
-            reply(null, eval('dota2.' + ename));
+            reply(null, dota2[ename]);
         };
+    },
+    getmmstats: function(reply) {
+        Dota2.matchmakingStatsRequest();
+
+        Dota2.once("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
+            var mmdata = {};
+
+            for (var i = waitTimesByGroup.length - 1; i >= 0; i--) {
+                mmdata[mmregions[i]] = [waitTimesByGroup[i], searchingPlayersByGroup[i]];
+            };
+            reply(null, mmdata);
+        });
     },
 
     /*
@@ -474,15 +511,37 @@ process.on('error', function(err) {
 });
 
 /*
-None = 0;
-Blocked = 1;
-PendingInvitee = 2; obsolete "renamed to RequestRecipient"
-RequestRecipient = 2;
-Friend = 3;
-RequestInitiator = 4;
-PendingInviter = 4;  obsolete "renamed to RequestInitiator"
-Ignored = 5;
-IgnoredFriend = 6;
-SuggestedFriend = 7;
-Max = 8;
+
+Steam friend status enum:
+
+    None              = 0;
+    Blocked           = 1;
+    PendingInvitee    = 2; obsolete "renamed to RequestRecipient"
+    RequestRecipient  = 2;
+    Friend            = 3;
+    RequestInitiator  = 4;
+    PendingInviter    = 4;  obsolete "renamed to RequestInitiator"
+    Ignored           = 5;
+    IgnoredFriend     = 6;
+    SuggestedFriend   = 7;
+    Max               = 8;
+
+Dota matchmaking regions
+
+    ['USWest',               matchgroup: 0
+    'USEast',               matchgroup: 1
+    'Europe',               matchgroup: 2
+    'Singapore',            matchgroup: 3
+    'Shanghai',             matchgroup: 4
+    'Brazil',               matchgroup: 5
+    'Korea',                matchgroup: 6
+    'Austria',              matchgroup: 8
+    'Stockholm',            matchgroup: 7
+    'Australia',            matchgroup: 9
+    'SouthAfrica',          matchgroup: 10
+    'PerfectWorldTelecom',  matchgroup: 11
+    'PerfectWorldUnicom',   matchgroup: 12
+    'Dubai',                matchgroup: 13
+    'Chile',                matchgroup: 14
+    'Peru']                 matchgroup: 15
 */

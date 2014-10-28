@@ -9,6 +9,8 @@ root = 'https://api.twitch.tv/kraken/'
 
 def _apiget(path):
     r = requests.get(root+path)
+    r.raise_for_status()
+
     try:
         return r.json()
     except Exception as e:

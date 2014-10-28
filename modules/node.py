@@ -36,6 +36,9 @@ def gc_status():
 def get_enum(name=None):
     return zrpc.getenum(name)
 
+def get_mm_stats():
+    return zrpc.getmmstats()
+
 ########
 
 def updateMMR(channel, chid, autolaunch=True):

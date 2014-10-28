@@ -104,6 +104,8 @@ class MyBot(irc.IRCClient):
                 return
             elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'turbo':
                 return
+            elif msg.split()[0] == 'SPECIALUSER':
+                print msg
 
             # print "INFO (#%s): %s" % (channel, msg)
             chatmanager.event(self.chan(), None, 'infomsg', msg, self, user in self.oplist)
@@ -122,7 +124,6 @@ class MyBot(irc.IRCClient):
             elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'turbo':
                 return
 
-
             # print "INFO from ttv (%s): %s" % (channel, msg)
 
             if 'The moderators of this room are:' in msg:
@@ -130,6 +131,7 @@ class MyBot(irc.IRCClient):
                 if not self.gotops:
                     print "Received initial list of ops"
                     self.gotops = True
+                print 'Updating ops'
 
             chatmanager.event(self.chan(channel), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
             return

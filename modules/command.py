@@ -234,7 +234,7 @@ class Commander(object):
                 output = comm.process(event.channel, event.user, event.data, self._getargs(event.data))
                 t2 = time.time()
                 if output[1] is command.OK:
-                    print "[%s] Command time: %4.4fs, Total time: %4.4fs" % (self.modulename, (t2-t1)*1000,(t2-tstart)*1000)
+                    print "[%s] Command time: %4.4fms, Total time: %4.4fms" % (self.modulename, (t2-t1)*1000,(t2-tstart)*1000)
                     print "[%s] Output for %s: %s" % (self.modulename, comm.trigger, output[0])
                     event.bot.say(event.channel, output[0])
 

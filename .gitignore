@@ -103,5 +103,6 @@ joinpartbot.py
 *.p
 *.old
 
+modules/moderation.py
 modules/test
 modules/node-test
