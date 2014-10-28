@@ -198,10 +198,10 @@ def generate_message_commands(bot):
             if args[0] in ['len', 'size']:
                 return str(settings.numkeys())
 
-            if args[0] in ['get']:
+            elif args[0] in ['get']:
                 return str(settings.getdata(args[1]))
 
-            if args[0] in ['set']:
+            elif args[0] in ['set']:
                 try:
                     oldval = settings.getdata(args[1])
                 except:
@@ -211,7 +211,7 @@ def generate_message_commands(bot):
                     settings.setdata(args[1], args[2])
                     return "Key %s changed: %s -> %s" % (args[1], oldval, args[2])
 
-            if args[0] in ['remove', 'delete', 'del']:
+            elif args[0] in ['remove', 'delete', 'del']:
                 try:
                     settings.deldata(args[1])
                 except:
@@ -219,9 +219,11 @@ def generate_message_commands(bot):
                 else:
                     return "Key %s deleted." % args[1]
 
-            if args[0] in ['dump']:
+            elif args[0] in ['dump']:
                 print settings.dumpkeys()
                 return 'Done, see console.'
+
+            # Else just presume that the arg is a settings domain
         return 'Huh?'
     coms.append(command.Command('#!settings', f, bot, groups=me_only_group))
 
@@ -544,22 +546,27 @@ def generate_message_commands(bot):
         '''
 
         if args:
+            if args[0].lower() == 'help':
+                helpstr = '!mmrsetup addme <steamid/profile> -> Has the bot attempt to add you on steam from the provided steamid or profile link | '
+                helpstr += '!mmrsetup addyou -> Returns a community link and a steam uri (for use with the Run dialog, Windows + r) to add the bot on steam from either one. '
+                helpstr += 'Help arguments are also available for both commands. (!mmrsetup addme help)'
+                return helpstr
+
             if args[0].lower() == 'addme' and len(arg) >= 2:
                 if args[1].lower() == 'help':
-                    return 'blah blah help'
+                    return 'Usage: !mmrsetup addme <help | steamid | steam profile link>'
 
-                steamthing = args[1] # might need to check for 'help'
+                steamthing = args[1]
 
                 # steamid | steam link | vanity name (api call to resolve)
                 # parse steamthing
 
             if args[0].lower() == 'addyou' and len(arg) >= 2:
                 if args[1].lower() == 'help':
-                    return 'blah blah help'
+                    return 'Usage: !mmrsetup addyou'
 
-                return "I await your friend request and message (enable mmr).  https://steamcommunity.com/id/Borkedbot/ or Run -> steam://friends/add/76561198153108180"
+                return "I await your friend request and message (enable mmr).  https://steamcommunity.com/id/Borkedbot/ or Run (Windows + r) -> steam://friends/add/76561198153108180"
 
-                # "You can find me on steam as Borkedbot or you can put this in your run dialog (Windows button + r): steam://friends/add/76561198153108180"
                 # "When you add me, send me the following as a message through steam: verifytwitch %s" % channel
                 # NODEJS REPLY TO MESSAGE: "To finish verification: say the following message in twitch chat: !mmrsetup verify {code}"
 
@@ -584,7 +591,7 @@ def generate_message_commands(bot):
 
                 # maybe change to simple explainations and say use the help argument
         return '''Hi.  You have two options.  1: You give me something to add you from (steam id, profile link)  or 2: you add me on steam.  \
-                These are the commands, respectively: !mmrsetup addme OR !mmrsetup addyou  \
+                These are the commands, respectively: !mmrsetup addme OR !mmrsetup addyou.  \
                 Once added, send me a message saying this: enable mmr'''
 
     coms.append(command.Command('!mmrsetup', f, bot, groups=['broadcaster'], repeatdelay=15))

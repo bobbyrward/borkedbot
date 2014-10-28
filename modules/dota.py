@@ -7,10 +7,10 @@ import steamapi, twitchapi, settings, node
 LOAD_ORDER = 35
 
 enabled_channels = {
-    # channel name : (Display name, get mmr)
+    # channel name : (Display name, mmr enabled)
+    'monkeys_forever': ('Monkeys', True),
     'mynameisamanda': ('Amanda', False),
     'kizzmett': ('Kizzmett', True),
-    'monkeys_forever': ('Monkeys', True),
     'barnyyy': ('Barny', False)
 }
 
@@ -34,12 +34,18 @@ def latestBlurb(channel):
 
         settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
 
-        latestmatch = steamapi.getlastdotamatch(dotaid)
+        try:
+            latestmatch = steamapi.getlastdotamatch(dotaid)
+        except Exception as e:
+            print "[Dota] API error: ", e
+            return
+
+
         previousmatch = settings.trygetset('%s_last_match' % channel, latestmatch)
 
         if previousmatch['match_id'] != latestmatch['match_id']:
 
-            # Somewhere in here is where I do the logic to check if we've skipped a game or not
+            #TODO: Somewhere in here is where I do the logic to check if we've skipped a game or not
 
             print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previousmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
             return getLatestGameBlurb(channel, dotaid, latestmatch, enabled_channels[channel][1] and str(latestmatch['lobby_type']) == '7')

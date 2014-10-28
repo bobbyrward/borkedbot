@@ -107,6 +107,7 @@ def _manage_modules():
         imported_modules = list(set(imported_modules))
 
         imported_modules.sort(key=lambda x: x.LOAD_ORDER)
+        new_imports.sort(key=lambda x: x.LOAD_ORDER)
 
         if len(new_imports):
             _info("Importing %s new modules:" % len(new_imports))
@@ -122,9 +123,7 @@ def _manage_modules():
             _info('')
 
             for mm in removed_imports:
-                mpop = modules_mtime.pop(mm, None)
-                if mpop == None:
-                    print "Something has gone wrong removing mtime"
+                del modules_mtime[mm]
 
 
 # This gets called after modules are imported to activate them
@@ -223,6 +222,7 @@ def _pr(xx):
     print xx
 
 
+# TODO: add some sort of log function for stdout replacement/enhancement
 class IRCevent(object):
     def __init__(self, bot, channel, user, etype, data, isop):
         self.bot = bot

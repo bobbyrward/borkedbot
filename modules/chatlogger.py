@@ -16,7 +16,7 @@ def formatdate():
     now = datetime.date.today()
     return "["+" ".join([now.strftime("%A")[0:3], now.strftime("%B")[0:3], now.strftime("%d"), datetime.datetime.now().strftime("%H:%M:%S"), time.tzname[0], now.strftime("%Y")])+"] "
 
-def log(user, channel, msg, isop, logstdout = True):
+def log(user, channel, msg, isop, isaction = False, logstdout = True):
     logpath = "/var/www/twitch/%s/chat/" % channel
     if not os.path.isfile(logpath + "log.txt"): 
         print "Creating log file for " + channel

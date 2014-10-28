@@ -378,7 +378,7 @@ var zrpcserver = new zerorpc.Server({
 
         if (Dota2._gcReady) {
             Dota2.createPracticeLobby(gameName, password, serverRegion, gameMode, function (err, body) {
-                console.log("Lobby created? ",err); // DOTA_JOIN_RESULT_ALREADY_IN_GAME should mean OK
+                console.log("Lobby created? ",err); // DOTA_JOIN_RESULT_ALREADY_IN_GAME should mean OK for whatever reason
                 console.log(body);
             });
             Dota2.once("practiceLobbyCreateResponse", function(lobbyresponse, id) {

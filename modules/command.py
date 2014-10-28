@@ -78,27 +78,28 @@ class Command(object):
                 if not msg.lower().split()[0] == self.trigger.lower():
                     return WRONG_TRIGGER
 
+        if channel in self.blacklist:
+            return BAD_CHANNEL
+
+        if self.channels and channel not in self.channels:
+            return BAD_CHANNEL
+
+
+        if user == 'imayhaveborkedit':
+            return OK
+
         if 'special' in self.groups and user != 'imayhaveborkedit':
             return SPECIAL_RESTRICTED
 
-        if 'broadcaster' in self.groups and user not in [channel, 'imayhaveborkedit']:
+        if 'broadcaster' in self.groups and user != channel:
             return HOST_RESTRICTED
 
-        if self.opcom and user not in self.bot.oplist | {'imayhaveborkedit'}:
+        if self.opcom and user not in self.bot.oplist:
             return OP_RESTRICTED
 
-        if not self._checkdelay() and user not in self.bot.oplist | {'imayhaveborkedit'}:
+        if not self._checkdelay() and user not in self.bot.oplist:
             print "%s: Time requested: %s Last use: %s Difference: %s " % (self, time.time(), self.lastuse, time.time()-self.lastuse)
             return DELAY_LOCKED
-
-        if channel in self.blacklist:
-            return BAD_CHANNEL
-
-        if len(self.channels) and channel not in self.channels + ['borkedbot']:
-            return BAD_CHANNEL
-
-        if channel in self.blacklist:
-            return BAD_CHANNEL
 
         return OK
 
