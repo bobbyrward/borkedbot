@@ -7,6 +7,7 @@ var steam = require("steam"),
     Dota2 = new dota2.Dota2Client(bot, true),
     zerorpc = require("zerorpc"),
 
+    adminids = ['76561198030495011'],
     chatkeymap = {},
 
     mmregions = ['USWest',
@@ -106,21 +107,21 @@ var onSteamLogOn = function onSteamLogOn(){
     onMessage = function onMessage(source, message, type, chatter) {
         // respond to both chat room and private messages
         console.log('Received message');
-        console.log(source + " : " + message + " : " + type + " : " + chatter)
+        console.log(source + " : " + message + " : " + type + " : " + chatter);
 
-        lmessage = message.toLowerCase()
+        lmessage = message.toLowerCase();
 
         // move over to switch eventually
         if (lmessage == 'test') {
-          bot.sendMessage(source, 'Yes hello this is test');
+            bot.sendMessage(source, 'Yes hello this is test');
         }
 
         if (lmessage == 'help') {
-          bot.sendMessage(source, 'I\'m working on it!');
+            bot.sendMessage(source, 'I\'m working on it!');
         }
 
+
         if (lmessage.indexOf('enable mmr') > -1) {
-            bot.sendMessage(source, 'Thank you for choosing BORK CORP (This feature is not yet implemented)');
             if (lmessage.split(' ')[2] == undefined) {
                 bot.sendMessage(source, 'You need to give me your twitch channel.');
                 return;
@@ -129,7 +130,8 @@ var onSteamLogOn = function onSteamLogOn(){
             randomkey = (Math.random()+Math.random()).toString(36).substr(2,6);
             chatkeymap[lmessage.split(' ')[2]] = randomkey;
 
-            bot.sendMessage(source, "Please use the following command in your chat to complete the verification: !mmrsetup verify " + randomkey);
+            bot.sendMessage(source, "Verification key generated for twitch channel \"" + lmessage.split(' ')[2] + "\".  "
+                + "Please use the following command in your chat to complete the verification: !mmrsetup verify " + randomkey);
 
         }
     },
@@ -284,7 +286,19 @@ var zrpcserver = new zerorpc.Server({
         channel = typeof channel !== 'function' ? channel : null;
         vkey = typeof vkey !== 'function' ? vkey : null;
 
-        reply(null, chatkeymap[channel] == vkey);
+        var generatedkey = chatkeymap[channel];
+        if (generatedkey === undefined) {
+            reply("Unregistered", false);
+            return;
+        }
+
+        reply(null, generatedkey == vkey);
+    },
+    clearkey: function(keychannel, reply) {
+        reply = arguments[arguments.length - 1];
+        keychannel = typeof keychannel !== 'function' ? keychannel : null;
+
+        reply(null, delete chatkeymap[keychannel]);
     },
 
     /*

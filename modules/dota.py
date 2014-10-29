@@ -6,20 +6,24 @@ import steamapi, twitchapi, settings, node
 
 LOAD_ORDER = 35
 
-enabled_channels = {
-    # channel name : (Display name, mmr enabled)
-    'monkeys_forever': ('Monkeys', True),
-    'mynameisamanda': ('Amanda', False),
-    'kizzmett': ('Kizzmett', True),
-    'barnyyy': ('Barny', False)
-}
+# enabled_channels = {
+#     # channel name : (Display name, mmr enabled)
+#     'monkeys_forever': (settings.getdata('%s_common_name' % 'monkeys_forever'), settings.getdata('%s_mmr_enabled' % 'monkeys_forever')),
+#     'mynameisamanda': (settings.getdata('%s_common_name' % 'mynameisamanda'), settings.getdata('%s_mmr_enabled' % 'mynameisamanda')),
+#     'kizzmett': (settings.getdata('%s_common_name' % 'kizzmett'), settings.getdata('%s_mmr_enabled' % 'kizzmett')),
+#     'barnyyy': (settings.getdata('%s_common_name' % 'barnyyy'), settings.getdata('%s_mmr_enabled' % 'barnyyy'))
+# }
 
+enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
+
+def update_channels():
+    enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
 def setup(bot):
     return
 
 def alert(event):
-    if event.etype == 'msg' and event.channel in enabled_channels.keys():
+    if event.etype == 'msg' and event.channel in enabled_channels:
         r = latestBlurb(event.channel)
         if r is not None:
             event.bot.botsay(r)

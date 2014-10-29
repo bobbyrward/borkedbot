@@ -55,6 +55,9 @@ def updateMMR(channel, chid, autolaunch=True):
 def verify_code(channel, code):
     return zrpc.verifycheck(channel, code)
 
+def delete_key(channel):
+    return zrpc.clearkey(channel)
+
 
 ########
 

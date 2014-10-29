@@ -194,7 +194,7 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import settings
 
-        if len(args):
+        if args:
             if args[0] in ['len', 'size']:
                 return str(settings.numkeys())
 
@@ -258,7 +258,7 @@ def generate_message_commands(bot):
                     args[1]
                 except:
                     args.append('USEast')
-                
+
                 # region = difflib.get_close_matches(args[1], mmdata.keys(), 1)[0]
 
                 try:
@@ -268,10 +268,9 @@ def generate_message_commands(bot):
                     return "No match for %s" % args[1]
 
                 waittimes, searchers = mmdata[region]
-                
+
                 return  "Matchmaking data for region %s: Average queue time: %s, In queue: %s" % (
                     region, time.strftime("%M:%S", time.gmtime(waittimes)), searchers)
-
 
 
     coms.append(command.Command('#!node', f, bot, groups=me_only_group))
@@ -517,7 +516,7 @@ def generate_message_commands(bot):
     coms.append(command.Command('!mmr', f, bot, repeatdelay=16))
 
     def f(channel, user, message, args, data, bot):
-        import node
+        import dota, node, settings
         '''
 
 
@@ -552,7 +551,7 @@ def generate_message_commands(bot):
                 helpstr += 'Help arguments are also available for both commands. (!mmrsetup addme help)'
                 return helpstr
 
-            if args[0].lower() == 'addme' and len(arg) >= 2:
+            if args[0].lower() == 'addme' and len(args) >= 2:
                 if args[1].lower() == 'help':
                     return 'Usage: !mmrsetup addme <help | steamid | steam profile link>'
 
@@ -561,7 +560,7 @@ def generate_message_commands(bot):
                 # steamid | steam link | vanity name (api call to resolve)
                 # parse steamthing
 
-            if args[0].lower() == 'addyou' and len(arg) >= 2:
+            if args[0].lower() == 'addyou' and len(args) >= 2:
                 if args[1].lower() == 'help':
                     return 'Usage: !mmrsetup addyou'
 
@@ -570,11 +569,9 @@ def generate_message_commands(bot):
                 # "When you add me, send me the following as a message through steam: verifytwitch %s" % channel
                 # NODEJS REPLY TO MESSAGE: "To finish verification: say the following message in twitch chat: !mmrsetup verify {code}"
 
-            if args[0].lower() == 'verify' and len(arg) >= 2:
-                if channel != user:
+            if args[0].lower() == 'verify' and len(args) >= 2:
+                if user not in [channel, 'imayhaveborkedit']:
                     return
-                elif user == 'imayhaveborkedit':
-                    pass
 
                 if args[1].lower() == 'help':
                     return 'blah blah help'
@@ -582,12 +579,44 @@ def generate_message_commands(bot):
                 verified = node.verify_code(channel, args[1].lower())
 
                 if verified:
+                    node.delete_key(channel)
+
+                    en_chans = settings.getdata('dota_enabled_channels')
+                    if channel in en_chans:
+                        return "Wtf you're already enabled"
+
+                    settings.setdata('dota_enabled_channels', en_chans + [channel])
+                    settings.setdata('%s_common_name' % channel, channel)
+                    settings.setdata('%s_mmr_enabled' % channel, True)
+
+                    dota.update_channels()
+                    # set channel as enabled in settings
+
                     return "You did it!  Thanks for using this feature.  If you encounter any bugs or issues, let imayhaveborkedit know."
                 else:
                     return "Bad code or something is borked."
-                # make sure codes match (probably a nodejs bridge call)
-                # if channel == user and checkCode(channel, args[1])
-                # set channel as enabled in settings
+
+
+            if args[0].lower() == 'setname' and len(args) >= 2 and user in [channel, 'imayhaveborkedit']:
+                newname = ' '.join(args[1:])
+
+                try:
+                    oldname = settings.getdata('%s_common_name' % channel)
+                except:
+                    oldname = channel
+
+                settings.setdata('%s_common_name' % channel, newname)
+                dota.update_channels()
+
+                return "Set common name for %s: %s -> %s" % (channel, oldname, newname)
+
+
+            if args[0].lower() == 'deletekey' and user == 'imayhaveborkedit':
+                node.delete_key(channel)
+
+                return "Deleted key for %s" % channel
+
+            return "Bad option"
 
                 # maybe change to simple explainations and say use the help argument
         return '''Hi.  You have two options.  1: You give me something to add you from (steam id, profile link)  or 2: you add me on steam.  \
@@ -673,7 +702,8 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import random
         places = ["Superjoe Land.", "Superjoe's dirty hovel.", "Superjoe's shining kingdom.", "Superjoe's murky swamp.", "Superjoe's haunted house.",
-        "Superjoe's secret cave under monkeys_forever's house.", "Superjoe's bathtub.", "Superjoe's slave dungeon.", "Superjoe's deflated bouncy castle."]
+        "Superjoe's secret cave under monkeys_forever's house.", "Superjoe's bathtub.", "Superjoe's slave dungeon.", "Superjoe's deflated bouncy castle.",
+        "Superjoe's vault of broken promises and intangible dreams."]
 
         return 'It is currently %s in %s' % (time.asctime(), random.choice(places))
 
@@ -898,7 +928,7 @@ def generate_message_commands(bot):
 
         searchterm = difflib.get_close_matches(args[0].lower(), data.keys(), 1)
 
-        if len(searchterm):
+        if searchterm:
             return "%s (%s): %s" % data[searchterm[0].lower()]
         else:
             return "No match for \"%s\"" % args[0]

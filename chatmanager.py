@@ -123,7 +123,10 @@ def _manage_modules():
             _info('')
 
             for mm in removed_imports:
-                del modules_mtime[mm]
+                try:
+                    del modules_mtime[mm]
+                except:
+                    _info("Error removing mtime for %s" % mm)
 
 
 # This gets called after modules are imported to activate them
