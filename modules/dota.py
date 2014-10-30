@@ -17,6 +17,7 @@ LOAD_ORDER = 35
 enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
 def update_channels():
+    global enabled_channels
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
 def setup(bot):
@@ -48,6 +49,7 @@ def latestBlurb(channel):
         previousmatch = settings.trygetset('%s_last_match' % channel, latestmatch)
 
         if previousmatch['match_id'] != latestmatch['match_id']:
+            update_channels()
 
             #TODO: Somewhere in here is where I do the logic to check if we've skipped a game or not
 
@@ -183,6 +185,10 @@ class Lobby(object):
     GAMEMODE_1v1mid            = 21
     GAMEMODE_All_Draft         = 22
 
+    GAMEMODES = {
+        'ap': 1, 'cm':2, 'rd':3, 'sd':4, 'ar':5, 'rcm':8, 'mo': 11, 
+        'lp':12, 'lh':13, 'ad': 18, 'ardm':20, '1v1':21, 'rap':22 }
+
     SERVER_Unspecified         = 0
     SERVER_USWest              = 1
     SERVER_USEast              = 2
@@ -197,9 +203,17 @@ class Lobby(object):
     SERVER_PerfectworldTelecom = 12
     SERVER_PerfectworldUnicom  = 13
 
+    SERVERS = {
+        'auto':0, 'uswest':1, 'useast':2, 'europe' : 3, 
+        'korea' : 4, 'singapore' : 5, 'australia' : 7, 
+        'stockholm' : 8, 'austria' : 9, 'brazil' : 10, 
+        'southafrica' : 11, 'perfectworldtelecom' : 12,
+        'perfectworldunicom' : 13 }
+
     def __init__(self, channel, name=None, password=None, mode=None, region=None):
         import node
 
+        self.channel = channel
         self.name = name
         self.password = password
         self.mode = mode

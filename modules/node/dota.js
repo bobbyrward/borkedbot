@@ -9,6 +9,7 @@ var steam = require("steam"),
 
     adminids = ['76561198030495011'],
     chatkeymap = {},
+    pendingenables = [],
 
     mmregions = ['USWest',
                  'USEast',
@@ -36,11 +37,11 @@ var onSteamLogOn = function onSteamLogOn(){
         Dota2.launch();
 
         Dota2.on("ready", function() {
-            console.log("Node-dota2 ready.");
+            util.log("Node-dota2 ready.");
         });
 
         Dota2.on("unready", function onUnready(){
-            console.log("Node-dota2 unready.");
+            util.log("Node-dota2 unready.");
         });
 
         Dota2.on("chatMessage", function(channel, personaName, message) {
@@ -49,37 +50,37 @@ var onSteamLogOn = function onSteamLogOn(){
 
         Dota2.on("guildInvite", function(guildId, guildName, inviter, guildInviteDataObject){
             // Dota2.setGuildAccountRole(guildId, 75028261, 3);
-            console.log('Got guild invite to "' + guildName + '" by ' + inviter + ' ('+guildId+')');
+            util.log('Got guild invite to "' + guildName + '" by ' + inviter + ' ('+guildId+')');
         });
 
         Dota2.on("profileData", function(accountID, profileData) {
-            console.log("Got data for " + accountID);
-            // console.log(profileData);
+            util.log("Got data for " + accountID);
+            // util.log(profileData);
         });
 
         Dota2.on("practiceLobbyCreateResponse", function(lobbyresponse, id) {
             if (id == '76561198153108180') return;
 
-            console.log("Lobby something'd ");
+            util.log("Lobby something'd ");
             console.log("id: ", id);
             console.log("Response: ", util.inspect(lobbyresponse));
         });
 
         Dota2.on("practiceLobbyJoinResponse", function(result, response){
             console.log('MAYBE THIS IS WHAT I WANT');
-            Dota2.joinChat(response.channelName, dota2.DOTAChatChannelType_t.DOTAChannelType_Lobby);
+            // Dota2.joinChat(response.channelName, dota2.DOTAChatChannelType_t.DOTAChannelType_Lobby);
         });
 
         Dota2.on("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
-            console.log('Got matchmaking stats');
-            //console.log("Wait times:\n")
-            //console.log(waitTimesByGroup)
-            //console.log("Players searching:\n")
-            //console.log(searchingPlayersByGroup)
+            util.log('Got matchmaking stats');
+            //util.log("Wait times:\n")
+            //util.log(waitTimesByGroup)
+            //util.log("Players searching:\n")
+            //util.log(searchingPlayersByGroup)
         });
 
         Dota2.on('error', function(err) {
-            console.error("dota: Help something borked ", err);
+            util.error("dota: Help something borked ", err);
         });
 
         Dota2.on("unhandled", function(kMsg) {
@@ -106,8 +107,13 @@ var onSteamLogOn = function onSteamLogOn(){
     },
     onMessage = function onMessage(source, message, type, chatter) {
         // respond to both chat room and private messages
-        console.log('Received message');
-        console.log(source + " : " + message + " : " + type + " : " + chatter);
+        util.log('Received message');
+
+        var chattypes = {};
+        for (var key in steam.EChatEntryType){
+            chattypes[steam.EChatEntryType[key]] = key;
+        }
+        console.log(">" + source + " : " + message + " : " + chattypes[type] + " : " + chatter);
 
         lmessage = message.toLowerCase();
 
@@ -120,33 +126,46 @@ var onSteamLogOn = function onSteamLogOn(){
             bot.sendMessage(source, 'I\'m working on it!');
         }
 
+        if (lmessage.indexOf('link twitch') > -1) {}
+
 
         if (lmessage.indexOf('enable mmr') > -1) {
             if (lmessage.split(' ')[2] == undefined) {
-                bot.sendMessage(source, 'You need to give me your twitch channel.');
+                bot.sendMessage(source, 'You need to give me your twitch channel (enable mmr your_twitch_channel)');
                 return;
             }
 
             randomkey = (Math.random()+Math.random()).toString(36).substr(2,6);
-            chatkeymap[lmessage.split(' ')[2]] = randomkey;
+            chatkeymap[lmessage.split(' ')[2]] = [randomkey, source];
 
             bot.sendMessage(source, "Verification key generated for twitch channel \"" + lmessage.split(' ')[2] + "\".  "
                 + "Please use the following command in your chat to complete the verification: !mmrsetup verify " + randomkey);
+        }
 
+        if (adminids.indexOf(source) > -1) {
+            // Commands
+            if (lmessage.indexOf('verify dump') > -1) {
+                bot.sendMessage(source, JSON.stringify(chatkeymap));
+            }
         }
     },
     onFriend = function onFriend(steamID, relation) {
         util.log(steamID + ':' + relation);
+        if (relation == steam.EFriendRelationship.PendingInvitee){
+            util.log("Got friend request from " + steamID);
+            bot.addFriend(steamID);
+        }
+        // send message to verify or whatever?
     },
     onSteamError = function onSteamError(err) {
-        console.error("steam: Help something borked ", err);
+        util.error("steam: Help something borked ", err);
         if (err.eresult == 34) {
-            console.log("we got logged out");
+            util.log("we got logged out");
             Dota2.exit();
         };
     },
     onSteamLogoff = function onSteamLogoff() {
-        console.log("steam is derp and logged off");
+        util.log("steam is derp and logged off");
         console.log(arguments);
         Dota2.exit();
 
@@ -174,6 +193,7 @@ bot.on("loggedOn", onSteamLogOn)
     .on('servers', onSteamServers)
     .on('webSessionID', onWebSessionID)
     .on('message', onMessage)
+    .on('friend', onFriend)
     .on('error', onSteamError);
 
 var zrpcserver = new zerorpc.Server({
@@ -193,7 +213,7 @@ var zrpcserver = new zerorpc.Server({
     },
     test: function(thing, reply) {
         reply = arguments[arguments.length - 1];
-        // console.log(thing);
+        // util.log(thing);
         reply("Idiot", 'something borked');
     },
     evaljs: function(incom, reply) {
@@ -286,7 +306,7 @@ var zrpcserver = new zerorpc.Server({
         channel = typeof channel !== 'function' ? channel : null;
         vkey = typeof vkey !== 'function' ? vkey : null;
 
-        var generatedkey = chatkeymap[channel];
+        var generatedkey = chatkeymap[channel][0];
         if (generatedkey === undefined) {
             reply("Unregistered", false);
             return;
@@ -299,6 +319,15 @@ var zrpcserver = new zerorpc.Server({
         keychannel = typeof keychannel !== 'function' ? keychannel : null;
 
         reply(null, delete chatkeymap[keychannel]);
+    },
+    setpendingmmrenable: function(steamid, reply) {
+        reply = arguments[arguments.length - 1];
+        if (pendingenables.indexOf(steamid) > -1) {
+            pendingenables.push(steamid);
+            reply(null, true);
+        } else {
+            reply(null, false);
+        }
     },
 
     /*

@@ -18,6 +18,9 @@ def alert(event):
 
 #####################
 
+def raw_eval(raw_command):
+    return zrpc.evaljs(raw_command)
+
 def restart():
     return zrpc.shutdown()
 
@@ -128,3 +131,11 @@ def chat(channelname, message):
 
 def get_chats():
     return zrpc.getchats()
+
+########
+
+def add_friend(steamid):
+    return zrpc.evaljs("bot.addFriend(%s)" % steamid)
+
+def send_steam_message(steamid, message):
+    return zrpc.evaljs("bot.sendMessage('%s', '%s')" % (steamid, message))

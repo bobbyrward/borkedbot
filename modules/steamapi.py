@@ -155,6 +155,13 @@ def GetSchema(raw_request = False):
     return _get_call(p, **args)
 
 
+def ResolveVanityURL(vanityurl, raw_request = False):
+    args = {k:v for k,v in locals().items() if v is not None}
+    p = "http://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/"
+
+    return _get_call(p, **args)
+
+
 
 
 def setup(bot):

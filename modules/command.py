@@ -88,11 +88,14 @@ class Command(object):
         if user == 'imayhaveborkedit':
             return OK
 
-        if 'special' in self.groups and user != 'imayhaveborkedit':
-            return SPECIAL_RESTRICTED
+        if 'broadcaster' in self.groups and user == channel:
+            return OK
 
         if 'broadcaster' in self.groups and user != channel:
             return HOST_RESTRICTED
+        
+        if 'special' in self.groups and user != 'imayhaveborkedit':
+            return SPECIAL_RESTRICTED
 
         if self.opcom and user not in self.bot.oplist:
             return OP_RESTRICTED

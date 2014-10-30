@@ -77,7 +77,7 @@ salem_mafia = {
     'godfather' : ('Godfather', 'Mafia Killing',
         'Kill someone each night. You can\'t be killed at night. You will appear to be a town member to the Sheriff. If you do not designate a target, the Mafioso may target anyone.'),
     'janitor' : ('Janitor', 'Mafia Deception',
-        'Choose a dying person to clean each night. If your target dies at night their role and last will will not be shown to the town, and only you will see them. You only have 3 cleanings.'),
+        'Choose a dying person to clean each night. If your target dies at night their role and last will not be shown to the town, and only you will see them. You only have 3 cleanings.'),
     'mafioso' : ('Mafioso', 'Mafia Killing',
         'Carry out the Godfather\'s orders. If the Godfather designates a target, you will kill them. If Godfather is dead or did not choose to kill someone you can kill whoever you want. ')}
 
@@ -150,6 +150,7 @@ def generate_message_commands(bot):
     #############################
 
     me_only_group = ['special']
+    me_and_host = ['special', 'broadcaster']
 
     coms.append(command.SimpleCommand('#!dbsize', "We've got %s entries." % markov.redis_conn.dbsize(), bot, groups=me_only_group, prependuser=False))
 
@@ -203,13 +204,20 @@ def generate_message_commands(bot):
 
             elif args[0] in ['set']:
                 try:
+                    coer=eval(args[3])
+                    if coer == bool:
+                        coer = eval
+                except:
+                    coer=str
+
+                try:
                     oldval = settings.getdata(args[1])
                 except:
-                    settings.setdata(args[1], args[2])
-                    return "Key %s added: %s" % (args[1], args[2])
+                    settings.setdata(args[1], coer(args[2]))
+                    return "Key %s added: %s (%s)" % (args[1], args[2], (coer.__name__ if coer is not eval else bool.__name__))
                 else:
-                    settings.setdata(args[1], args[2])
-                    return "Key %s changed: %s -> %s" % (args[1], oldval, args[2])
+                    settings.setdata(args[1], coer(args[2]))
+                    return "Key %s changed: %s -> %s (%s)" % (args[1], oldval, args[2], (coer.__name__ if coer is not eval else bool.__name__))
 
             elif args[0] in ['remove', 'delete', 'del']:
                 try:
@@ -293,21 +301,93 @@ def generate_message_commands(bot):
     #
 
     def f(channel, user, message, args, data, bot):
+        import random
         import node, settings
         from dota import Lobby
 
         # BLARGH SET UP ARGPARSE
 
-        # IF A LOBBY ALREADY EXISTS
-        #   SAY SOMETHING ABOUT IT
+        try:
+            lobby = settings.getdata('latest_lobby')
+        except:
+            lobby = None
 
-        lobby = Lobby(channel) # args
+        # TODO: move options up here
+        # parser.add_argument('option', choices=['create', 'leave', 'remake', 'start', 'shuffle', 'flip', 'kick'])
 
-        settings.setdata('latest_lobby', lobby)
+        if args:
+            if args[0].lower() == 'create':
+                if lobby:
+                    return "A lobby already exists (%s)" % lobby.chanel
 
-        return "A LOBBY HAS BEEN CREATED"
+                import argparse
+                options = args[1:]
 
-    coms.append(command.Command('!createlobby', f, bot, groups=me_only_group))
+                parser = argparse.ArgumentParser('create')
+                pwgroup = parser.add_mutually_exclusive_group()
+
+                #def __init__(self, channel, name=None, password=None, mode=None, region=None):
+                parser.add_argument('-name', nargs='*', default='Borkedbot lobby', type=str)
+                parser.add_argument('-mode', choices=Lobby.GAMEMODES.keys(), default='AP')
+                parser.add_argument('-server', choices=Lobby.SERVERS.keys(), default='Auto', dest='region')
+                pwgroup.add_argument('-password', nargs='*', default=argparse.SUPPRESS, type=str)
+                pwgroup.add_argument('-randompassword', action='store_true', default=argparse.SUPPRESS) # ENHANCE with action or something
+
+                try:
+                    ns = parser.parse_args(options)
+                except BaseException as e:
+                    return "you did something wrong"
+
+                prepasswordns = str(ns)
+
+                if hasattr(ns, 'randompassword'):
+                    ns.password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+                    del ns.randompassword
+
+                print ns
+                lobby = Lobby(channel, **vars(ns))
+                lobby.create()
+                settings.setdata('latest_lobby', lobby)
+                return "A LOBBY HAS BEEN CREATED %s" % prepasswordns.replace('Namespace','')
+
+            if args[0].lower() == 'leave':
+                if lobby:
+                    lobby.leave()
+                    settings.deldata('latest_lobby')
+                    return "Lobby has been abandoned."
+
+            if args[0].lower() == 'remake':
+                if lobby:
+                    lobby.remake() #TODO: add options parsing
+
+            if args[0].lower() == 'start':
+                if lobby:
+                    lobby.start()
+                    lobby.leave()
+
+            if args[0].lower() == 'shuffle':
+                if lobby:
+                    lobby.shuffle()
+
+            if args[0].lower() == 'flip':
+                if lobby:
+                    lobby.flip()
+
+            if args[0].lower() == 'kick':
+                if lobby:
+                    return 'Not yet implemented'
+
+
+            if args[0].lower() == 'help':
+                return "!lobby options: create, leave, remake, start, shuffle, flip, kick"
+        else:
+            if not lobby:
+                return "No lobby"
+            else:
+                return "Current lobby: yes (%s)" % lobby.channel # TODO: add __repr__
+
+
+    coms.append(command.Command('!lobby', f, bot, True))
 
     ######################################################################
     # Mod message_commands
@@ -546,23 +626,54 @@ def generate_message_commands(bot):
 
         if args:
             if args[0].lower() == 'help':
-                helpstr = '!mmrsetup addme <steamid/profile> -> Has the bot attempt to add you on steam from the provided steamid or profile link | '
+                helpstr = '!mmrsetup addme < steamid/profile link/profile name > -> Has the bot attempt to add you on steam from the provided steamid or profile link | '
                 helpstr += '!mmrsetup addyou -> Returns a community link and a steam uri (for use with the Run dialog, Windows + r) to add the bot on steam from either one. '
                 helpstr += 'Help arguments are also available for both commands. (!mmrsetup addme help)'
                 return helpstr
 
-            if args[0].lower() == 'addme' and len(args) >= 2:
-                if args[1].lower() == 'help':
-                    return 'Usage: !mmrsetup addme <help | steamid | steam profile link>'
+            if args[0].lower() == 'addme':
+                try:
+                    if args[1].lower() == 'help':
+                        return 'Usage: !mmrsetup addme < help | steamid | steam profile link >'
+                except: return 'Usage: !mmrsetup addme < help | steamid | steam profile link >'
 
                 steamthing = args[1]
+                steamid = ''
 
-                # steamid | steam link | vanity name (api call to resolve)
-                # parse steamthing
+                if 'steamcommunity.com/id/' in steamthing or 'steamcommunity.com/profiles/' in steamthing:
+                    steamid = [x for x in steamthing.split('/') if x][-1] # oh I hope this works
+                else:
+                    import re
+                    match = re.match('^\d*$', steamthing)
+                    if match:
+                        steamid = match.string
+                    else:
+                        import steamapi
+                        result = steamapi.ResolveVanityURL(steamthing)['response']
+                        if result['success'] == 1:
+                            steamid = result['message']
+                        else:
+                            return "Bad name, no match."
 
-            if args[0].lower() == 'addyou' and len(args) >= 2:
-                if args[1].lower() == 'help':
-                    return 'Usage: !mmrsetup addyou'
+                print "Determined that %s's steamid is: %s" % (channel, steamid)
+
+                if str(steamid) in node.raw_eval('bot.friends').keys():
+                    return "You are already on the bot's friend list.  If you want to change something, use [commands I need to write]"
+
+                node.add_friend(steamid)
+
+                node.send_steam_message(steamid, "Twitch user '%s' has requested to enable mmr data for this account.  " % channel +
+                    "If you have received this message in error, or have no idea what this is, simply ignore this message or block this bot.")
+
+                node.send_steam_message(steamid, "To generate a verification code, please type this: enable mmr your_twitch_channel")
+
+                
+
+            if args[0].lower() == 'addyou':
+                try:
+                    if args[1].lower() == 'help':
+                        return 'Usage: !mmrsetup addyou'
+                except: pass
 
                 return "I await your friend request and message (enable mmr).  https://steamcommunity.com/id/Borkedbot/ or Run (Windows + r) -> steam://friends/add/76561198153108180"
 
@@ -583,18 +694,20 @@ def generate_message_commands(bot):
 
                     en_chans = settings.getdata('dota_enabled_channels')
                     if channel in en_chans:
-                        return "Wtf you're already enabled"
+                        return "Wtf you're already enabled.  If you want to change something use [commands i need to write]"
 
                     settings.setdata('dota_enabled_channels', en_chans + [channel])
-                    settings.setdata('%s_common_name' % channel, channel)
+                    settings.trygetset('%s_common_name' % channel, channel)
                     settings.setdata('%s_mmr_enabled' % channel, True)
+
+                    settings.setdata('%s', verified, domain='steamids')
 
                     dota.update_channels()
                     # set channel as enabled in settings
 
                     return "You did it!  Thanks for using this feature.  If you encounter any bugs or issues, let imayhaveborkedit know."
                 else:
-                    return "Bad code or something is borked."
+                    return "Bad code."
 
 
             if args[0].lower() == 'setname' and len(args) >= 2 and user in [channel, 'imayhaveborkedit']:
@@ -619,11 +732,12 @@ def generate_message_commands(bot):
             return "Bad option"
 
                 # maybe change to simple explainations and say use the help argument
-        return '''Hi.  You have two options.  1: You give me something to add you from (steam id, profile link)  or 2: you add me on steam.  \
-                These are the commands, respectively: !mmrsetup addme OR !mmrsetup addyou.  \
+        return '''Hi.  You have two options.  1: You give me something to add you from (example: http://i.imgur.com/7Yepc8i.png either blue section or either link) \
+                or 2: you add me on steam.  These are the commands, respectively: !mmrsetup addme < steam thing > OR !mmrsetup addyou.  \
                 Once added, send me a message saying this: enable mmr'''
 
     coms.append(command.Command('!mmrsetup', f, bot, groups=['broadcaster'], repeatdelay=15))
+    #TODO: Maybe split mmr setup stuff and configuration stuff
 
     coms.append(command.SimpleCommand('!mumble', 'doc.asdfxyz.de (default port) 100 slot open server, on 24/7.  Try not to be awful, or bork will ban you.',
         bot, channels=['superjoe', 'monkeys_forever'], repeatdelay=10, targeted=True))
@@ -703,7 +817,7 @@ def generate_message_commands(bot):
         import random
         places = ["Superjoe Land.", "Superjoe's dirty hovel.", "Superjoe's shining kingdom.", "Superjoe's murky swamp.", "Superjoe's haunted house.",
         "Superjoe's secret cave under monkeys_forever's house.", "Superjoe's bathtub.", "Superjoe's slave dungeon.", "Superjoe's deflated bouncy castle.",
-        "Superjoe's vault of broken promises and intangible dreams."]
+        "Superjoe's vault of broken promises and intangible dreams.", "Superjoe's corn field."]
 
         return 'It is currently %s in %s' % (time.asctime(), random.choice(places))
 

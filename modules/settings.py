@@ -45,7 +45,7 @@ def trygetset(key, value, domain='settings-global', coerceto=None, announce=True
 def deldata(key, domain='settings-global', announce=True):
     if announce:
         print "[Settings] Key deleted: %s" % key
-    redisdb.hdel(key)
+    redisdb.hdel(domain, key)
 
 
 def numkeys(domain='settings-global'):
