@@ -9,7 +9,7 @@ var steam = require("steam"),
 
     adminids = ['76561198030495011'],
     chatkeymap = {},
-    pendingenables = [],
+    pendingenables = {},
 
     mmregions = ['USWest',
                  'USEast',
@@ -154,6 +154,13 @@ var onSteamLogOn = function onSteamLogOn(){
         if (relation == steam.EFriendRelationship.PendingInvitee){
             util.log("Got friend request from " + steamID);
             bot.addFriend(steamID);
+
+            if (steamID in pendingenables) {
+                bot.sendMessage(steamID, "Twitch user " + pendingenables[steamID] + " has requested to enable mmr data features for this account.  " +
+                    "If you have received this message in error, or have no idea what this is, simply ignore this message or block this bot.");
+
+                bot.sendMessage(steamID, "To generate a verification code, please type this: enable mmr your_twitch_channel");
+            };
         }
         // send message to verify or whatever?
     },
@@ -292,7 +299,7 @@ var zrpcserver = new zerorpc.Server({
             return;
         };
 
-        console.log("ZRPC: Updating mmr for ", channel);
+        util.log("ZRPC: Updating mmr for ", channel);
 
         Dota2.profileRequest(dotaid, true, function(err, body){
             fs.writeFileSync(util.format('/var/www/twitch/%s/data', channel), JSON.stringify(body));
@@ -320,14 +327,19 @@ var zrpcserver = new zerorpc.Server({
 
         reply(null, delete chatkeymap[keychannel]);
     },
-    setpendingmmrenable: function(steamid, reply) {
+    addpendingmmrenable: function(steamid, channel, reply) {
         reply = arguments[arguments.length - 1];
-        if (pendingenables.indexOf(steamid) > -1) {
-            pendingenables.push(steamid);
-            reply(null, true);
-        } else {
+        if (steamid in pendingenables) {
             reply(null, false);
+        } else {
+            pendingenables[steamid] = channel;
+            reply(null, true);
         }
+    },
+    delpendingmmrenable: function(steamid, reply) {
+        reply = arguments[arguments.length - 1];
+        delete pendingenables[steamid];
+        reply();
     },
 
     /*
@@ -342,7 +354,7 @@ var zrpcserver = new zerorpc.Server({
             return;
         };
 
-        console.log("ZRPC: Joining chat " + channel);
+        util.log("ZRPC: Joining chat " + channel);
 
 
         Dota2.joinChat(channel, type);
@@ -354,7 +366,7 @@ var zrpcserver = new zerorpc.Server({
             reply(null, false);
             return;
         };
-        console.log("ZRPC: Leaving chat " + channel);
+        util.log("ZRPC: Leaving chat " + channel);
         Dota2.leaveChat(channel);
 
         for (ch in Dota2.chatChannels) {          //
@@ -373,7 +385,7 @@ var zrpcserver = new zerorpc.Server({
             reply(null, false);
             return;
         };
-        console.log("ZRPC: Sending message to " + channel + ": " + message);
+        util.log("ZRPC: Sending message to " + channel + ": " + message);
 
         Dota2.sendMessage(channel, message);
 
@@ -394,7 +406,7 @@ var zrpcserver = new zerorpc.Server({
             reply(null, false);
             return;
         };
-        console.log("ZRPC: Chat channels requested");
+        util.log("ZRPC: Chat channels requested");
         reply(null, Dota2.chatChannels);
     },
 
@@ -415,7 +427,7 @@ var zrpcserver = new zerorpc.Server({
             return;
         };
 
-        console.log("ZRPC: Creating lobby");
+        util.log("ZRPC: Creating lobby");
 
         Dota2.leavePracticeLobby();
 
@@ -446,7 +458,7 @@ var zrpcserver = new zerorpc.Server({
             reply(null, false);
             return;
         };
-        console.log("ZRPC: Leaving lobby");
+        util.log("ZRPC: Leaving lobby");
 
         Dota2.leavePracticeLobby();
         Dota2.once("practiceLobbyResponse", function(lobbyresponse, id) {
@@ -508,20 +520,20 @@ var zrpcserver = new zerorpc.Server({
 
     shutdown: function(reply) {
         reply = arguments[arguments.length - 1];
-        console.log("ZRPC: Terminating via zrpc/python command");
+        util.log("ZRPC: Terminating via zrpc/python command");
 
         try {
-            console.log("ZRPC: Leaving lobby");
+            util.log("ZRPC: Leaving lobby");
             Dota2.leavePracticeLobby();
         } catch (e) {}
 
         try {
-            console.log("ZRPC: Exiting dota");
+            util.log("ZRPC: Exiting dota");
             Dota2.exit();
         } catch (e) {}
 
         try {
-            console.log("ZRPC: Logging off steam");
+            util.log("ZRPC: Logging off steam");
             bot.logOff();
         } catch (e) {}
 

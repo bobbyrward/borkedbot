@@ -61,6 +61,11 @@ def verify_code(channel, code):
 def delete_key(channel):
     return zrpc.clearkey(channel)
 
+def add_pending_mmr_enable(steamid, channel):
+    return zrpc.addpendingmmrenable(steamid, chann)
+
+def remove_pending_mmr_enable(steamid):
+    zrpc.delpendingmmrenable(steamid)
 
 ########
 

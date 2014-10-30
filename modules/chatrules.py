@@ -301,7 +301,7 @@ def generate_message_commands(bot):
     #
 
     def f(channel, user, message, args, data, bot):
-        import random
+        import random, argparse
         import node, settings
         from dota import Lobby
 
@@ -312,6 +312,15 @@ def generate_message_commands(bot):
         except:
             lobby = None
 
+        # class UsefulArgumentParser(argparse.ArgumentParser):
+        #     def error(self, message):
+        #         # self.print_help(sys.stderr)
+        #         raise ValueError(message)
+        #         # self.exit(2, '%s: error: %s\n' % (self.prog, message))
+
+
+
+
         # TODO: move options up here
         # parser.add_argument('option', choices=['create', 'leave', 'remake', 'start', 'shuffle', 'flip', 'kick'])
 
@@ -320,7 +329,6 @@ def generate_message_commands(bot):
                 if lobby:
                     return "A lobby already exists (%s)" % lobby.chanel
 
-                import argparse
                 options = args[1:]
 
                 parser = argparse.ArgumentParser('create')
@@ -344,7 +352,6 @@ def generate_message_commands(bot):
                     ns.password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
                     del ns.randompassword
 
-                print ns
                 lobby = Lobby(channel, **vars(ns))
                 lobby.create()
                 settings.setdata('latest_lobby', lobby)
@@ -660,14 +667,11 @@ def generate_message_commands(bot):
                 if str(steamid) in node.raw_eval('bot.friends').keys():
                     return "You are already on the bot's friend list.  If you want to change something, use [commands I need to write]"
 
+                node.add_pending_mmr_enable(steamid, channel)
                 node.add_friend(steamid)
 
-                node.send_steam_message(steamid, "Twitch user '%s' has requested to enable mmr data for this account.  " % channel +
-                    "If you have received this message in error, or have no idea what this is, simply ignore this message or block this bot.")
+                return "A friend request has been sent.  The steam bot will message you when you accept."
 
-                node.send_steam_message(steamid, "To generate a verification code, please type this: enable mmr your_twitch_channel")
-
-                
 
             if args[0].lower() == 'addyou':
                 try:
@@ -704,6 +708,8 @@ def generate_message_commands(bot):
 
                     dota.update_channels()
                     # set channel as enabled in settings
+
+                    node.remove_pending_mmr_enable(verified)
 
                     return "You did it!  Thanks for using this feature.  If you encounter any bugs or issues, let imayhaveborkedit know."
                 else:
