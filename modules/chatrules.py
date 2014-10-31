@@ -305,94 +305,103 @@ def generate_message_commands(bot):
         import node, settings
         from dota import Lobby
 
-        # BLARGH SET UP ARGPARSE
+
+        if not node.gc_status():
+            return "The dota 2 network is down (or the bot has disconnected for some reason)."
 
         try:
             lobby = settings.getdata('latest_lobby')
         except:
             lobby = None
 
-        # class UsefulArgumentParser(argparse.ArgumentParser):
-        #     def error(self, message):
-        #         # self.print_help(sys.stderr)
-        #         raise ValueError(message)
-        #         # self.exit(2, '%s: error: %s\n' % (self.prog, message))
+        class UsefulArgumentParser(argparse.ArgumentParser):
+            def error(self, message):
+                # self.print_help(sys.stderr)
+                raise ValueError(message)
+                # self.exit(2, '%s: error: %s\n' % (self.prog, message))
+
+        parser = UsefulArgumentParser('lobby')
+        pwgroup = parser.add_mutually_exclusive_group()
+
+        #def __init__(self, channel, name=None, password=None, mode=None, region=None):
+        parser.add_argument('option', choices=['create', 'leave', 'remake', 'start', 'shuffle', 'flip', 'kick', 'status', 'showpassword'])
+        parser.add_argument('-name', nargs='*', default='Borkedbot lobby', type=str)
+        parser.add_argument('-mode', choices=Lobby.GAMEMODES.keys(), default='AP')
+        parser.add_argument('-server', choices=Lobby.SERVERS.keys(), default='Auto', dest='region')
+        pwgroup.add_argument('-password', nargs='*', default=argparse.SUPPRESS, type=str)
+        pwgroup.add_argument('-randompassword', action='store_true', default=argparse.SUPPRESS) # ENHANCE with action or something                
+
+        try:
+            ns = parser.parse_args(args)
+        except ValueError as e:
+            print e
+            return str(e)
+
+        prepasswordns = ns
+
+        if hasattr(ns, 'randompassword'):
+            ns.password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+            del ns.randompassword
+
+        option = ns.option
+        del ns.option
+
+        
+        if option == 'create':
+            if lobby:
+                return "A lobby already exists (%s)" % lobby.chanel
+
+            lobby = Lobby(channel, **vars(ns))
+            lobby.create()
+            settings.setdata('latest_lobby', lobby)
+            
+            return "A LOBBY HAS BEEN CREATED %s" % str(prepasswordns).replace('Namespace','')
 
 
+        elif option == 'leave':
+            if lobby:
+                lobby.leave()
+                settings.deldata('latest_lobby')
+                return "Lobby has been abandoned."
 
+        elif option == 'remake':
+            if lobby:
+                lobby.remake() #TODO: add options parsing
+                return
 
-        # TODO: move options up here
-        # parser.add_argument('option', choices=['create', 'leave', 'remake', 'start', 'shuffle', 'flip', 'kick'])
+        elif option == 'start':
+            if lobby:
+                lobby.start()
+                lobby.leave()
+                return
 
-        if args:
-            if args[0].lower() == 'create':
-                if lobby:
-                    return "A lobby already exists (%s)" % lobby.chanel
+        elif option == 'shuffle':
+            if lobby:
+                lobby.shuffle()
+                return
 
-                options = args[1:]
+        elif option == 'flip':
+            if lobby:
+                lobby.flip()
+                return
 
-                parser = argparse.ArgumentParser('create')
-                pwgroup = parser.add_mutually_exclusive_group()
+        elif option == 'kick':
+            if lobby:
+                return 'Not yet implemented'
 
-                #def __init__(self, channel, name=None, password=None, mode=None, region=None):
-                parser.add_argument('-name', nargs='*', default='Borkedbot lobby', type=str)
-                parser.add_argument('-mode', choices=Lobby.GAMEMODES.keys(), default='AP')
-                parser.add_argument('-server', choices=Lobby.SERVERS.keys(), default='Auto', dest='region')
-                pwgroup.add_argument('-password', nargs='*', default=argparse.SUPPRESS, type=str)
-                pwgroup.add_argument('-randompassword', action='store_true', default=argparse.SUPPRESS) # ENHANCE with action or something
-
-                try:
-                    ns = parser.parse_args(options)
-                except BaseException as e:
-                    return "you did something wrong"
-
-                prepasswordns = str(ns)
-
-                if hasattr(ns, 'randompassword'):
-                    ns.password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-                    del ns.randompassword
-
-                lobby = Lobby(channel, **vars(ns))
-                lobby.create()
-                settings.setdata('latest_lobby', lobby)
-                return "A LOBBY HAS BEEN CREATED %s" % prepasswordns.replace('Namespace','')
-
-            if args[0].lower() == 'leave':
-                if lobby:
-                    lobby.leave()
-                    settings.deldata('latest_lobby')
-                    return "Lobby has been abandoned."
-
-            if args[0].lower() == 'remake':
-                if lobby:
-                    lobby.remake() #TODO: add options parsing
-
-            if args[0].lower() == 'start':
-                if lobby:
-                    lobby.start()
-                    lobby.leave()
-
-            if args[0].lower() == 'shuffle':
-                if lobby:
-                    lobby.shuffle()
-
-            if args[0].lower() == 'flip':
-                if lobby:
-                    lobby.flip()
-
-            if args[0].lower() == 'kick':
-                if lobby:
-                    return 'Not yet implemented'
-
-
-            if args[0].lower() == 'help':
-                return "!lobby options: create, leave, remake, start, shuffle, flip, kick"
-        else:
+        elif option == 'status':
             if not lobby:
                 return "No lobby"
             else:
                 return "Current lobby: yes (%s)" % lobby.channel # TODO: add __repr__
 
+        elif option == 'showpassword':
+            return "Here's the lobby password: %s" % lobby.password
+
+        elif option == 'help':
+            return "!lobby options: create, leave, remake, start, shuffle, flip, kick"
+
+        return "How did something not happen.  That... shouldn't happen..."
 
     coms.append(command.Command('!lobby', f, bot, True))
 
