@@ -168,6 +168,21 @@ def updateMMR(channel):
     return node.updateMMR(channel, dotaid)
 
 
+def determineSteamid(steamthing):
+    if 'steamcommunity.com/id/' in steamthing or 'steamcommunity.com/profiles/' in steamthing:
+        return [x for x in steamthing.split('/') if x][-1] # oh I hope this works
+    else:
+        import re
+        match = re.match('^\d*$', steamthing)
+        if match:
+            return match.string
+        else:
+            result = steamapi.ResolveVanityURL(steamthing)['response']
+            if result['success'] == 1:
+                return result['message']
+            else:
+                return False
+
 
 class Lobby(object):
 

@@ -23,6 +23,7 @@ def raw_eval(raw_command):
 
 def restart():
     return zrpc.shutdown()
+    # Maybe add deferred callback for when its ready again
 
 def status():
     return zrpc.status()
@@ -41,6 +42,9 @@ def get_enum(name=None):
 
 def get_mm_stats():
     return zrpc.getmmstats()
+
+def invite_to_monkeys_sub_guild(steamid):
+    return zrpc.invitetomonkeysguild(steamid)
 
 ########
 

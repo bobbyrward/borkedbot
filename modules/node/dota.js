@@ -267,6 +267,7 @@ var zrpcserver = new zerorpc.Server({
         };
     },
     getmmstats: function(reply) {
+        reply = arguments[arguments.length - 1];
         Dota2.matchmakingStatsRequest();
 
         Dota2.once("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
@@ -277,6 +278,30 @@ var zrpcserver = new zerorpc.Server({
             };
             reply(null, mmdata);
         });
+    },
+    invitetomonkeysguild: function(steamid, reply) {
+        reply = arguments[arguments.length - 1];
+
+        Dota2.inviteToGuild("228630", Dota2.ToAccountID(steamid), function(err, response) {
+            console.log("Guild invite callback:");
+            console.log(arguments);
+            reply(err, response['result']);
+        });
+
+        // reply(null);
+    },
+    cancelinvitetomonkeysguild: function(steamid, reply) {
+        reply = arguments[arguments.length - 1];
+
+        // Results
+
+        // { '0': null, '1': { result: 'ERROR_NO_PERMISSION' } } -> Given when an invite has already been accepted
+        // { '0': null, '1': { result: 'ERROR_ACCOUNT_ALREADY_IN_GUILD' } } -> Really now
+        // { '0': null, '1': { result: 'ERROR_ACCOUNT_ALREADY_INVITED' } } -> When an invite has been sent but not accepted
+        // { '0': null, '1': { result: 'SUCCESS' } } -> An invite has been rescinded
+
+
+        reply();
     },
 
     /*
@@ -581,6 +606,7 @@ Steam friend status enum:
     SuggestedFriend   = 7;
     Max               = 8;
 
+
 Dota matchmaking regions
 
     ['USWest',               matchgroup: 0
@@ -599,4 +625,16 @@ Dota matchmaking regions
     'Dubai',                matchgroup: 13
     'Chile',                matchgroup: 14
     'Peru']                 matchgroup: 15
+
+
+https://github.com/DoctorMcKay/node-steamcommunity
+
+request.post('http://steamcommunity.com/groups/group_url/announcements', {form: {
+    sessionID: g_sessionID,
+    action: 'post',
+    headline: 'Announcement Title',
+    body: "Announcement content"
+}});
+
+
 */

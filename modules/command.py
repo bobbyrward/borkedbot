@@ -211,6 +211,16 @@ def alert(event):
 
 
 class Commander(object):
+
+    PERMISSION_SPECIAL = 0
+    PERMISSION_BROADCASTER = 1
+    PERMISSION_MODS = 2
+    PERMISSION_SUBSCRIBERS = 3
+    PERMISSION_ALL = 4
+    PERMISSION_WHITELIST = 5
+    PERMISSION_BLACKLIST = 6
+    PERMISSION_WHITELIST_AND_BLACKLIST = 7
+
     def __init__(self, modulename, eventtypes=['msg']):
         import time, command
 
