@@ -820,51 +820,99 @@ def generate_message_commands(bot):
     coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
-        if user not in bot.channelsubs and user != 'imayhaveborkedit':
-            return
+        if user not in bot.channelsubs:
+            if user != 'imayhaveborkedit' or user not in bot.oplist:
+                return
 
         import dota, node, settings
 
+        # Monkeys sub guild id: "228630"
+
         # Do check to see if "Is your name this thing I pulled from steam?"
         if args:
+            channelguildid = settings.getdata('%s_sub_guild_id' % channel)
 
             if len(args) == 1:
-                steamid = dota.determineSteamid(args[0])
-                if steamid:
-                    result = node.invite_to_monkeys_sub_guild(steamid)
-                    
-                    if result == 'SUCCESS':
-                        try:
-                            previousinviteid = settings.getdata('monkeys_forever_sub_guild_invite_id_for_%s' % user)
-                        except:
-                            pass
-                        else:
-                            pass
-
-                        settings.setdata('monkeys_forever_sub_guild_invite_id_for_%s' % user, steamid)
-                        return "%s has been invited to the sub guild." % user
-                    else:
-                        return "Invitation failure: %s" % result.lower()
-
+                targetsteamid = args[0]
+                targetuser = user
             elif len(args) > 1 and user in bot.oplist:
-                steamid = dota.determineSteamid(args[1])
-                if steamid:
-                    result = node.invite_to_monkeys_sub_guild(steamid)
-                    
-                    if result == 'SUCCESS':
-                        try:
-                            previousinviteid = settings.getdata('monkeys_forever_sub_guild_invite_id_for_%s' % args[0])
-                        except:
-                            pass
-                        else:
-                            pass
+                targetsteamid = args[1]
+                targetuser = args[0]
 
-                        settings.setdata('monkeys_forever_sub_guild_invite_id_for_%s' % args[0], steamid)
-                        return "%s has been invited to the sub guild." % args[0]
-                    else:
-                        return "Invitation failure: %s" % result.lower()
+            steamid = dota.determineSteamid(targetsteamid)
+
+            if steamid:
+                try:
+                    previousinviteid = settings.getdata('invite_id_for_%s' % targetuser, domain='%s_sub_guild_invites' % channel)
+
+                except: # No data on record
+                    previousinviteid = None
+                    invite_result = node.invite_to_guild(channelguildid, steamid)
+
+                else: # ID already on record
+                    kick_result = node.kick_from_guild(channelguildid, previousinviteid)
+                    print 'Kick result: %s' % kick_result
+
+                    invite_result = node.invite_to_guild(channelguildid, steamid)
+
+
+                if invite_result == 'SUCCESS':
+                    settings.setdata('invite_id_for_%s' % targetuser, steamid, domain='%s_sub_guild_invites' % channel)
+
+                    return "%s has been invited to the sub guild." % targetuser
+                else:
+                    return "Invitation failure: %s" % invite_result.lower()
 
             return "Bad id or something"
+
+            # if len(args) == 1:
+            #     steamid = dota.determineSteamid(args[0])
+            #     if steamid:
+            #         try:
+            #             previousinviteid = settings.getdata('invite_id_for_%s' % user, domain='%s_sub_guild_invites' % channel)
+
+            #         except: # No data on record
+            #             previousinviteid = None
+            #             invite_result = node.invite_to_guild(channelguildid, steamid)
+
+            #         else: # ID already on record
+            #             kick_result = node.kick_from_guild(channelguildid, previousinviteid)
+            #             print 'Kick result: %s' % kick_result
+
+            #             invite_result = node.invite_to_guild(channelguildid, steamid)
+
+
+            #         if invite_result == 'SUCCESS':
+            #             settings.setdata('invite_id_for_%s' % user, steamid, domain='%s_sub_guild_invites' % channel)
+
+            #             return "%s has been invited to the sub guild." % user
+            #         else:
+            #             return "Invitation failure: %s" % invite_result.lower()
+
+            # elif len(args) > 1 and user in bot.oplist:
+            #     steamid = dota.determineSteamid(args[1])
+            #     if steamid:
+            #         try:
+            #             previousinviteid = settings.getdata('invite_id_for_%s' % args[0], domain='%s_sub_guild_invites' % channel)
+
+            #         except: # No data on record
+            #             previousinviteid = None
+            #             invite_result = node.invite_to_guild(channelguildid, steamid)
+
+            #         else: # ID already on record
+            #             kick_result = node.kick_from_guild(channelguildid, previousinviteid)
+            #             print 'Kick result: %s' % kick_result
+
+            #             invite_result = node.invite_to_guild(channelguildid, steamid)
+
+
+            #         if invite_result == 'SUCCESS':
+            #             settings.setdata('invite_id_for_%s' % args[0], steamid, domain='%s_sub_guild_invites' % channel)
+
+            #             return "%s has been invited to the sub guild." % args[0]
+            #         else:
+            #             return "Invitation failure: %s" % invite_result.lower()
+
         else:
             return "You need to give me a steam id or profile link"
 

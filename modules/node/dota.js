@@ -221,7 +221,7 @@ var zrpcserver = new zerorpc.Server({
     test: function(thing, reply) {
         reply = arguments[arguments.length - 1];
         // util.log(thing);
-        reply("Idiot", 'something borked');
+        reply("IDIOT", 'something borked');
     },
     evaljs: function(incom, reply) {
         reply = arguments[arguments.length - 1];
@@ -278,30 +278,6 @@ var zrpcserver = new zerorpc.Server({
             };
             reply(null, mmdata);
         });
-    },
-    invitetomonkeysguild: function(steamid, reply) {
-        reply = arguments[arguments.length - 1];
-
-        Dota2.inviteToGuild("228630", Dota2.ToAccountID(steamid), function(err, response) {
-            console.log("Guild invite callback:");
-            console.log(arguments);
-            reply(err, response['result']);
-        });
-
-        // reply(null);
-    },
-    cancelinvitetomonkeysguild: function(steamid, reply) {
-        reply = arguments[arguments.length - 1];
-
-        // Results
-
-        // { '0': null, '1': { result: 'ERROR_NO_PERMISSION' } } -> Given when an invite has already been accepted
-        // { '0': null, '1': { result: 'ERROR_ACCOUNT_ALREADY_IN_GUILD' } } -> Really now
-        // { '0': null, '1': { result: 'ERROR_ACCOUNT_ALREADY_INVITED' } } -> When an invite has been sent but not accepted
-        // { '0': null, '1': { result: 'SUCCESS' } } -> An invite has been rescinded
-
-
-        reply();
     },
 
     /*
@@ -537,6 +513,120 @@ var zrpcserver = new zerorpc.Server({
             console.log('help what am i doing ' + arguments);
         });
         reply(null, "Ok I hoped that worked");
+    },
+
+    /*
+        Guild stuff
+    */
+
+    invitetoguild: function(guildid, targetid, reply) {
+        reply = arguments[arguments.length - 1];
+
+        guildid = typeof guildid !== 'function' ? guildid : undefined;
+        targetid = typeof targetid !== 'function' ? targetid : undefined;
+
+        if (!(guildid && targetid)) {
+            reply('Bad arguments');
+            return;
+        }
+
+        if (!Dota2._gcReady) {
+            reply('GC unready');
+            return;
+        };
+
+        Dota2.inviteToGuild(guildid, Dota2.ToAccountID(targetid), function(err, response) {
+            reply(err, response['result']);
+        });
+    },
+    cancelinvitetoguild: function(guildid, targetid, reply) {
+        reply = arguments[arguments.length - 1];
+
+        guildid = typeof guildid !== 'function' ? guildid : undefined;
+        targetid = typeof targetid !== 'function' ? targetid : undefined;
+
+        if (!(guildid && targetid)) {
+            reply('Bad arguments');
+            return;
+        }
+
+        if (!Dota2._gcReady) {
+            reply('GC unready');
+            return;
+        };
+
+        Dota2.cancelInviteToGuild(guildid, Dota2.ToAccountID(targetid), function(err, response) {
+            reply(err, response['result']);
+        });
+    },
+    setguildrole: function(guildid, targetid, targetrole, reply) {
+        reply = arguments[arguments.length - 1];
+
+        guildid = typeof guildid !== 'function' ? guildid : undefined;
+        targetid = typeof targetid !== 'function' ? targetid : undefined;
+        targetrole = typeof targetrole !== 'function' ? targetrole : undefined;
+
+        if (!(guildid && targetid && targetrole)) {
+            reply('Bad arguments');
+            return;
+        }
+
+        if (!Dota2._gcReady) {
+            reply('GC unready');
+            return;
+        };
+
+        // 0 - Kick member from guild.
+        // 1 - Leader.
+        // 2 - Officer.
+        // 3 - Member.
+
+        Dota2.setGuildAccountRole(guildid, Dota2.ToAccountID(targetid), targetrole, function(err, response) {
+            reply(err, response['result']);
+        });
+    },
+    invitetomonkeysguild: function(targetid, reply) {
+        reply = arguments[arguments.length - 1];
+
+        targetid = typeof targetid !== 'function' ? targetid : undefined;
+
+        if (!(targetid)) {
+            reply('Bad arguments');
+            return;
+        }
+
+        if (!Dota2._gcReady) {
+            reply('GC unready');
+            return;
+        };
+
+        Dota2.inviteToGuild("228630", Dota2.ToAccountID(targetid), function(err, response) {
+            reply(err, response['result']);
+        });
+    },
+    cancelinvitetomonkeysguild: function(targetid, reply) {
+        reply = arguments[arguments.length - 1];
+
+        // { result: 'ERROR_NO_PERMISSION' } -> Given when an invite has already been accepted
+        // { result: 'ERROR_ACCOUNT_ALREADY_IN_GUILD' } -> Really now
+        // { result: 'ERROR_ACCOUNT_ALREADY_INVITED' } -> When an invite has been sent but not accepted
+        // { result: 'SUCCESS' } -> An invite has been rescinded
+
+        targetid = typeof targetid !== 'function' ? targetid : undefined;
+
+        if (!(targetid)) {
+            reply('Bad arguments');
+            return;
+        }
+
+        if (!Dota2._gcReady) {
+            reply('GC unready');
+            return;
+        };
+
+        Dota2.cancelInviteToGuild("228630", Dota2.ToAccountID(targetid), function(err, response) {
+            reply(err, response['result']);
+        });
     },
 
     /*

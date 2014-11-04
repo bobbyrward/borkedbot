@@ -43,9 +43,6 @@ def get_enum(name=None):
 def get_mm_stats():
     return zrpc.getmmstats()
 
-def invite_to_monkeys_sub_guild(steamid):
-    return zrpc.invitetomonkeysguild(steamid)
-
 ########
 
 def updateMMR(channel, chid, autolaunch=True):
@@ -110,9 +107,9 @@ allchat             : bool, Enable all chat?
 '''
 
 def config_lobby(
-    game_name = None, server_region = None, game_mode = None, allow_cheats = None, 
-    fill_with_bots = None, allow_spectating = None, pass_key = None, series_type = None, 
-    radiant_series_wins = None, dire_series_wins = None, allchat = None): 
+    game_name = None, server_region = None, game_mode = None, allow_cheats = None,
+    fill_with_bots = None, allow_spectating = None, pass_key = None, series_type = None,
+    radiant_series_wins = None, dire_series_wins = None, allchat = None):
     # This doesn't work yet
 
     args = {k:v for k,v in locals().items() if v is not None}
@@ -148,3 +145,21 @@ def add_friend(steamid):
 
 def send_steam_message(steamid, message):
     return zrpc.evaljs("bot.sendMessage('%s', '%s')" % (steamid, message))
+
+########
+
+def invite_to_guild(guildid, steamid):
+    return zrpc.invitetoguild(guildid, steamid)
+
+def cancel_invite_to_guild(guildid, steamid):
+    return zrpc.cancelinvitetoguild(guildid, steamid)
+
+def set_guild_role(guildid, targetid, targetrole):
+    # 0 - Kick from guild
+    # 1 - Leader
+    # 2 - Officer
+    # 3 - Member
+    return zrpc.setguildrole(guildid, targetid, targetrole)
+
+def kick_from_guild(guildid, targetid):
+    return zrpc.setguildrole(guildid, targetid, 0)

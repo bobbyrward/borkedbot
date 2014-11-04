@@ -175,6 +175,7 @@ def determineSteamid(steamthing):
         import re
         match = re.match('^\d*$', steamthing)
         if match:
+            # if long(match) < that number you subtract: add the number I guess
             return match.string
         else:
             result = steamapi.ResolveVanityURL(steamthing)['response']
