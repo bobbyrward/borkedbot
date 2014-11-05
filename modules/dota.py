@@ -16,6 +16,8 @@ LOAD_ORDER = 35
 
 enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
+STEAM_TO_DOTA_CONSTANT = 76561197960265728
+
 def update_channels():
     global enabled_channels
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
@@ -24,10 +26,16 @@ def setup(bot):
     return
 
 def alert(event):
-    if event.etype == 'msg' and event.channel in enabled_channels:
+    if event.channel in enabled_channels:
+        t1 = time.time()
         r = latestBlurb(event.channel)
+        
         if r is not None:
+            t2 = time.time()
+            print "[Dota] Blurb time: %4.4fms" % ((t2-t1)*1000)
+
             event.bot.botsay(r)
+
 
 
 def latestBlurb(channel):
@@ -42,7 +50,7 @@ def latestBlurb(channel):
         try:
             latestmatch = steamapi.getlastdotamatch(dotaid)
         except Exception as e:
-            print "[Dota] API error: ", e
+            print "[Dota] API error:", e
             return
 
 
@@ -108,19 +116,24 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False):
 
     d_victory = 'Victory' if not (matchdata['result']['radiant_win'] ^ (d_team == 'Radiant')) else 'Defeat'
 
-    finaloutput = "%s has %s a game.  http://www.dotabuff.com/matches/%s " % (
+    matchoutput = "%s has %s a game.  http://www.dotabuff.com/matches/%s " % (
         enabled_channels[channel][0], 'won' if d_victory == 'Victory' else 'lost',  latestmatch['match_id'])
 
     extramatchdata = "| Level {} {} {} - KDA: {}/{}/{} - CS: {}/{} - GPM: {} - XPM: {}".format(
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
 
-    if getmmr:
-        mmrstring = getMMRData(channel, dotaid)
-        print "[Dota] " + finaloutput + mmrstring + extramatchdata
-        return finaloutput + mmrstring + extramatchdata
-    else:
-        print "[Dota] " + finaloutput + extramatchdata
-        return finaloutput + extramatchdata
+    finaloutput = matchoutput + (getMMRData(channel, dotaid) if getmmr else '') + extramatchdata
+
+    print "[Dota] Blurb output: " + finaloutput
+    return finaloutput
+
+    #if getmmr:
+    #    mmrstring = getMMRData(channel, dotaid)
+    #    print "[Dota] Blurb output: " + matchoutput + mmrstring + extramatchdata
+    #    return matchoutput + mmrstring + extramatchdata
+    #else:
+    #    print "[Dota] Blurb output: " + matchoutput + extramatchdata
+    #    return matchoutput + extramatchdata
 
 
 def getMMRData(channel, dotaid):
@@ -169,20 +182,46 @@ def updateMMR(channel):
 
 
 def determineSteamid(steamthing):
-    if 'steamcommunity.com/id/' in steamthing or 'steamcommunity.com/profiles/' in steamthing:
-        return [x for x in steamthing.split('/') if x][-1] # oh I hope this works
+    # print '[Dota] Determining steamid for input: %s' % steamthing
+
+    if steamthing.startswith('STEAM_'):
+        sx,sy,sz = steamthing.split('_')[1].split(':')
+        maybesteamid = (int(sz)*2+int(sy)) + STEAM_TO_DOTA_CONSTANT
+
+    elif'steamcommunity.com/profiles/' in steamthing:
+        maybesteamid = [x for x in steamthing.split('/') if x][-1] # oh I hope this works
+
+    elif 'steamcommunity.com/id/' in steamthing:
+        try:
+            result = steamapi.ResolveVanityURL([x for x in steamthing.split('/') if x][-1])['response']
+        except:
+            return False
+
+        if result['success'] == 1:
+            maybesteamid = result['steamid']
+        else:
+            maybesteamid = None
     else:
         import re
         match = re.match('^\d*$', steamthing)
         if match:
-            # if long(match) < that number you subtract: add the number I guess
-            return match.string
-        else:
-            result = steamapi.ResolveVanityURL(steamthing)['response']
-            if result['success'] == 1:
-                return result['message']
+            if long(match.string) < STEAM_TO_DOTA_CONSTANT:
+                maybesteamid  = long(match) + STEAM_TO_DOTA_CONSTANT
             else:
+                maybesteamid = match.string
+        else:
+            try:
+                result = steamapi.ResolveVanityURL(steamthing)['response']
+            except:
                 return False
+
+            if result['success'] == 1:
+                maybesteamid = result['steamid']
+            else:
+                maybesteamid = None
+
+    print '[Dota] Determined that steamid for %s is %s' % (steamthing, maybesteamid)
+    return maybesteamid
 
 
 class Lobby(object):
@@ -202,7 +241,7 @@ class Lobby(object):
     GAMEMODE_All_Draft         = 22
 
     GAMEMODES = {
-        'ap': 1, 'cm':2, 'rd':3, 'sd':4, 'ar':5, 'rcm':8, 'mo': 11, 
+        'ap': 1, 'cm':2, 'rd':3, 'sd':4, 'ar':5, 'rcm':8, 'mo': 11,
         'lp':12, 'lh':13, 'ad': 18, 'ardm':20, '1v1':21, 'rap':22 }
 
     SERVER_Unspecified         = 0
@@ -220,9 +259,9 @@ class Lobby(object):
     SERVER_PerfectworldUnicom  = 13
 
     SERVERS = {
-        'auto':0, 'uswest':1, 'useast':2, 'europe' : 3, 
-        'korea' : 4, 'singapore' : 5, 'australia' : 7, 
-        'stockholm' : 8, 'austria' : 9, 'brazil' : 10, 
+        'auto':0, 'uswest':1, 'useast':2, 'europe' : 3,
+        'korea' : 4, 'singapore' : 5, 'australia' : 7,
+        'stockholm' : 8, 'austria' : 9, 'brazil' : 10,
         'southafrica' : 11, 'perfectworldtelecom' : 12,
         'perfectworldunicom' : 13 }
 

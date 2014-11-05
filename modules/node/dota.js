@@ -304,7 +304,7 @@ var zrpcserver = new zerorpc.Server({
 
         Dota2.profileRequest(dotaid, true, function(err, body){
             fs.writeFileSync(util.format('/var/www/twitch/%s/data', channel), JSON.stringify(body));
-            console.log(util.format('Wrote data for %s', channel));
+            util.log(util.format('Wrote data for %s', channel));
             reply(null, true);
         });
     },

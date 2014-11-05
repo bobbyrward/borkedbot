@@ -616,30 +616,9 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import dota, node, settings
         '''
-
-
-        mmmm    mmmm        mmmmmmm m    m mmmmm   mmmm
-        #   "m m"  "m          #    #    #   #    #"   "
-        #    # #    #          #    #mmmm#   #    "#mmm
-        #    # #    #          #    #    #   #        "#
-        #mmm"   #mm#           #    #    # mm#mm  "mmm#"
-
-
-
         76561197960265728 <- THAT IS THE NUMBER TO SUBTRACT FROM STEAM ID'S TO MAKE A DOTA ID
 
-        Two options:
-            !mmrsetup addme <link or id>
-            !mmrsetup addyou
-
-        addme:
-            Parse link or id, add them as friend
-
-        addyou:
-            Link to steam profile and steam://friends/add/76561198153108180
-
         I need to figure out what happens when you try to get a non friend mmr, catch that, and whatever else afterwards.
-
         '''
 
         if args:
@@ -655,25 +634,25 @@ def generate_message_commands(bot):
                         return 'Usage: !mmrsetup addme < help | steamid | steam profile link >'
                 except: return 'Usage: !mmrsetup addme < help | steamid | steam profile link >'
 
-                steamthing = args[1]
-                steamid = ''
+                # steamthing = args[1]
+                # steamid = ''
 
-                if 'steamcommunity.com/id/' in steamthing or 'steamcommunity.com/profiles/' in steamthing:
-                    steamid = [x for x in steamthing.split('/') if x][-1] # oh I hope this works
-                else:
-                    import re
-                    match = re.match('^\d*$', steamthing)
-                    if match:
-                        steamid = match.string
-                    else:
-                        import steamapi
-                        result = steamapi.ResolveVanityURL(steamthing)['response']
-                        if result['success'] == 1:
-                            steamid = result['message']
-                        else:
-                            return "Bad name, no match."
+                # if 'steamcommunity.com/id/' in steamthing or 'steamcommunity.com/profiles/' in steamthing:
+                #     steamid = [x for x in steamthing.split('/') if x][-1] # oh I hope this works
+                # else:
+                #     import re
+                #     match = re.match('^\d*$', steamthing)
+                #     if match:
+                #         steamid = match.string
+                #     else:
+                #         import steamapi
+                #         result = steamapi.ResolveVanityURL(steamthing)['response']
+                #         if result['success'] == 1:
+                #             steamid = result['message']
+                #         else:
+                #             return "Bad name, no match."
 
-                print "Determined that %s's steamid is: %s" % (channel, steamid)
+                steamid = dota.determineSteamid(args[1])
 
                 if str(steamid) in node.raw_eval('bot.friends').keys():
                     return "You are already on the bot's friend list.  If you want to change something, use [commands I need to write]"
@@ -824,13 +803,23 @@ def generate_message_commands(bot):
             if user != 'imayhaveborkedit' or user not in bot.oplist:
                 return
 
-        import dota, node, settings
-
+        # return "please wait, bugs are being fixed"
         # Monkeys sub guild id: "228630"
 
         # Do check to see if "Is your name this thing I pulled from steam?"
         if args:
-            channelguildid = settings.getdata('%s_sub_guild_id' % channel)
+
+            if args[0].lower() == 'help':
+                return 'halp not done yet'
+
+            import settings
+
+            try:
+                channelguildid = settings.getdata('%s_sub_guild_id' % channel)
+            except:
+                return "No sub guild id found for %s" % channel
+
+            import dota, node, steamapi
 
             if len(args) == 1:
                 targetsteamid = args[0]
@@ -839,14 +828,19 @@ def generate_message_commands(bot):
                 targetsteamid = args[1]
                 targetuser = args[0]
 
-            steamid = dota.determineSteamid(targetsteamid)
+            try:
+                steamid = dota.determineSteamid(targetsteamid)
+            except:
+                return "Something went wrong, it might be an issue with the steam api"
 
             if steamid:
                 try:
                     previousinviteid = settings.getdata('invite_id_for_%s' % targetuser, domain='%s_sub_guild_invites' % channel)
+                    previousinvitename = settings.getdata('invite_name_for_%s' % steamid, domain='%s_sub_guild_invites' % channel)
 
                 except: # No data on record
                     previousinviteid = None
+                    kick_result = None
                     invite_result = node.invite_to_guild(channelguildid, steamid)
 
                 else: # ID already on record
@@ -858,63 +852,25 @@ def generate_message_commands(bot):
 
                 if invite_result == 'SUCCESS':
                     settings.setdata('invite_id_for_%s' % targetuser, steamid, domain='%s_sub_guild_invites' % channel)
+                    settings.setdata('invite_name_for_%s' % steamid, targetuser, domain='%s_sub_guild_invites' % channel)
 
-                    return "%s has been invited to the sub guild." % targetuser
+                    try:
+                        steamprofilename = steamapi.GetPlayerSummaries(str(steamid))['response']['personaname']
+                    except:
+                        steamprofilename = None
+
+                    if kick_result:
+                        return "%s%s has been invited to the sub guild." % (targetuser, ' (%s)' % steamprofilename if steamprofilename else '')
+                    else:
+                        return "%s%s has been invited to the sub guild." % (targetuser, ' (%s)' % steamprofilename if steamprofilename else '')
                 else:
                     return "Invitation failure: %s" % invite_result.lower()
+            elif steamid is False:
+                return "Steam api down, cannot resolve vanity name"
 
             return "Bad id or something"
-
-            # if len(args) == 1:
-            #     steamid = dota.determineSteamid(args[0])
-            #     if steamid:
-            #         try:
-            #             previousinviteid = settings.getdata('invite_id_for_%s' % user, domain='%s_sub_guild_invites' % channel)
-
-            #         except: # No data on record
-            #             previousinviteid = None
-            #             invite_result = node.invite_to_guild(channelguildid, steamid)
-
-            #         else: # ID already on record
-            #             kick_result = node.kick_from_guild(channelguildid, previousinviteid)
-            #             print 'Kick result: %s' % kick_result
-
-            #             invite_result = node.invite_to_guild(channelguildid, steamid)
-
-
-            #         if invite_result == 'SUCCESS':
-            #             settings.setdata('invite_id_for_%s' % user, steamid, domain='%s_sub_guild_invites' % channel)
-
-            #             return "%s has been invited to the sub guild." % user
-            #         else:
-            #             return "Invitation failure: %s" % invite_result.lower()
-
-            # elif len(args) > 1 and user in bot.oplist:
-            #     steamid = dota.determineSteamid(args[1])
-            #     if steamid:
-            #         try:
-            #             previousinviteid = settings.getdata('invite_id_for_%s' % args[0], domain='%s_sub_guild_invites' % channel)
-
-            #         except: # No data on record
-            #             previousinviteid = None
-            #             invite_result = node.invite_to_guild(channelguildid, steamid)
-
-            #         else: # ID already on record
-            #             kick_result = node.kick_from_guild(channelguildid, previousinviteid)
-            #             print 'Kick result: %s' % kick_result
-
-            #             invite_result = node.invite_to_guild(channelguildid, steamid)
-
-
-            #         if invite_result == 'SUCCESS':
-            #             settings.setdata('invite_id_for_%s' % args[0], steamid, domain='%s_sub_guild_invites' % channel)
-
-            #             return "%s has been invited to the sub guild." % args[0]
-            #         else:
-            #             return "Invitation failure: %s" % invite_result.lower()
-
         else:
-            return "You need to give me a steam id or profile link"
+            return "%s: You need to give me a steam id or profile link" % user
 
     coms.append(command.Command('!guildinvite', f, bot, channels=['monkeys_forever']))
 
@@ -1200,6 +1156,20 @@ def generate_message_commands(bot):
     #
     # Test commands
     #
+
+    def f(channel, user, message, args, data, bot):
+        from twisted.internet import reactor
+        
+        def testthing(bot):
+            import time
+            bot.botsay('pausing for 10 seconds')
+            time.sleep(10)
+            bot.botsay('done')
+
+        reactor.callLater(5, testthing, bot)
+        return 'task deferred for 5 seconds'
+
+    coms.append(command.Command('!defertest', f, bot, groups=me_only_group))
 
     ######################################################################
 
