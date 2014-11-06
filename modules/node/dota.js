@@ -630,6 +630,23 @@ var zrpcserver = new zerorpc.Server({
     },
 
     /*
+        SourceTV
+    */
+
+    getsourcetvgames: function(gameoffset, reply) {
+        reply = arguments[arguments.length - 1];
+
+        if (!Dota2._gcReady) {
+            reply('GC unready');
+            return;
+        };
+
+        Dota2.findSourceTVGames({start:gameoffset}, function(resp) {
+            reply(null, resp);
+        });
+    },
+
+    /*
         Exiting stuff
     */
 

@@ -532,7 +532,7 @@ def generate_message_commands(bot):
         else:
             return hour_str.format(user, channel, reldelta)
 
-    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda', 'siractionslacks'], repeatdelay=15))
+    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
     # TODO: Meh idiots
 
     def f(channel, user, message, args, data, bot):
@@ -856,7 +856,8 @@ def generate_message_commands(bot):
 
                     try:
                         steamprofilename = steamapi.GetPlayerSummaries(str(steamid))['response']['personaname']
-                    except:
+                    except Exception as e:
+                        print 'Error getting steam profile name for %s:' % targetuser, e
                         steamprofilename = None
 
                     if kick_result:
@@ -874,6 +875,29 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!guildinvite', f, bot, channels=['monkeys_forever']))
 
+    def f(channel, user, message, args, data, bot):
+        import dota, settings
+        if args:
+            pages = int(args[0])
+        else:
+            pages = 5
+        players = dota.searchForNotablePlayers(dota.dotaToSteam(dota.settings.getdata('monkeys_forever_dota_id')), pages)
+
+        if players is None:
+            return "Game not found in %s pages." % pages
+
+        if players:
+            return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
+        else:
+            return "No notable players found"
+    
+    coms.append(command.Command('!notableplayers', f, bot, True, channels=['monkeys_forever']))
+
+    def f(channel, user, message, args, data, bot):
+        import dota
+        dota.blurb(channel, bot, True)
+
+    coms.append(command.Command('!checkmatch', f, bot, True, channels=['monkeys_forever']))
 
     coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
@@ -882,7 +906,7 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!songrequest', 'This aint no nightbot stream', bot, channels=['monkeys_forever'], repeatdelay=10))
 
-    coms.append(command.SimpleCommand(['!song', '!currentsong'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
+    coms.append(command.SimpleCommand(['!song', '!currentsong', '!songname'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
         channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand('!background',

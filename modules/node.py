@@ -163,3 +163,8 @@ def set_guild_role(guildid, targetid, targetrole):
 
 def kick_from_guild(guildid, targetid):
     return zrpc.setguildrole(guildid, targetid, 0)
+
+########
+
+def get_source_tv_games(page=0):
+    return zrpc.getsourcetvgames(page*6)

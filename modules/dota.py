@@ -6,13 +6,6 @@ import steamapi, twitchapi, settings, node
 
 LOAD_ORDER = 35
 
-# enabled_channels = {
-#     # channel name : (Display name, mmr enabled)
-#     'monkeys_forever': (settings.getdata('%s_common_name' % 'monkeys_forever'), settings.getdata('%s_mmr_enabled' % 'monkeys_forever')),
-#     'mynameisamanda': (settings.getdata('%s_common_name' % 'mynameisamanda'), settings.getdata('%s_mmr_enabled' % 'mynameisamanda')),
-#     'kizzmett': (settings.getdata('%s_common_name' % 'kizzmett'), settings.getdata('%s_mmr_enabled' % 'kizzmett')),
-#     'barnyyy': (settings.getdata('%s_common_name' % 'barnyyy'), settings.getdata('%s_mmr_enabled' % 'barnyyy'))
-# }
 
 enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
@@ -27,19 +20,22 @@ def setup(bot):
 
 def alert(event):
     if event.channel in enabled_channels:
-        t1 = time.time()
-        r = latestBlurb(event.channel)
-        
-        if r is not None:
-            t2 = time.time()
-            print "[Dota] Blurb time: %4.4fms" % ((t2-t1)*1000)
+        blurb(event.channel, event.bot)
 
-            event.bot.botsay(r)
+def blurb(channel, bot, override=False):
+    t1 = time.time()
+    r = latestBlurb(channel, override)
+    
+    if r is not None:
+        t2 = time.time()
+        print "[Dota] Blurb time: %4.4fms" % ((t2-t1)*1000)
 
+        bot.botsay(r)
 
+    return r is not None
 
-def latestBlurb(channel):
-    if checktimeout(channel):
+def latestBlurb(channel, override=False):
+    if checktimeout(channel) or override:
         dotaid = settings.getdata('%s_dota_id' % channel)
         if dotaid is None:
             print "[Dota] No ID on record for %s.  I should probably sort this out." % channel
@@ -82,7 +78,7 @@ def checktimeout(channel):
     return time.time() - int(getmatchtimeout) > float(lastmatchfetch)
 
 
-def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False):
+def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False, notableplayers=True):
     if latestmatch is None:
         latestmatch = steamapi.getlastdotamatch(dotaid)
 
@@ -95,6 +91,24 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False):
         if str(p['account_id']) == str(dotaid):
             playerdata = p
             break
+
+    notableplayerdata = None
+
+    if notableplayers:
+        print "notable player lookup requested"
+        notable_players = settings.getdata('dota_notable_players')
+        notable_players_found = []
+
+        for p in matchdata['result']['players']:
+            print 'looking up %s' % p['account_id']
+            if p['account_id'] in notable_players:
+                print 'Found notable player %s' % notable_players[p['account_id']]
+                playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(p['heroId'])][0])
+                notable_players_found.append((notable_players[p['account_id']], playerhero))
+
+        if notable_players_found:
+            notableplayerdata = "| Notable players found: %s" % ', '.join(['%s - %s' % (p,h) for p,h in notable_players_found])
+            print "notable player data: " + notableplayerdata
 
     try:
         d_hero = [h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(playerdata['hero_id'])][0]
@@ -119,10 +133,11 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False):
     matchoutput = "%s has %s a game.  http://www.dotabuff.com/matches/%s " % (
         enabled_channels[channel][0], 'won' if d_victory == 'Victory' else 'lost',  latestmatch['match_id'])
 
-    extramatchdata = "| Level {} {} {} - KDA: {}/{}/{} - CS: {}/{} - GPM: {} - XPM: {}".format(
+    extramatchdata = "| Level {} {} {} - KDA: {}/{}/{} - CS: {}/{} - GPM: {} - XPM: {} ".format(
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
 
-    finaloutput = matchoutput + (getMMRData(channel, dotaid) if getmmr else '') + extramatchdata
+
+    finaloutput = matchoutput + (getMMRData(channel, dotaid) if getmmr else '') + extramatchdata + (notableplayerdata if notableplayerdata else '')
 
     print "[Dota] Blurb output: " + finaloutput
     return finaloutput
@@ -222,6 +237,54 @@ def determineSteamid(steamthing):
 
     print '[Dota] Determined that steamid for %s is %s' % (steamthing, maybesteamid)
     return maybesteamid
+
+
+def searchForNotablePlayers(targetsteamid, pages=3):
+    # Needs check for if in a game (maybe need a status indicator for richPresence)
+    t0 = time.time()
+    for pagenum in range(0, pages):
+        print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
+        games = node.get_source_tv_games(pagenum)['games']
+        print 'got game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
+        notable_players = settings.getdata('dota_notable_players')
+        
+        for game in games:
+            players = []
+            players.extend(game['goodPlayers'])
+            players.extend(game['badPlayers'])
+            notable_players_found = []
+            target_found = False
+
+            for player in players:
+                if steamToDota(player['steamId']) in notable_players:
+                    # print 'found player %s, adding %s' % (player, steamToDota(player['steamId']))
+
+                    try:
+                        herodata = steamapi.GetHeroes()
+                        playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
+                    except:
+                        playerhero = 'Unknown Hero (this is a bug)'
+                    
+                    notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
+
+                if player['steamId'] == str(targetsteamid):
+                    print 'found target player'
+                    target_found = True
+
+            if target_found:
+                return notable_players_found
+
+            print 'searched game %s, T+%4.4fms' % (games.index(game), (time.time()-t0)*1000)
+
+        print 'searched game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
+
+        
+
+def dotaToSteam(dotaid):
+    return long(dotaid) + STEAM_TO_DOTA_CONSTANT
+
+def steamToDota(steamid):
+    return long(steamid) - STEAM_TO_DOTA_CONSTANT
 
 
 class Lobby(object):
