@@ -573,7 +573,7 @@ def generate_message_commands(bot):
 
         if args and 'update' in args[0].lower() and not isupdate:
             if user == 'gggccca7x':
-                outputstring = "stfu gggccca7x"
+                return "stfu gggccca7x"
             else:
                 outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
         else:
@@ -582,7 +582,9 @@ def generate_message_commands(bot):
         if isupdate:
             print "Updating mmr"
 
+
             olddotadata = dota.getUserDotaData(channel)
+
 
             wentok = dota.updateMMR(channel)
 
@@ -669,8 +671,10 @@ def generate_message_commands(bot):
                         return 'Usage: !mmrsetup addyou'
                 except: pass
 
-                return "I await your friend request and message (enable mmr).  https://steamcommunity.com/id/Borkedbot/ or Run (Windows + r) -> steam://friends/add/76561198153108180"
+                outputstring = "I await your friend request and message (enable mmr channel_name).  "
+                outputstring += "https://steamcommunity.com/id/Borkedbot/ or Run (Windows + r) -> steam://friends/add/76561198153108180"
 
+                return outputstring
                 # "When you add me, send me the following as a message through steam: verifytwitch %s" % channel
                 # NODEJS REPLY TO MESSAGE: "To finish verification: say the following message in twitch chat: !mmrsetup verify {code}"
 
@@ -694,12 +698,13 @@ def generate_message_commands(bot):
                     settings.trygetset('%s_common_name' % channel, channel)
                     settings.setdata('%s_mmr_enabled' % channel, True)
 
-                    settings.setdata('%s', verified, domain='steamids')
-
-                    dota.update_channels()
-                    # set channel as enabled in settings
+                    settings.setdata('%s' % channel, verified, domain='steamids')
+                    settings.setdata('%s_dota_id' % channel, dota.steamToDota(verified))
 
                     node.remove_pending_mmr_enable(verified)
+
+                    dota.update_channels()
+                    dota.updateMMR(channel)
 
                     return "You did it!  Thanks for using this feature.  If you encounter any bugs or issues, let imayhaveborkedit know."
                 else:
@@ -729,16 +734,41 @@ def generate_message_commands(bot):
 
                 # maybe change to simple explainations and say use the help argument
         return '''Hi.  You have two options.  1: You give me something to add you from (example: http://i.imgur.com/7Yepc8i.png either blue section or either link) \
-                or 2: you add me on steam.  These are the commands, respectively: !mmrsetup addme < steam thing > OR !mmrsetup addyou.  \
-                Once added, send me a message saying this: enable mmr'''
+                or 2: you add me on steam.  These are the commands, respectively: !mmrsetup addme < steam thing > OR !mmrsetup addyou .  \
+                Once added, send me a steam message saying this: enable mmr'''
 
     coms.append(command.Command('!mmrsetup', f, bot, groups=me_and_host, repeatdelay=5))
     #TODO: Maybe split mmr setup stuff and configuration stuff
 
+    def f(channel, user, message, args, data, bot):
+        import dota
+
+        if channel not in dota.enabled_channels:
+            return
+        
+        dotaid = settings.getdata('%s_dota_id' % channel)
+
+        return '%s: http://www.dotabuff.com/players/%s' % (user, dotaid)
+
+    coms.append(command.Command('!dotabuff', f, bot, repeatdelay=10))
 
     def f(channel, user, message, args, data, bot):
+        '''
+        setname <name>
+        deletekey (special)
+        enable <dota | mmr>
+        disable <dota | mmr>
+        '''
         import settings, dota, node
         if args:
+
+            if args[0].lower() == 'status':
+                if channel not in dota.enabled_channels:
+                    return "Channel is not enabled for dota."
+
+                return "MMR is %s." % ('enabled' if dota.enabled_channels[channel][1] else 'disabled')
+
+
             if args[0].lower() == 'setname' and len(args) >= 2:
                 newname = ' '.join(args[1:])
 
@@ -753,12 +783,74 @@ def generate_message_commands(bot):
                 return "Set common name for %s: %s -> %s" % (channel, oldname, newname)
 
 
+            if args[0].lower() == 'enable' and len(args) >= 2:
+                if args[1] == 'dota':
+                    dec = settings.getdata('dota_enabled_channels')
+                    if channel in dec:
+                        return "Channel already enabled"
+
+                    dec = list(set(dec.append(channel)))
+                    settings.getdata('dota_enabled_channels', dec)
+                    dota.update_channels()
+
+                elif args[1] == 'mmr':
+                    try:
+                        settings.getdata('%s_dota_id' % channel)
+                    except:
+                        return "No dota id on record for %s, please use !mmrsetup" % channel
+                    else:
+                        settings.setdata('%s_mmr_enabled' % channel, True)
+
+
+            if args[0].lower() == 'disable' and len(args) >= 2:
+                if args[1] == 'dota':
+                    dec = settings.getdata('dota_enabled_channels')
+                    if channel not in dec:
+                        return "Channel not enabled"
+
+                    dec.remove(channel)
+                    settings.getdata('dota_enabled_channels', dec)
+                    dota.update_channels()
+
+                elif args[1] == 'mmr':
+                    settings.setdata('%s_mmr_enabled' % channel, False)
+
+
             if args[0].lower() == 'deletekey' and user == 'imayhaveborkedit':
                 node.delete_key(channel)
 
                 return "Deleted key for %s" % channel
 
     coms.append(command.Command('!dotaconfig', f, bot, groups=me_and_host, repeatdelay=5))
+
+    def f(channel, user, message, args, data, bot):
+        import dota, settings
+
+        if channel not in dota.enabled_channels:
+            return
+
+
+        if args:
+            if args[0] == 'add' and len(args) >= 3:
+
+                return
+
+        if args:
+            pages = int(args[0])
+        else:
+            pages = 5
+
+        players = dota.searchForNotablePlayers(dota.settings.getdata('%s_dota_id' % channel), pages)
+
+        if players is None:
+            return "Game not found in %s pages." % pages
+
+        if players:
+            return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
+        else:
+            return "No notable players found in the current game."
+
+    coms.append(command.Command('!notableplayers', f, bot, True))
 
 
     coms.append(command.SimpleCommand('!mumble', 'doc.asdfxyz.de (default port) 100 slot open server, on 24/7.  Try not to be awful, or bork will ban you.',
@@ -800,6 +892,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         if user not in bot.channelsubs:
+            print user, user in bot.channelsubs
             if user != 'imayhaveborkedit' or user not in bot.oplist:
                 return
 
@@ -830,7 +923,8 @@ def generate_message_commands(bot):
 
             try:
                 steamid = dota.determineSteamid(targetsteamid)
-            except:
+            except Exception as e:
+                print e
                 return "Something went wrong, it might be an issue with the steam api"
 
             if steamid:
@@ -855,51 +949,39 @@ def generate_message_commands(bot):
                     settings.setdata('invite_name_for_%s' % steamid, targetuser, domain='%s_sub_guild_invites' % channel)
 
                     try:
-                        steamprofilename = steamapi.GetPlayerSummaries(str(steamid))['response']['personaname']
+                        steamprofilename = steamapi.GetPlayerSummaries(str(steamid))['response']['players'][0]['personaname']
                     except Exception as e:
                         print 'Error getting steam profile name for %s:' % targetuser, e
                         steamprofilename = None
 
                     if kick_result:
-                        return "%s%s has been invited to the sub guild." % (targetuser, ' (%s)' % steamprofilename if steamprofilename else '')
+                        return "%s%s has been invited to the sub guild. Make sure you have \"Allow guild invites from -> Anyone\" enabled." % (
+                            targetuser, ' (%s)' % steamprofilename if steamprofilename else '')
                     else:
-                        return "%s%s has been invited to the sub guild." % (targetuser, ' (%s)' % steamprofilename if steamprofilename else '')
+                        return "%s%s has been invited to the sub guild. Make sure you have \"Allow guild invites from -> Anyone\" enabled." % (
+                            targetuser, ' (%s)' % steamprofilename if steamprofilename else '')
                 else:
                     return "Invitation failure: %s" % invite_result.lower()
             elif steamid is False:
                 return "Steam api down, cannot resolve vanity name"
 
-            return "Bad id or something"
+            return "Bad id or something (try http://i.imgur.com/7Yepc8i.png )"
         else:
-            return "%s: You need to give me a steam id or profile link" % user
+            return "%s: You need to give me a steam id or profile link (see http://i.imgur.com/7Yepc8i.png )" % user
 
     coms.append(command.Command('!guildinvite', f, bot, channels=['monkeys_forever']))
 
     def f(channel, user, message, args, data, bot):
-        import dota, settings
-        if args:
-            pages = int(args[0])
-        else:
-            pages = 5
-        players = dota.searchForNotablePlayers(dota.dotaToSteam(dota.settings.getdata('monkeys_forever_dota_id')), pages)
-
-        if players is None:
-            return "Game not found in %s pages." % pages
-
-        if players:
-            return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
-        else:
-            return "No notable players found"
-    
-    coms.append(command.Command('!notableplayers', f, bot, True, channels=['monkeys_forever']))
-
-    def f(channel, user, message, args, data, bot):
         import dota
-        dota.blurb(channel, bot, True)
+        blurb = dota.latestBlurb(channel, True)
+        print 'blurb: %s' % blurb
 
-    coms.append(command.Command('!checkmatch', f, bot, True, channels=['monkeys_forever']))
+        if blurb:
+            return blurb
 
-    coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
+    coms.append(command.Command('!lastmatch', f, bot, True, channels=['monkeys_forever']))
+
+    # coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'],
         "Monkeys' playlist can be found here: http://grooveshark.com/playlist/Stream/81341599", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
@@ -1176,6 +1258,8 @@ def generate_message_commands(bot):
 
     # ???
 
+    # coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/59839587 There you go.', bot, channels=['mikushiru'], repeatdelay=10, targeted=True))
+
     ######################################################################
     #
     # Test commands
@@ -1183,7 +1267,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         from twisted.internet import reactor
-        
+
         def testthing(bot):
             import time
             bot.botsay('pausing for 10 seconds')

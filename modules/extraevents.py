@@ -15,4 +15,8 @@ def alert(event):
     if event.etype == 'twitchnotify':
         if event.channel in ['unsanitylive', 'monkeys_forever', 'superjoe', 'kizzmett']:
             if 'just subscribed!' in event.data:
-                event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s' % event.data.split()[0].upper())
+                extra = ''
+                if event.channel == 'monkeys_forever':
+                    extra = ' | If you want an invite to the sub guild use !guildinvite steamid'
+
+                event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s%s' % (event.data.split()[0].upper(), extra))

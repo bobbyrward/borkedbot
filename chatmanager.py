@@ -67,7 +67,7 @@ def _manage_modules():
         import modules
         reload(modules)
     except ImportError as e:
-        print "Cannot import modules."
+        print "[ChatManager] Cannot import modules."
         print traceback.format_exc()
     else:
 
@@ -156,7 +156,7 @@ def _init_module(m, bot):
     try:
         setup_result = m.setup(bot)
     except Exception as ee:
-        print "Setup failure for %s" % m.__name__
+        print "[ChatManager] Setup failure for %s" % m.__name__
         print traceback.format_exc()
         print
 
@@ -173,7 +173,7 @@ def _init_module(m, bot):
 # This is what gets called by the bot to distribute events to modules
 def event(channel, user, etype, data, bot, isop):
     if etype not in ['msg', 'timer']:
-        print "Received event, %s: %s" % (etype, data)
+        print "[ChatManager] Received event, %s: %s" % (etype, data)
 
     doreload(bot)
 
@@ -198,7 +198,7 @@ def _process_event(event):
             _debug("Alerting %s" % m.__name__)
             m.alert(event)
         except Exception as e:
-            print "Alert error for %s: " % m.__name__
+            print "[ChatManager] Alert error for %s: " % m.__name__
             print traceback.format_exc()
 
 
@@ -216,9 +216,9 @@ def _debug(o, nl=True):
 def _info(o, nl=True):
     if INFO_OUTPUT:
         if nl:
-            print o
+            print '[ChatManager] %s' % o
         else:
-            print o,
+            print '[ChatManager] %s' % o,
 
 
 def _pr(xx):

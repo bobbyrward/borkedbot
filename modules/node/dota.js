@@ -320,7 +320,7 @@ var zrpcserver = new zerorpc.Server({
             return;
         }
 
-        reply(null, generatedkey == vkey);
+        reply(null, generatedkey == vkey ? chatkeymap[channel][1] : false);
     },
     clearkey: function(keychannel, reply) {
         reply = arguments[arguments.length - 1];

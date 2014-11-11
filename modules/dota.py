@@ -14,18 +14,19 @@ STEAM_TO_DOTA_CONSTANT = 76561197960265728
 def update_channels():
     global enabled_channels
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
+    os.system('touch %s' % os.path.abspath(__file__))
 
 def setup(bot):
     return
 
 def alert(event):
-    if event.channel in enabled_channels:
+    if event.channel in enabled_channels and event.etype == 'msg': # Meh
         blurb(event.channel, event.bot)
 
 def blurb(channel, bot, override=False):
     t1 = time.time()
     r = latestBlurb(channel, override)
-    
+
     if r is not None:
         t2 = time.time()
         print "[Dota] Blurb time: %4.4fms" % ((t2-t1)*1000)
@@ -52,7 +53,7 @@ def latestBlurb(channel, override=False):
 
         previousmatch = settings.trygetset('%s_last_match' % channel, latestmatch)
 
-        if previousmatch['match_id'] != latestmatch['match_id']:
+        if previousmatch['match_id'] != latestmatch['match_id'] or override:
             update_channels()
 
             #TODO: Somewhere in here is where I do the logic to check if we've skipped a game or not
@@ -62,8 +63,18 @@ def latestBlurb(channel, override=False):
 
 
 def checktimeout(channel):
-    if not twitchapi.is_streaming(channel):
-       return False
+    twitchchecktimeout = settings.trygetset('twitch_online_check_timeout', 15)
+    lastonlinecheck = settings.trygetset('twitch_online_last_check', time.time())
+
+    if time.time() - int(twitchchecktimeout) > float(lastonlinecheck):
+        settings.setdata('twitch_online_last_check', time.time(), announce=False)
+        try:
+            if not twitchapi.is_streaming(channel):
+               return False
+        except Exception as e:
+            print '[Dota] twitch api check error:',e
+            return False
+    else: return True
 
     laststreamcheck = settings.trygetset('%s_last_is_streaming_check' % channel, time.time())
     streamchecktimeout = settings.trygetset('%s_is_streaming_timeout' % channel, 30)
@@ -95,7 +106,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False, notablep
     notableplayerdata = None
 
     if notableplayers:
-        print "notable player lookup requested"
+        # print "notable player lookup requested"
         notable_players = settings.getdata('dota_notable_players')
         notable_players_found = []
 
@@ -103,12 +114,14 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False, notablep
             print 'looking up %s' % p['account_id']
             if p['account_id'] in notable_players:
                 print 'Found notable player %s' % notable_players[p['account_id']]
-                playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(p['heroId'])][0])
+                playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(p['hero_id'])][0]) # p['heroId'] ?
                 notable_players_found.append((notable_players[p['account_id']], playerhero))
 
         if notable_players_found:
             notableplayerdata = "| Notable players found: %s" % ', '.join(['%s - %s' % (p,h) for p,h in notable_players_found])
             print "notable player data: " + notableplayerdata
+        else:
+            print 'No notable players found'
 
     try:
         d_hero = [h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(playerdata['hero_id'])][0]
@@ -221,7 +234,7 @@ def determineSteamid(steamthing):
         match = re.match('^\d*$', steamthing)
         if match:
             if long(match.string) < STEAM_TO_DOTA_CONSTANT:
-                maybesteamid  = long(match) + STEAM_TO_DOTA_CONSTANT
+                maybesteamid  = long(match.string) + STEAM_TO_DOTA_CONSTANT
             else:
                 maybesteamid = match.string
         else:
@@ -239,15 +252,15 @@ def determineSteamid(steamthing):
     return maybesteamid
 
 
-def searchForNotablePlayers(targetsteamid, pages=3):
+def searchForNotablePlayers(targetdotaid, pages=3):
     # Needs check for if in a game (maybe need a status indicator for richPresence)
     t0 = time.time()
     for pagenum in range(0, pages):
-        print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
+        # print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
         games = node.get_source_tv_games(pagenum)['games']
-        print 'got game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
+        # print 'received game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
         notable_players = settings.getdata('dota_notable_players')
-        
+
         for game in games:
             players = []
             players.extend(game['goodPlayers'])
@@ -257,28 +270,29 @@ def searchForNotablePlayers(targetsteamid, pages=3):
 
             for player in players:
                 if steamToDota(player['steamId']) in notable_players:
-                    # print 'found player %s, adding %s' % (player, steamToDota(player['steamId']))
+                    print 'found player %s (%s)' % (player['name'], notable_players[steamToDota(player['steamId'])])
 
                     try:
                         herodata = steamapi.GetHeroes()
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
-                        playerhero = 'Unknown Hero (this is a bug)'
-                    
+                        playerhero = 'Unknown Hero (no hero selected/something borked)'
+
                     notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
 
-                if player['steamId'] == str(targetsteamid):
+                if steamToDota(player['steamId']) == long(targetdotaid):
                     print 'found target player'
                     target_found = True
 
             if target_found:
+                print 'Managed to find: %s' % notable_players_found
                 return notable_players_found
 
-            print 'searched game %s, T+%4.4fms' % (games.index(game), (time.time()-t0)*1000)
+            # print 'searched game %s, T+%4.4fms' % (games.index(game), (time.time()-t0)*1000)
 
         print 'searched game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
-        
+
 
 def dotaToSteam(dotaid):
     return long(dotaid) + STEAM_TO_DOTA_CONSTANT

@@ -99,6 +99,7 @@ class MyBot(irc.IRCClient):
             if msg.split()[0] in ['EMOTESET', 'USERCOLOR']:
                 return
             elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'subscriber':
+                print msg
                 self.channelsubs.append(msg.split()[1])
                 self.channelsubs = list(set(self.channelsubs))
                 return

@@ -63,7 +63,7 @@ def delete_key(channel):
     return zrpc.clearkey(channel)
 
 def add_pending_mmr_enable(steamid, channel):
-    return zrpc.addpendingmmrenable(steamid, chann)
+    return zrpc.addpendingmmrenable(steamid, channel)
 
 def remove_pending_mmr_enable(steamid):
     zrpc.delpendingmmrenable(steamid)
@@ -141,7 +141,7 @@ def get_chats():
 ########
 
 def add_friend(steamid):
-    return zrpc.evaljs("bot.addFriend(%s)" % steamid)
+    return zrpc.evaljs("bot.addFriend('%s')" % steamid)
 
 def send_steam_message(steamid, message):
     return zrpc.evaljs("bot.sendMessage('%s', '%s')" % (steamid, message))

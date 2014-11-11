@@ -27,6 +27,7 @@ def alert(event):
             nowhosting(event) # This needs to be called before the check goes
             # checkifhostonline(event) # This line might need to be outside the if check
 
+        return
         if settings.trygetset('%s_is_hosting' % event.channel, False):
             checkifhostonline(event)
 
