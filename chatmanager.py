@@ -101,7 +101,7 @@ def _manage_modules():
                 if_issue = True
                 new_imports.remove(ni)
 
-        if if_issue: _info('')
+        if if_issue: print
 
         imported_modules.extend(new_imports)
         imported_modules = list(set(imported_modules))
@@ -112,7 +112,7 @@ def _manage_modules():
         if len(new_imports):
             _info("Importing %s new modules:" % len(new_imports))
             [_info('- %s'%m.__name__) for m in new_imports]
-            _info('')
+            print
 
             for mm in imported_modules:
                 modules_mtime[mm] = os.path.getmtime(mm.__file__)
@@ -120,7 +120,7 @@ def _manage_modules():
         if len(removed_imports):
             _info("Removing %s modules:" % len(removed_imports))
             [_info('- %s'%m.__name__) for m in removed_imports]
-            _info('')
+            print
 
             for mm in removed_imports:
                 try:
@@ -171,13 +171,13 @@ def _init_module(m, bot):
 
 
 # This is what gets called by the bot to distribute events to modules
-def event(channel, user, etype, data, bot, isop):
+def event(channel, user, etype, data, bot, isop, extratags=[]):
     if etype not in ['msg', 'timer']:
         print "[ChatManager] Received event, %s: %s" % (etype, data)
 
     doreload(bot)
 
-    event = IRCevent(bot, channel, user, etype, data, isop)
+    event = IRCevent(bot, channel, user, etype, data, isop, extratags)
 
     # Extra logic goes here
     _process_event(event)
@@ -202,10 +202,6 @@ def _process_event(event):
             print traceback.format_exc()
 
 
-def _check_global_blacklist(event):
-    return user in ('fidofidder', 'sage1447', 'jimbooob')
-
-
 def _debug(o, nl=True):
     if DEBUG_OUTPUT:
         if nl:
@@ -227,16 +223,20 @@ def _pr(xx):
 
 # TODO: add some sort of log function for stdout replacement/enhancement
 class IRCevent(object):
-    def __init__(self, bot, channel, user, etype, data, isop):
+    def __init__(self, bot, channel, user, etype, data, isop, tags=[]):
         self.bot = bot
         self.channel = channel
         self.user = user
         self.etype = etype
         self.data = data
         self.isop = isop
+        self.tags = tags
 
         self.time = time.time()
         self.htime = int(round(self.time))
+
+    def special(self, tag):
+        return tag in self.tags
 
     @staticmethod
     def glob(*evs):

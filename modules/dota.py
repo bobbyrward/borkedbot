@@ -13,6 +13,7 @@ STEAM_TO_DOTA_CONSTANT = 76561197960265728
 
 def update_channels():
     global enabled_channels
+    print "[Dota] Updating enabled channels"
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
     os.system('touch %s' % os.path.abspath(__file__))
 
@@ -111,7 +112,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False, notablep
         notable_players_found = []
 
         for p in matchdata['result']['players']:
-            print 'looking up %s' % p['account_id']
+            # print 'looking up %s' % p['account_id']
             if p['account_id'] in notable_players:
                 print 'Found notable player %s' % notable_players[p['account_id']]
                 playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(p['hero_id'])][0]) # p['heroId'] ?
@@ -126,7 +127,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False, notablep
     try:
         d_hero = [h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(playerdata['hero_id'])][0]
     except:
-        d_hero = 'Unknown Hero (this is a bug)'
+        d_hero = 'Unknown Hero'
 
     d_team = 'Radiant' if int(playerdata['player_slot']) < 128 else 'Dire'
     d_level = playerdata['level']

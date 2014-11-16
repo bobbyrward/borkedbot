@@ -16,12 +16,14 @@ class MyBot(irc.IRCClient):
     opsinchan = set()
     oplist = set()
     userlist = [] # RIP TWITCHCLENT 1
-    channelsubs = []
-    usercolors = {}
+    channelsubs = set()
+
+    usertags = {}
 
     gotops = False
 
     timertask = None
+    timertick = 5
 
     @property
     def password(self):
@@ -36,38 +38,50 @@ class MyBot(irc.IRCClient):
     def channel(self):
         return self.factory.channel
 
+    @property
+    def usercolors(self):
+        return {k:v['USERCOLOR'] for k,v in self.usertags.items()}
+
+    def usercolor(self, user):
+        return self.usertags.get(user.lower(), {'USERCOLOR':None}).get('USERCOLOR', None)
 
     def timer(self):
-        chatmanager.event(self.chan(), None, 'timer', time.time(), self, None)
+        self.send_event(self.chan(), None, 'timer', time.time(), self, None)
+
+
+    def send_event(self, channel, user, etype, data, bot, isop, extratags=[]):
+        del self
+        chatmanager.event(**vars())
+
+    def log(self, txt):
+        print '[Borkedbot] %s' % txt
+
+    def update_mods(self):
+        self.botsay('/mods')
+
 
     def signedOn(self):
         self.sendLine('TWITCHCLIENT 3') # Oh boy here we go
 
         self.join(self.factory.channel)
         self.oplist.add(self.chan())
-        print "Signed on as %s.\n" % self.nickname
+        self.log("Signed on as %s.\n" % self.nickname)
 
         chatmanager.setup(self)
-        chatmanager.event(None, None, 'serverjoin', None, self, None)
+        self.send_event(None, None, 'serverjoin', None, self, None)
 
 
     def joined(self, channel):
-        print "Joined %s." % self.chan(channel)
-        chatmanager.event(self.chan(channel), None, 'channeljoin', self.chan(channel), self, None)
+        self.log("Joined %s." % self.chan(channel))
+        self.send_event(self.chan(channel), None, 'channeljoin', self.chan(channel), self, None)
 
         self.timertask = task.LoopingCall(self.timer)
-        self.timertask.start(15, True)
+        self.timertask.start(self.timertick, True)
 
-        self.botsay('/mods')
+        self.update_mods()
 
     def receivedMOTD(self, motd):
-        print '\n### MOTD ###'
-        print '\n'.join(motd)
-        print '############\n'
-
-    def action(self, user, channel, data):
-        print "Received action message from %s" % user
-        self.privmsg(user, channel, data)
+        print '\n'.join(['\n### MOTD ###', '\n'.join(motd), '############\n'])
 
     def modeChanged(self, user, channel, sett, modes, args):
         # user channel           set  modes args
@@ -78,81 +92,96 @@ class MyBot(irc.IRCClient):
         if sett and modes == 'o':
             for u in args:
                 self.opsinchan.add(u)
-                chatmanager.event(self.chan(channel), user, 'op', u, self, True)
+                self.send_event(self.chan(channel), user, 'op', u, self, True)
 
         elif not sett and modes == 'o':
             for u in args:
                 self.opsinchan.discard(u)
-                chatmanager.event(self.chan(channel), user, 'deop', u, self, True)
+                self.send_event(self.chan(channel), user, 'deop', u, self, True)
 
         if self.opsinchan - self.oplist and self.gotops:
-            print "WE HAVE A MOD DISCREPANCY HERE:"
+            # This might be only for new mods now, need to check
+            self.log("WE HAVE A MOD DISCREPANCY HERE:")
             print self.opsinchan - self.oplist
             print
+            # self.update_mods()
+
+
+    def action(self, user, channel, data):
+        user = user.split("!")[0]
+        self.send_event(self.chan(channel), user, 'action', data, self, user in self.oplist)
 
 
     def privmsg(self, user, channel, msg):
         fulluser = user
         user = user.split("!")[0]
 
-        if channel != self.factory.channel:
-            if msg.split()[0] in ['EMOTESET', 'USERCOLOR']:
-                return
-            elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'subscriber':
-                print msg
-                self.channelsubs.append(msg.split()[1])
-                self.channelsubs = list(set(self.channelsubs))
-                return
-            elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'turbo':
-                return
-            elif msg.split()[0] == 'SPECIALUSER':
-                print msg
+        if channel != self.factory.channel or user in ['twitchnotify','jtv']:
 
-            # print "INFO (#%s): %s" % (channel, msg)
-            chatmanager.event(self.chan(), None, 'infomsg', msg, self, user in self.oplist)
-            return
-
-        if user == 'jtv':
-            if msg.split()[0] in ['EMOTESET']:
-                return
-            if msg.split()[0] in ['USERCOLOR']:
-                self.usercolors[msg.split()[1]] =  msg.split()[2]
-                return
-            elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'subscriber':
-                self.channelsubs.append(msg.split()[1])
-                self.channelsubs = list(set(self.channelsubs))
-                return
-            elif msg.split()[0] == 'SPECIALUSER' and msg.split()[2] == 'turbo':
+            if user == 'twitchnotify':
+                # print "!!Notification from twitch!! (%s): %s" % (channel, msg)
+                self.send_event(self.chan(channel), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
                 return
 
-            # print "INFO from ttv (%s): %s" % (channel, msg)
+            if user == 'jtv':
 
-            if 'The moderators of this room are:' in msg:
-                self.oplist = set(msg.split(': ')[1].split(', ')) | {self.chan()}
-                if not self.gotops:
-                    print "Received initial list of ops"
-                    self.gotops = True
-                print 'Updating ops'
+                if msg.split()[0] in ['EMOTESET', 'USERCOLOR', 'SPECIALUSER']:
+                    tag_user = msg.split()[1]
+                    tag_data = msg.split()[2]
 
-            chatmanager.event(self.chan(channel), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
-            return
+                    self.usertags.setdefault(tag_user, dict())
 
-        if user == 'twitchnotify':
-            print "!!Notification from twitch!! (%s): %s" % (channel, msg)
-            chatmanager.event(self.chan(channel), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
-            return
+                if msg.split()[0] == 'EMOTESET':
+                    self.usertags[tag_user]['EMOTESET'] = tag_data
+                    return
 
-        #       def event(channel, user, etype, data, bot, isop):
-        chatmanager.event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
+                elif msg.split()[0] == 'USERCOLOR':
+                    self.usertags[tag_user]['USERCOLOR'] = tag_data
+                    return
+
+                elif msg.split()[0] == 'SPECIALUSER':
+
+                    self.usertags[tag_user].setdefault('SPECIALUSER', set())
+                    self.usertags[tag_user]['SPECIALUSER'].add(tag_data)
+
+                    if tag_data in ['turbo']:
+                        return
+
+                    elif tag_data == 'subscriber':
+                        self.channelsubs.add(tag_user)
+                        return
+
+                    elif tag_data in ['admin', 'staff']:
+                        self.opsinchan.add(tag_user)
+                        print "Whoop whoop twitch police in the house (%s)" % tag_user
+                        return
+
+                    self.log('Unknown SPECIALUSER: %s' % tag_data)
+
+                elif 'The moderators of this room are:' in msg:
+                    self.oplist = set(msg.split(': ')[1].split(', ')) | {self.chan()}
+                    if not self.gotops:
+                        self.log("Received initial list of ops")
+                        self.gotops = True
+
+                self.send_event(self.chan(), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
+                return
+        else:
+            # def event(channel, user, etype, data, bot, isop):
+            self.send_event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
 
     def chan(self, ch=None):
         c = ch or self.channel
         return c.replace('#','')
 
     def userJoined(self, user, channel):
+        print 'Oh dear we\'re gettings joins.  Resending TC 3'
+        self.sendLine('TWITCHCLIENT 3')
+        return
+
         self.userlist.append(user)
         self.userlist = list(set(self.userlist))
-        chatmanager.event(self.chan(channel), None, 'join', user, self, user in self.oplist)
+        self.send_event(self.chan(channel), None, 'join', user, self, user in self.oplist)
 
     def userLeft(self, user, channel):
         try:
@@ -160,17 +189,17 @@ class MyBot(irc.IRCClient):
         except:
             print "User not in list to part from (%s)" % user
         self.userlist = list(set(self.userlist))
-        chatmanager.event(self.chan(channel), None, 'part', user, self, user in self.oplist)
+        self.send_event(self.chan(channel), None, 'part', user, self, user in self.oplist)
 
     def botsay(self, msg):
         self.say(self.factory.channel, msg)
 
     def quirkyMessage(self, s):
-        print "Something odd has happened"
+        print "\nSomething odd has happened:"
         print s
 
     def badMessage(self, line, excType, excValue, tb):
-        print "Something bad has happened"
+        print "\nSomething bad has happened:"
         print line, excType, excValue
 
 
@@ -199,11 +228,10 @@ if __name__ == "__main__":
         starttime = time.time()
 
         server = 'irc.twitch.tv'
-        chan = sys.argv[1]
-        mbf = MyBotFactory('#' + chan, 'borkedbot')
+        chan = sys.argv[1] if sys.argv[1].startswith('#') else '#%s' % sys.argv[1]
+        mbf = MyBotFactory(chan, 'borkedbot')
 
         reactor.connectTCP(server, 6667, mbf)
-
         reactor.run()
 
         print "\nTotal run time: %s" % (time.time() - starttime)

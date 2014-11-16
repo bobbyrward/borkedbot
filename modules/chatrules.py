@@ -493,13 +493,10 @@ def generate_message_commands(bot):
        if message.endswith('?'):
            return "%s, %s"%(user, random.choice(data))
 
-    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever'], data=magic8ball))
+    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever'], data=magic8ball, repeatdelay=8))
 
     def f(channel, user, message, args, data, bot):
         import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi, settings
-
-        if user in ['jewishoverlord']:
-            return
 
         if args:
             channel = args[0].lower()
@@ -1256,7 +1253,11 @@ def generate_message_commands(bot):
 
     # Kizzmett ##########
 
-    # ???
+    # Tom
+
+    coms.append(command.SimpleCommand('!plugs', 'Facebook: http://www.facebook.com/unsanitylive | Twitter: http://twitter.com/unsanitylive | ' +
+        'Like/Follow/Subscribe/whatever you want, that\'s where you can find Tom!',
+        bot, channels=['unsanitylive'], prependuser=False, repeatdelay=8))
 
     # coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/59839587 There you go.', bot, channels=['mikushiru'], repeatdelay=10, targeted=True))
 
