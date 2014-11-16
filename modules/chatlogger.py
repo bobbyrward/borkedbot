@@ -10,11 +10,11 @@ def setup(bot):
 
 def alert(event):
     if event.etype in ['msg','action']:
-        log(event.user, event.channel, event.data, event.user in event.bot.oplist)
+        log(event.user, event.channel, event.data, event.user in event.bot.oplist, event.etype == 'action')
 
 def formatdate():
     now = datetime.date.today()
-    return "["+" ".join([now.strftime("%A")[0:3], now.strftime("%B")[0:3], now.strftime("%d"), datetime.datetime.now().strftime("%H:%M:%S"), time.tzname[0], now.strftime("%Y")])+"] "
+    return "["+" ".join([now.strftime("%A")[0:3], now.strftime("%B")[0:3], now.strftime("%d"), datetime.datetime.now().strftime("%H:%M:%S"), time.tzname[0], now.strftime("%Y")])+"]"
 
 def log(user, channel, msg, isop, isaction = False, logstdout = True):
     logpath = "/var/www/twitch/%s/chat/" % channel
@@ -24,6 +24,14 @@ def log(user, channel, msg, isop, isaction = False, logstdout = True):
 
     now = formatdate()
 
+    if not isaction:
+        outputformat = "%s [%s] <%s%s> %s"
+        logfileformat = "%s %s: %s\n"
+    else:
+        outputformat = "%s [%s] * %s%s %s"
+        logfileformat = "%s * %s %s\n"
+
+
     if logstdout:
         if user == channel:
             indicator = '@'
@@ -32,7 +40,9 @@ def log(user, channel, msg, isop, isaction = False, logstdout = True):
         else:
             indicator = ' '
 
-        print now + "[" + channel + "]", '<' + indicator + user + '>', msg
+        # print now + "[" + channel + "]", '<' + indicator + user + '>', msg
+        print outputformat % (now, channel, indicator, user, msg)
 
     with open(logpath + "log.txt", 'a+') as f:
-        f.write(now + user +": " +  msg + "\n")
+        # f.write(now + user +": " +  msg + "\n")
+        f.write(logfileformat % (now, user, msg))

@@ -154,10 +154,10 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('#!dbsize', "We've got %s entries." % markov.redis_conn.dbsize(), bot, groups=me_only_group, prependuser=False))
 
-    _opstr = str(bot.oplist).replace('[','').replace(']', '').replace('\'','')
-    _ostr = "There are %s mods in chat: %s" % (len(bot.oplist), _opstr)
-    coms.append(command.SimpleCommand('#!ops', _ostr, bot, groups=me_only_group, prependuser=False))
-    coms.append(command.SimpleCommand('#!opnum', "There are %s mods in chat" % len(bot.oplist), bot, groups=me_only_group, prependuser=False))
+    # _opstr = str(bot.oplist).replace('[','').replace(']', '').replace('\'','')
+    # _ostr = "There are %s mods in chat: %s" % (len(bot.oplist), _opstr)
+    # coms.append(command.SimpleCommand('#!ops', _ostr, bot, groups=me_only_group, prependuser=False))
+    # coms.append(command.SimpleCommand('#!opnum', "There are %s mods in chat" % len(bot.oplist), bot, groups=me_only_group, prependuser=False))
 
     # Exec #
 
@@ -633,28 +633,10 @@ def generate_message_commands(bot):
                         return 'Usage: !mmrsetup addme < help | steamid | steam profile link >'
                 except: return 'Usage: !mmrsetup addme < help | steamid | steam profile link >'
 
-                # steamthing = args[1]
-                # steamid = ''
-
-                # if 'steamcommunity.com/id/' in steamthing or 'steamcommunity.com/profiles/' in steamthing:
-                #     steamid = [x for x in steamthing.split('/') if x][-1] # oh I hope this works
-                # else:
-                #     import re
-                #     match = re.match('^\d*$', steamthing)
-                #     if match:
-                #         steamid = match.string
-                #     else:
-                #         import steamapi
-                #         result = steamapi.ResolveVanityURL(steamthing)['response']
-                #         if result['success'] == 1:
-                #             steamid = result['message']
-                #         else:
-                #             return "Bad name, no match."
-
                 steamid = dota.determineSteamid(args[1])
 
                 if str(steamid) in node.raw_eval('bot.friends').keys():
-                    return "You are already on the bot's friend list.  If you want to change something, use [commands I need to write]"
+                    return "You are already on the bot's friend list.  If you want to change something, use !dotaconfig"
 
                 node.add_pending_mmr_enable(steamid, channel)
                 node.add_friend(steamid)
@@ -742,7 +724,7 @@ def generate_message_commands(bot):
 
         if channel not in dota.enabled_channels:
             return
-        
+
         dotaid = settings.getdata('%s_dota_id' % channel)
 
         return '%s: http://www.dotabuff.com/players/%s' % (user, dotaid)
