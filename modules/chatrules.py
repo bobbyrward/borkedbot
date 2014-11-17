@@ -530,7 +530,6 @@ def generate_message_commands(bot):
             return hour_str.format(user, channel, reldelta)
 
     coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
-    # TODO: Meh idiots
 
     def f(channel, user, message, args, data, bot):
         if args:
@@ -811,13 +810,13 @@ def generate_message_commands(bot):
 
         if args:
             if args[0] == 'add' and len(args) >= 3:
-
+                # 106231948 Fitzy
                 return
 
         if args:
             pages = int(args[0])
         else:
-            pages = 5
+            pages = 8
 
         players = dota.searchForNotablePlayers(dota.settings.getdata('%s_dota_id' % channel), pages)
 
@@ -827,7 +826,7 @@ def generate_message_commands(bot):
         if players:
             return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
         else:
-            return "No notable players found in the current game."
+            return "No other notable players found in the current game."
 
     coms.append(command.Command('!notableplayers', f, bot, True))
 

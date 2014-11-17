@@ -15,12 +15,11 @@ class MyBot(irc.IRCClient):
 
     opsinchan = set()
     oplist = set()
-    userlist = [] # RIP TWITCHCLENT 1
-    channelsubs = set()
-
-    usertags = {}
-
     gotops = False
+
+    channelsubs = set()
+    userlist = [] # RIP TWITCHCLENT 1
+    usertags = {}
 
     timertask = None
     timertick = 5

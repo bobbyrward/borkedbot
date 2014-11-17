@@ -28,7 +28,7 @@ def log(user, channel, msg, isop, isaction = False, logstdout = True):
         outputformat = "%s [%s] <%s%s> %s"
         logfileformat = "%s %s: %s\n"
     else:
-        outputformat = "%s [%s] * %s%s %s"
+        outputformat = "%s [%s] *%s%s %s"
         logfileformat = "%s * %s %s\n"
 
 

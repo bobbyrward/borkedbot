@@ -45,22 +45,34 @@ def latestBlurb(channel, override=False):
 
         settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
 
-        try:
-            latestmatch = steamapi.getlastdotamatch(dotaid)
-        except Exception as e:
-            print "[Dota] API error:", e
-            return
+        # try:
+            # latestmatch = steamapi.getlastdotamatch(dotaid)
+        # except Exception as e:
+            # print "[Dota] API error:", e
+            # return
 
+        matches = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=25)['result']['matches']
 
-        previousmatch = settings.trygetset('%s_last_match' % channel, latestmatch)
+        latestmatch = matches[0]
+        previousnewmatch = matches[1]
+        previoussavedmatch = settings.trygetset('%s_last_match' % channel, latestmatch)
 
-        if previousmatch['match_id'] != latestmatch['match_id'] or override:
+        if previoussavedmatch['match_id'] != latestmatch['match_id'] or override:
+            if previoussavedmatch['match_id'] != previousnewmatch['match_id']:
+                # Other matches have happened.
+
+                matchlist = [m['match_id'] for m in matches]
+
+                # For some reason, a failed match (early abandon) was never saved as the lastest match
+                skippedmatches = matchlist.index(previoussavedmatch['match_id']) - 1
+                print '[Dota] Skipped %s matches MAYBE PROBABLY I HOPE SO' % skippedmatches
+            else:
+                skippedmatches = 0
+
             update_channels()
 
-            #TODO: Somewhere in here is where I do the logic to check if we've skipped a game or not
-
-            print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previousmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
-            return getLatestGameBlurb(channel, dotaid, latestmatch, enabled_channels[channel][1] and str(latestmatch['lobby_type']) == '7')
+            print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previoussavedmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
+            return getLatestGameBlurb(channel, dotaid, latestmatch, skippedmatches=skippedmatches, getmmr = enabled_channels[channel][1] and str(latestmatch['lobby_type']) == '7')
 
 
 def checktimeout(channel):
@@ -90,7 +102,7 @@ def checktimeout(channel):
     return time.time() - int(getmatchtimeout) > float(lastmatchfetch)
 
 
-def getLatestGameBlurb(channel, dotaid, latestmatch=None, getmmr=False, notableplayers=True):
+def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getmmr=False, notableplayers=True):
     if latestmatch is None:
         latestmatch = steamapi.getlastdotamatch(dotaid)
 
