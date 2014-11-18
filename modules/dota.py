@@ -156,8 +156,8 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     d_victory = 'Victory' if not (matchdata['result']['radiant_win'] ^ (d_team == 'Radiant')) else 'Defeat'
 
-    matchoutput = "%s has %s a game.  http://www.dotabuff.com/matches/%s " % (
-        enabled_channels[channel][0], 'won' if d_victory == 'Victory' else 'lost',  latestmatch['match_id'])
+    matchoutput = "%s has %s a game%s.  http://www.dotabuff.com/matches/%s " % (
+        enabled_channels[channel][0], 'won' if d_victory == 'Victory' else 'lost', ' (%s skipped)' % skippedmatches if skippedmatches else '', latestmatch['match_id'])
 
     extramatchdata = "| Level {} {} {} - KDA: {}/{}/{} - CS: {}/{} - GPM: {} - XPM: {} ".format(
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)

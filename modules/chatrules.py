@@ -407,6 +407,71 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!lobby', f, bot, groups=me_and_host))
 
+    def f(channel, user, message, args, data, bot):
+        import recurring, twitchapi
+
+        if args:
+            if args[0] in ['new', 'add'] and len(args) >= 3:
+                # register_new_recurring(bot, name, message, timeout, checkfunc, duration=None, autostart=False)
+                name = args[1]
+                timeout = int(args[2])
+                message = ' '.join(args[3:])
+
+                if "'" in name:
+                    return 'Event names may not have apostrophes in them (no \')'
+
+                recurring.register_new_recurring(bot, name, message, timeout, autostart=True)
+                return "Recurring event '%s' created repeating every %s seconds." % (name, timeout)
+
+            if args[0] in ['del', 'delete'] and len(args) >= 2:
+                if recurring.delete_recurring(args[1]):
+                    return "Event %s stopped and deleted." % args[1]
+                else:
+                    return 'That does not exist, use the \'list\' argument to see what your events are.'
+
+            if args[0] == 'start':
+                try:
+                    recurring.start_recurring(args[1])
+                except:
+                    return "Event already running"
+                else:
+                    return "Event %s started" % args[1]
+
+            if args[0] == 'stop':
+                try:
+                    recurring.stop_recurring(args[1])
+                except:
+                    return "Event already stopped"
+                else:
+                    return "Event %s stopped" % args[1]
+
+            if args[0] == 'skip':
+                recurring.skip_recurring(args[1])
+
+            if args[0] == 'status':
+                if len(args) == 1:
+                    # status all
+                    statuses = {n:recurring.is_resurring_running(n) for n in recurring.list_recurring(channel) if not n.endswith('_data')}
+                    for s in statuses:
+                        statuses[s] = 'Running' if statuses[s] else 'Stopped'
+                    
+                    return 'Event statuses: %s' % (str(statuses)[1:-1].replace('\'',''))
+                else:
+                    return '%s -> %s' % (args[1], 'Running' if recurring.is_resurring_running(args[1]) else 'Stopped')
+
+            if args[0] == 'list':
+                return 'Events: ' + ', '.join([n for n in recurring.list_recurring(channel) if not n.endswith('_data')])
+
+            if args[0] == 'dump':
+                print recurring.list_recurring(channel)
+                return "I hope you find what you're looking for."
+
+            return "unrecognized option %s, use: new, del, list" % args[0]
+        else:
+            print "Usage: !recurring [new < name> < timeout > < message... > | del < name > | start | stop | list | status ]"
+    
+    coms.append(command.Command('!recurring', f, bot, groups=me_and_host))
+
     ######################################################################
     # Mod message_commands
     #
@@ -1261,6 +1326,8 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!defertest', f, bot, groups=me_only_group))
 
+
+    
     ######################################################################
 
     message_commands = coms
