@@ -53,12 +53,15 @@ def delete_recurring(name):
 
     print '[Recurring] Deleting %s for %s' % (name, the_channel)
     # WHAT A FUCKING WEIRD WAY TO DO THIS
-    rtask = _get_recurring(name)
-    rtask.stop()
+    try:
+        rtask = _get_recurring(name)
+        rtask.stop()
+        del rtask
+    except:
+        pass
 
     settings.deldata(name, recurring_domain)
     settings.deldata(name + '_data', recurring_domain)
-    del rtask
 
     return True
 
@@ -118,7 +121,7 @@ def set_timeout(name, newtimeout, imediatestart=True):
 
     settings.setdata(name + '_data', (newtimeout, message, createdat), recurring_domain)
 
-    print '[Recurring] Changed %s timeout: %s -> %s, %srestarting' % (name, oldtimeout, newtimeout, 'not ' if imediatestart else '')
+    print '[Recurring] Changed %s timeout: %s -> %s, %simediate' % (name, oldtimeout, newtimeout, '' if imediatestart else 'not ')
     return True
 
 

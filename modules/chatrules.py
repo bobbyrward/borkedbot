@@ -474,7 +474,7 @@ def generate_message_commands(bot):
                     if len(args) == 5:
                         now = 'now' in args[4]
                     else:
-                        now = True
+                        now = False
 
                     if recurring.set_timeout(args[2], int(args[3]), now):
                         return None if now else 'Ok, done.'
