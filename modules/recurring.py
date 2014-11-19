@@ -8,39 +8,42 @@ from twisted.internet import task, threads
 LOAD_ORDER = 31
 
 recurring_domain = None
+the_channel = None
 
 def setup(bot):
     global recurring_domain
+    global the_channel
     recurring_domain = 'recurring_events_for_%s' % bot.chan()
+    the_channel = bot.chan()
 
 def alert(event):
     return
 
-
-def _online_check_wrapper(channel, message, onlyonline, bot):
+# TODO: switch to key name settings reqest to allow for easy changing
+def _online_check_wrapper(channel, message, bot):
     import twitchapi
-    if onlyonline:
-        if twitchapi.is_streaming(channel):
-            bot.botsay(message)
-    else:
+    print '[Recurring] Doing call'
+    if twitchapi.is_streaming(channel):
         bot.botsay(message)
 
 
-def register_new_recurring(bot, name, message, timeout, duration=None, autostart=True, onlywhileonline=True):
+def register_new_recurring(bot, name, message, timeout, duration=None, autostart=True):
     if settings.exists(name, recurring_domain):
         return False
 
     timeout = int(timeout)
     message = str(message)
 
-    recurtask = task.LoopingCall(_online_check_wrapper, recurring_domain.split('_')[-1], message, onlywhileonline, bot)
+    recurtask = task.LoopingCall(_online_check_wrapper, the_channel, message, bot)
     recurringid = id(recurtask)
 
     settings.setdata(name, recurringid, recurring_domain)
     settings.setdata(name + '_data', (timeout, message, time.time()), recurring_domain)
 
+    print '[Recurring] Creating recurring %s for %s' % (name, the_channel)
+
     if autostart:
-        recurtask.start(timeout, True)
+        recurtask.start(timeout, False)
 
     return True
 
@@ -48,13 +51,15 @@ def delete_recurring(name):
     if not settings.exists(name, recurring_domain):
         return False
 
+    print '[Recurring] Deleting %s for %s' % (name, the_channel)
     # WHAT A FUCKING WEIRD WAY TO DO THIS
     rtask = _get_recurring(name)
     rtask.stop()
 
     settings.deldata(name, recurring_domain)
+    settings.deldata(name + '_data', recurring_domain)
     del rtask
-    
+
     return True
 
 def is_resurring_running(name):
@@ -64,7 +69,7 @@ def is_resurring_running(name):
     return _get_recurring(name).running
 
 def list_recurring(channel=None):
-    channel = channel or recurring_domain.split('_')[-1]
+    channel = channel or the_channel
 
     return settings.dumpkeys('recurring_events_for_%s' % channel)
 
@@ -76,6 +81,7 @@ def start_recurring(name):
     recurring = _get_recurring(name)
     recurring.start(settings.getdata(name + '_data', recurring_domain)[0], True)
 
+    print '[Recurring] Starting %s for %s' % (name, the_channel)
     return True
 
 def stop_recurring(name):
@@ -85,6 +91,7 @@ def stop_recurring(name):
     recurring = _get_recurring(name)
     recurring.stop()
 
+    print '[Recurring] Stopping %s for %s' % (name, the_channel)
     return True
 
 
@@ -95,6 +102,23 @@ def skip_recurring(name):
     recurring = _get_recurring(name)
     recurring.reset()
 
+    print '[Recurring] Skipping %s for %s' % (name, the_channel)
+    return True
+
+
+def set_timeout(name, newtimeout, imediatestart=True):
+    if not settings.exists(name, recurring_domain):
+        return False
+
+    recurring = _get_recurring(name)
+    oldtimeout, message, createdat = settings.getdata(name + '_data', recurring_domain)
+
+    recurring.stop()
+    recurring.start(newtimeout, imediatestart)
+
+    settings.setdata(name + '_data', (newtimeout, message, createdat), recurring_domain)
+
+    print '[Recurring] Changed %s timeout: %s -> %s, %srestarting' % (name, oldtimeout, newtimeout, 'not ' if imediatestart else '')
     return True
 
 
@@ -102,6 +126,7 @@ def _get_recurring(name):
     return dill.detect.at(int(settings.getdata(name, recurring_domain)))
 
 
+'''
 class Recurring(object):
     def __init__(self, name, message, timeout, bot, duration=None, onlywhileonline=True):
         from twisted.internet import task
@@ -145,3 +170,4 @@ class Recurring(object):
                 self.bot.botsay(str(message))
         else:
             self.bot.botsay(str(message))
+'''

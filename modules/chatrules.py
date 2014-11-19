@@ -427,7 +427,14 @@ def generate_message_commands(bot):
                 if recurring.delete_recurring(args[1]):
                     return "Event %s stopped and deleted." % args[1]
                 else:
-                    return 'That does not exist, use the \'list\' argument to see what your events are.'
+                    return 'That event does not exist, use the \'list\' argument to see what your events are.'
+
+            if args[0] in ['delall', 'deleteall']:
+                for r in recurring.list_recurring(channel):
+                    if not r.endswith('_data'):
+                        recurring.delete_recurring(r)
+
+                return "All events deleted."
 
             if args[0] == 'start':
                 try:
@@ -454,7 +461,7 @@ def generate_message_commands(bot):
                     statuses = {n:recurring.is_resurring_running(n) for n in recurring.list_recurring(channel) if not n.endswith('_data')}
                     for s in statuses:
                         statuses[s] = 'Running' if statuses[s] else 'Stopped'
-                    
+
                     return 'Event statuses: %s' % (str(statuses)[1:-1].replace('\'',''))
                 else:
                     return '%s -> %s' % (args[1], 'Running' if recurring.is_resurring_running(args[1]) else 'Stopped')
@@ -462,14 +469,27 @@ def generate_message_commands(bot):
             if args[0] == 'list':
                 return 'Events: ' + ', '.join([n for n in recurring.list_recurring(channel) if not n.endswith('_data')])
 
+            if args[0] == 'set' and len(args) >= 4:
+                if args[1] == 'timeout':
+                    if len(args) == 5:
+                        now = 'now' in args[4]
+                    else:
+                        now = True
+
+                    if recurring.set_timeout(args[2], int(args[3]), now):
+                        return None if now else 'Ok, done.'
+                    else:
+                        return "Are you sure that's a thing?  I don't think it is."
+
+
             if args[0] == 'dump':
                 print recurring.list_recurring(channel)
                 return "I hope you find what you're looking for."
 
             return "unrecognized option %s, use: new, del, list" % args[0]
         else:
-            print "Usage: !recurring [new < name> < timeout > < message... > | del < name > | start | stop | list | status ]"
-    
+            return "Usage: !recurring [new < name > < timeout > < message... > | del < name > | set timeout < name > < timeout > [now] | start | stop | list | status ]"
+
     coms.append(command.Command('!recurring', f, bot, groups=me_and_host))
 
     ######################################################################
@@ -872,6 +892,9 @@ def generate_message_commands(bot):
         if channel not in dota.enabled_channels:
             return
 
+        if user == 'bluepowervan':
+            bot.botsay('.timeout bluepowervan 1')
+            return "You know that doesn't work for you, stop trying."
 
         if args:
             if args[0] == 'add' and len(args) >= 3:
@@ -1327,7 +1350,7 @@ def generate_message_commands(bot):
     coms.append(command.Command('!defertest', f, bot, groups=me_only_group))
 
 
-    
+
     ######################################################################
 
     message_commands = coms
