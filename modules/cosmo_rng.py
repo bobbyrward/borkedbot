@@ -16,7 +16,8 @@ def alert(event):
 
     last_powerup = settings.trygetset('cosmo_last_rng_powerup', time.time())
     rng_mode = settings.trygetset('cosmo_rng_mode', False)
-    if last_powerup + 3600 <= time.time():
+    
+    if last_powerup + 3600 <= time.time() and rng_mode:
         powerup(event)
 
     if event.etype == 'msg':
