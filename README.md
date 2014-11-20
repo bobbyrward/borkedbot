@@ -23,7 +23,7 @@ Other:
   * steam api access
   * twitch api access
 
-For Steam and Dota 2 related functionality a running instance of node-steam with node-dota2 is required.  See [modules/node/dota.js](dota.js) for more information.
+For Steam and Dota 2 related functionality a running instance of node-steam with node-dota2 is required.  See [dota.js](modules/node/dota.js) for more information. 
 
 Features
 --------
@@ -36,7 +36,7 @@ Borkedbot is designed to be interfaced almost entirely through chat.  Redis sett
 Main file for commands.  All commands are created and processed from this file.  The command system is pending overhaul, and will be removed in favor per channel importing.
 
 #### chatlogger.py
-Logs chat to a file.  Can be used for an IRC stats page like [this](http://singstats.io).
+Logs chat to a file.  Can be used for an IRC stats page like [this](http://singstats.github.io).
 
 #### command.py
 Command class definition file.  Used by chatrules.py for processing commands.  Pending command system overhaul.
