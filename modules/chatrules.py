@@ -1337,8 +1337,19 @@ def generate_message_commands(bot):
 
             if args[0].lower() == 'on':
                 settings.setdata('cosmo_rng_mode', True)
+                return "RNG godmode turned on."
             elif args[0].lower() == 'off':
                 settings.setdata('cosmo_rng_mode', False)
+                return "RNG godmode turned off."
+            elif args[0].lower() == 'maxtimeout':
+                try:
+                    settings.setdata('cosmo_rng_maxto', int(args[1]))
+                    return "Max timeout duration set to %s seconds." % args[1]
+                except:
+                    return "That's not a number"
+        else:
+            return "RNG mode is %s" % 'on' if settings.getdata('cosmo_rng_mode') else 'off'
+
 
     coms.append(command.Command('!RNGgodmode', f, bot, groups=me_and_broadcaster))
 

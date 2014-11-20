@@ -28,7 +28,8 @@ def alert(event):
                     duration = int(duration)
                 except: pass
                 else:
-                    event.bot.botsay('.timeout %s %s' % (who, duration if duration <= 600 else 600))
+                    maxto = settings.trygetset('cosmo_rng_maxto', 600)
+                    event.bot.botsay('.timeout %s %s' % (who, duration if duration <= maxto else maxto))
 
 def powerup(event):
     chatters = twitchapi.get_chatters('cosmowright')['chatters']['viewers']
