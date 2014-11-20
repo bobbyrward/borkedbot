@@ -1350,8 +1350,7 @@ def generate_message_commands(bot):
             elif args[0].lower() == 'powerup':
                 settings.setdata('cosmo_rng_last_powerup', 0)
             elif args[0].lower() == 'test':
-                print cosmo_rng.test(bot)
-                return "Simulation run, see console."
+                return cosmo_rng.test()
         else:
             return "RNG mode is %s" % 'on' if settings.getdata('cosmo_rng_mode') else 'off'
 
