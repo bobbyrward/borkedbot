@@ -150,7 +150,7 @@ def generate_message_commands(bot):
     #############################
 
     me_only_group = ['special']
-    me_and_host = ['special', 'broadcaster']
+    me_and_broadcaster = ['special', 'broadcaster']
 
     coms.append(command.SimpleCommand('#!dbsize', "We've got %s entries." % markov.redis_conn.dbsize(), bot, groups=me_only_group, prependuser=False))
 
@@ -405,7 +405,7 @@ def generate_message_commands(bot):
 
         return "How did something not happen.  That... shouldn't happen..."
 
-    coms.append(command.Command('!lobby', f, bot, groups=me_and_host))
+    coms.append(command.Command('!lobby', f, bot, groups=me_and_broadcaster))
 
     def f(channel, user, message, args, data, bot):
         import recurring, twitchapi
@@ -490,7 +490,7 @@ def generate_message_commands(bot):
         else:
             return "Usage: !recurring [new < name > < timeout > < message... > | del < name > | set timeout < name > < timeout > [now] | start | stop | list | status ]"
 
-    coms.append(command.Command('!recurring', f, bot, groups=me_and_host))
+    coms.append(command.Command('!recurring', f, bot, groups=me_and_broadcaster))
 
     ######################################################################
     # Mod message_commands
@@ -800,7 +800,7 @@ def generate_message_commands(bot):
                 or 2: you add me on steam.  These are the commands, respectively: !mmrsetup addme < steam thing > OR !mmrsetup addyou .  \
                 Once added, send me a steam message saying this: enable mmr'''
 
-    coms.append(command.Command('!mmrsetup', f, bot, groups=me_and_host, repeatdelay=5))
+    coms.append(command.Command('!mmrsetup', f, bot, groups=me_and_broadcaster, repeatdelay=5))
     #TODO: Maybe split mmr setup stuff and configuration stuff
 
     def f(channel, user, message, args, data, bot):
@@ -884,7 +884,7 @@ def generate_message_commands(bot):
 
                 return "Deleted key for %s" % channel
 
-    coms.append(command.Command('!dotaconfig', f, bot, groups=me_and_host, repeatdelay=5))
+    coms.append(command.Command('!dotaconfig', f, bot, groups=me_and_broadcaster, repeatdelay=5))
 
     def f(channel, user, message, args, data, bot):
         import dota, settings
@@ -1322,13 +1322,25 @@ def generate_message_commands(bot):
 
     # Kizzmett ##########
 
-    # Tom
+    # Tom ##############
 
     coms.append(command.SimpleCommand('!plugs', 'Facebook: http://www.facebook.com/unsanitylive | Twitter: http://twitter.com/unsanitylive | ' +
         'Like/Follow/Subscribe/whatever you want, that\'s where you can find Tom!',
         bot, channels=['unsanitylive'], prependuser=False, repeatdelay=8))
 
-    # coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/59839587 There you go.', bot, channels=['mikushiru'], repeatdelay=10, targeted=True))
+
+    # Cosmo ##############
+
+    def f(channel, user, message, args, data, bot):
+        if args:
+            import settings
+
+            if args[0].lower() == 'on':
+                settings.setdata('cosmo_rng_mode', True)
+            elif args[0].lower() == 'off':
+                settings.setdata('cosmo_rng_mode', False)
+
+    coms.append(command.Command('!RNGgodmode', f, bot, groups=me_and_broadcaster))
 
     ######################################################################
     #

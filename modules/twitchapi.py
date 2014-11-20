@@ -7,6 +7,7 @@ LOAD_ORDER = 80
 
 root = 'https://api.twitch.tv/kraken/'
 
+
 def _apiget(path):
     r = requests.get(root+path)
     r.raise_for_status()
@@ -24,6 +25,11 @@ def get(path='', key=None):
 
 def is_streaming(channel):
     return get('streams/%s' % channel, 'stream') is not None
+
+def get_chatters(channel):
+    r = requests.get('https://tmi.twitch.tv/group/user/%s/chatters' % channel)
+    r.raise_for_status()
+    return r.json()
 
 
 def setup(bot):
