@@ -1333,7 +1333,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         if args:
-            import settings
+            import settings, cosmo_rng
 
             if args[0].lower() == 'on':
                 settings.setdata('cosmo_rng_mode', True)
@@ -1349,10 +1349,13 @@ def generate_message_commands(bot):
                     return "That's not a number"
             elif args[0].lower() == 'powerup':
                 settings.setdata('cosmo_rng_last_powerup', 0)
+            elif args[0].lower() == 'test':
+                print cosmo_rng.test(bot)
+                return "Simulation run, see console."
         else:
             return "RNG mode is %s" % 'on' if settings.getdata('cosmo_rng_mode') else 'off'
 
-    coms.append(command.Command('!RNGgodmode', f, bot, groups=me_and_broadcaster))
+    coms.append(command.Command('!RNGmode', f, bot, groups=me_and_broadcaster))
 
     ######################################################################
     #
