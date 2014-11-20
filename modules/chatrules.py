@@ -556,6 +556,16 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('#!ofortune', f, bot, True))
 
+    def f(channel, user, message, args, data, bot):
+        if args:
+            if bot.usercolors.has_key(args[0].lower()):
+                return bot.usercolors[args[0].lower()]
+            else:
+                return "No data for %s" % args[0].lower()
+        else:
+            return "Use the command properly, idiot."
+
+    coms.append(command.Command('!usercolor', f, bot, True, repeatdelay=8))
 
     ######################################################################
     #
@@ -578,7 +588,7 @@ def generate_message_commands(bot):
        if message.endswith('?'):
            return "%s, %s"%(user, random.choice(data))
 
-    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever'], data=magic8ball, repeatdelay=8))
+    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'cosmowright'], data=magic8ball, repeatdelay=8))
 
     def f(channel, user, message, args, data, bot):
         import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi, settings
@@ -616,16 +626,6 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
 
-    def f(channel, user, message, args, data, bot):
-        if args:
-            if bot.usercolors.has_key(args[0].lower()):
-                return bot.usercolors[args[0].lower()]
-            else:
-                return "No data for %s" % args[0].lower()
-        else:
-            return "Use the command properly, idiot."
-
-    coms.append(command.Command('!usercolor', f, bot, True, repeatdelay=8))
 
     ######################################################################
     #
@@ -1354,7 +1354,7 @@ def generate_message_commands(bot):
         else:
             return "RNG mode is %s" % 'on' if settings.getdata('cosmo_rng_mode') else 'off'
 
-    coms.append(command.Command('!RNGmode', f, bot, groups=me_and_broadcaster))
+    coms.append(command.Command('!RNGmode', f, bot, channels=['cosmowright'], groups=me_and_broadcaster))
 
     ######################################################################
     #
