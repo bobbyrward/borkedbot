@@ -49,4 +49,4 @@ def test():
     new_powerups = int(len(chatters) * 0.05)
     new_gods = random.sample(chatters, new_powerups)
 
-    return "Chatters: %s, 5%% = %s, chosen: %s" % (len(chatters), new_powerups, ' ,'.join(new_gods))
+    return "Chatters: %s, 5%% = %s, chosen: %s" % (len(chatters), new_powerups, ' ,'.join([str(g) for g in new_gods]))
