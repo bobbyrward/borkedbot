@@ -35,7 +35,7 @@ def alert(event):
 def powerup(bot):
     chatters = twitchapi.get_chatters('cosmowright')['chatters']['viewers']
 
-    new_powerups = len(chatters) * 0.05
+    new_powerups = int(len(chatters) * 0.05)
     new_gods = random.sample(chatters, new_powerups)
 
     settings.setdata('cosmo_rng_gods', new_gods)
@@ -46,7 +46,7 @@ def powerup(bot):
 def test():
     chatters = twitchapi.get_chatters('cosmowright')['chatters']['viewers']
     
-    new_powerups = len(chatters) * 0.05
+    new_powerups = int(len(chatters) * 0.05)
     new_gods = random.sample(chatters, new_powerups)
 
     return "Chatters: %s, 5%: %s, chosen: %s" % (len(chatters), new_powerups, new_gods)
