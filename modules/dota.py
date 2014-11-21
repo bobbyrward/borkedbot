@@ -43,15 +43,18 @@ def latestBlurb(channel, override=False):
             print "[Dota] No ID on record for %s.  I should probably sort this out." % channel
             return
 
-        settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
 
         # try:
             # latestmatch = steamapi.getlastdotamatch(dotaid)
         # except Exception as e:
             # print "[Dota] API error:", e
             # return
+        try:
+            matches = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=25)['result']['matches']
+        except:
+            return
 
-        matches = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=25)['result']['matches']
+        settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
 
         latestmatch = matches[0]
         previousnewmatch = matches[1]

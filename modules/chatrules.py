@@ -588,7 +588,7 @@ def generate_message_commands(bot):
        if message.endswith('?'):
            return "%s, %s"%(user, random.choice(data))
 
-    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'cosmowright'], data=magic8ball, repeatdelay=8))
+    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'cosmowright'], data=magic8ball, repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
         import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi, settings
@@ -694,7 +694,7 @@ def generate_message_commands(bot):
             # ???
             return outputstring % (mmr,mmrp)
 
-    coms.append(command.Command('!mmr', f, bot, repeatdelay=16))
+    coms.append(command.Command('!mmr', f, bot, repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
         import dota, node, settings
@@ -1319,6 +1319,19 @@ def generate_message_commands(bot):
             return "No match for \"%s\"" % args[0]
 
     coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=4))
+
+    def f(channel, user, message, args, data, bot):
+        try:
+            x = int(args[0])
+        except:
+            return "Are you sure that's a number?"
+        for i in range(2, x-1):
+            if x % i == 0:
+                return 'False'
+        else:
+            return 'True'
+
+    coms.append(command.Command('!isprime', f, bot, channels=['superjoe']))
 
     # Kizzmett ##########
 
