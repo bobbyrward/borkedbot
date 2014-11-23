@@ -6,22 +6,24 @@ Borkedbot is a python IRC bot built for twitch.tv chats.  It interfaces with Ste
 
 ## Dependencies
 
-Python modules required: _TODO: Links_
+Python modules required:
 
-  * twisted
-  * redis
-  * requests
-  * dill
-  * dateutil
+  * [twisted](https://twistedmatrix.com/trac/)
+  * [redis](https://github.com/andymccurdy/redis-py)
+  * [requests](http://python-requests.org/)
+  * [dill](http://trac.mystic.cacr.caltech.edu/project/pathos/wiki/dill)
+  * [dateutil](http://labix.org/python-dateutil)
+
+Most, if not all, of these pagkages can be installed via [pip](https://pip.pypa.io/en/latest/installing.html).
 
 Other:
 
-  * [node-steam](../../../../seishun/node-steam)
-  * [node-dota2](../../../../RJacksonm1/node-dota2)
-  * [steam api access](http://steamcommunity.com/dev/apikey)
-  * twitch api access
+  * [node-steam](https://github.com/seishun/node-steam)
+  * [node-dota2](https://github.com/RJacksonm1/node-dota2)
+  * [Steam API access](http://steamcommunity.com/dev/apikey)
+  * [Twitch API access](https://github.com/justintv/twitch-api)
 
-For Steam and Dota 2 related functionality a running instance of node-steam with node-dota2 is required.  See [modules/node/dota.js](dota.js) for more information.
+For Steam and Dota 2 related functionality a running instance of node-steam with node-dota2 is required.  See [dota.js](modules/node/dota.js) for more information.
 
 # Features
 
