@@ -6,7 +6,7 @@ Borkedbot is a python IRC bot built for twitch.tv chats.  It interfaces with Ste
 
 ## Dependencies
 
-Python modules required:
+Python modules required: _TODO: Links_
 
   * twisted
   * redis
@@ -16,9 +16,9 @@ Python modules required:
 
 Other:
 
-  * node-steam
-  * node-dota2
-  * steam api access
+  * [node-steam](../../../../seishun/node-steam)
+  * [node-dota2](../../../../RJacksonm1/node-dota2)
+  * [steam api access](http://steamcommunity.com/dev/apikey)
   * twitch api access
 
 For Steam and Dota 2 related functionality a running instance of node-steam with node-dota2 is required.  See [modules/node/dota.js](dota.js) for more information.
@@ -40,7 +40,7 @@ Commands have varying levels of permissions and rules regarding when and in whic
 ### Arguments
   * `[arg]` - Optional argument.
   * `<arg>` - Required argument.
-  * `'arg'` - Literal argument.  The word in quotes _is_ the argument.  Multiple arguments are considered literals as well.
+  * `'arg'` - Literal argument.  The word in quotes _is_ the argument.  Multiple arguments without quotes are considered literals as well.
   * `arg1 | arg2` - Multiple arguments.  Either can be used, ex: `!command arg1` or `!command arg2`
 
 ### Permissions heirarchy
@@ -76,7 +76,7 @@ Generates a sentence using markov chains from words collected from chat.  Use at
 ##### Typical output: `Completely random jibberish`
 ##### Cooldown: `30 seconds`
 ##### Arguments:
-`[two word seed]` - Takes two words and tried to create a sentence using those to start with.  Typically inferior to using the command without the argument.
+`[two word seed]` - Takes two words and tries to create a sentence using those to start with.  Typically inferior to using the command without the argument.
 
 ----
 
@@ -92,7 +92,7 @@ Ask borkedbot a question and his magic 8 ball will give you an answer.  Message 
 
 ---
 
-### I-forgot-what-I-was-going-to-call-these commands
+### Feature Specific or otherwise Limited Commands
 These commands work in all channels if the channel is enabled for something, i.e. Dota related commands work in Dota related channels.
 
 ### `!mmr ['update']`
@@ -108,7 +108,7 @@ Displays the streamer's Dota 2 ranked MMR.
 ---
 
 ### `!dotabuff`
-Text about the command
+Returns a link to the streamer's dotabuff if Dota features are enabled.
 
 ##### Category: `Dota`
 ##### Permission: `All users`
@@ -135,7 +135,14 @@ Will be removed in the future in favor of an automatic system.
 ---
 
 ### `!mmrsetup [help | addyou | addme <steam thing> | verify <code> ]`
-Text about the command
+Setup command to register a streamer with borkedbot and enable dota features.  The process goes as follows:
+
+  1. Streamer types `!mmrsetup` and Borkedbot replies with instructions.
+  2. Streamer types `!mmrsetup` with the `addme` or `addyou` options.
+  3. Streamer somehow adds Borkedbot as a friend on steam.
+  4. Borkedbot may initiate a steam chat with that person (if that feature isn't broken), otherwise the streamer says `enable mmr` in steam chat.
+  5. Borkedbot generates a code for the streamer to verify with in chat.
+  6. Once verified, Borkedbot congratulates you on a job well done and Dota features are enabled.
 
 ##### Category: `Dota`
 ##### Permission: `Broadcaster`
@@ -145,18 +152,21 @@ Text about the command
   * `[help]` - Displays information about the command.
   * `[addyou]` - Returns borkedbot's steam profile link and a steam uri link for use with the `Win+R` Run dialog.
   * `[addme]` - Requests that borkedbot attempt to add the broadcaster from...
-    * `<steam thing>` - A steam profile link, id, vanity name, dota id, etc.  Valid items are:
-      * steam community link _TODO_
-      * steam community id _TODO_
-      * steam community vanity name _TODO_
-      * dota id _TODO_
-      * that other steam id thing _TODO_
+    * `<steam thing>` - A steam profile link, id, vanity name, dota id, etc.  Borkedbot's will be used as an example.  Valid options:
+      * Steam Community profile link, either work:
+        * `http://steamcommunity.com/profiles/76561198153108180/`
+        * `http://steamcommunity.com/id/Borkedbot/`
+      * Or just the end part:
+        * `76561198153108180`
+        * `Borkedbot`
+      * Dota ID (can be found on your dota profile): `192842452`
+      * The other Steam ID that looks like this: `STEAM_0:0:96421226`
   * `[verify]` - Verifies the streamer with borkedbot and enables dota related features in the channel.
     * `<code>` - Code given to the streamer by borkedbot through steam chat to verify themselves.
 
 ---
 
-### `!dotaconfig [status | setname | enable <dota | mmr> | disable <dota | mmr>]`
+### `!dotaconfig [status | setname <name> | enable <dota | mmr> | disable <dota | mmr>]`
 Configuration command for dota related settings.  More options will be added in the future.
 
 ##### Category: `Dota`
@@ -164,10 +174,26 @@ Configuration command for dota related settings.  More options will be added in 
 ##### Typical output: `Depends on argument.  No help argument available yet, use this for reference.`
 ##### Cooldown: `5 seconds`
 ##### Arguments:
-`[status]` - Blah
+  * `[status]` - Currently displays if MMR features are enabled.  Will show more information in the future.
+  * `[setname]` - Sets the name that will be used to refer to the streamer.
+    * `<name>` -  Said name.
+  * `[enable]` and `[disable]` - Enable and disable the following features:
+    * `<dota>` - Dota related functions
+    * `<mmr>` - MMR related functions
 
-To be continued...
 ---
+
+### `!mumble`
+Displays information about the mumble server.  
+
+##### Category: `Limited channels (monkeys_forever, superjoe)`
+##### Permission: `All`
+##### Typical output: `{address} 100 slot open server, on 24/7.` Don't be an idiot, etc etc.
+##### Cooldown: `15 seconds`
+
+---
+
+
 
 
 
@@ -253,5 +279,6 @@ Interface for the Twitch API.  Key does not seem to be required but may be in th
   * fix auto unhosting
   * folder module loading for import overhaul
   * addition of information to the borkedbot steam page (online/ingame/offline etc)
+  * Multiple dota accounts, switching depending on which one is in game
   
 I guess that's good enough for now I'll add more later.
