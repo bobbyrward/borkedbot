@@ -66,6 +66,7 @@ def latestBlurb(channel, override=False):
 
                 matchlist = [m['match_id'] for m in matches]
 
+                # TODO: Fix -1 issues for lastmatch
                 # For some reason, a failed match (early abandon) was never saved as the lastest match
                 skippedmatches = matchlist.index(previoussavedmatch['match_id']) - 1
                 print '[Dota] Skipped %s matches MAYBE PROBABLY I HOPE SO' % skippedmatches
@@ -159,8 +160,14 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     d_victory = 'Victory' if not (matchdata['result']['radiant_win'] ^ (d_team == 'Radiant')) else 'Defeat'
 
+    matchskipstr = ' (%s skipped)' % skippedmatches if skippedmatches else ''
+    if skippedmatches == -1:
+        matchskipstr = ' (Last match)'
+    else:
+        matchskipstr = ' (%s matches ago)' % skippedmatches * -1
+
     matchoutput = "%s has %s a game%s.  http://www.dotabuff.com/matches/%s " % (
-        enabled_channels[channel][0], 'won' if d_victory == 'Victory' else 'lost', ' (%s skipped)' % skippedmatches if skippedmatches else '', latestmatch['match_id'])
+        enabled_channels[channel][0], 'won' if d_victory == 'Victory' else 'lost', matchskipstr, latestmatch['match_id'])
 
     extramatchdata = "| Level {} {} {} - KDA: {}/{}/{} - CS: {}/{} - GPM: {} - XPM: {} ".format(
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)

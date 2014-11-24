@@ -1382,18 +1382,24 @@ def generate_message_commands(bot):
     #
 
     def f(channel, user, message, args, data, bot):
-        from twisted.internet import reactor
+        import twitchapi
 
-        def testthing(bot):
-            import time
-            bot.botsay('pausing for 10 seconds')
-            time.sleep(10)
-            bot.botsay('done')
+        chatters = twitchapi.get_chatters(channel)
+        num_chatters = chatters['chatter_count']
 
-        reactor.callLater(5, testthing, bot)
-        return 'task deferred for 5 seconds'
+        try:
+            num_viewers = twitchapi.get('streams/%s' % channel)['stream']['viewers']
+        except:
+            num_viewers = 0
 
-    coms.append(command.Command('!defertest', f, bot, groups=me_only_group))
+        return 'Viewers: %s, Chatters: %s, Mods: %s%s%s' % (
+            num_viewers, num_chatters, len(chatters['chatters']['moderators']), 
+            ', Admin: %s' % len(chatters['chatters']['admins']) if len(chatters['chatters']['admins']) else '', 
+            ', Staff: %s' % len(chatters['chatters']['staff']) if len(chatters['chatters']['staff']) else '')
+
+    coms.append(command.Command('!chatters', f, bot, groups=me_only_group))
+
+
 
 
     ######################################################################
