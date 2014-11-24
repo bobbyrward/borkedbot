@@ -126,7 +126,7 @@ def alert(event):
             if output[1] is command.OK:
                 print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
                 print "[Chatrules] Command time: %4.4fms, Total time: %4.4fms" % ((t2-t1)*1000, (t2-tstart)*1000)
-                event.bot.say(event.channel, output[0])
+                event.bot.say(event.channel, str(output[0]))
 
     #if event.etype in ['join', 'part']:
     #    # not quite yet, maybe not for a while
@@ -486,9 +486,9 @@ def generate_message_commands(bot):
                 print recurring.list_recurring(channel)
                 return "I hope you find what you're looking for."
 
-            return "unrecognized option %s, use: new, del, list" % args[0]
+            return "unrecognized option %s, refer to usage here: https://github.com/imayhaveborkedit/borkedbot#arguments-5" % args[0]
         else:
-            return "Usage: !recurring [new < name > < timeout > < message... > | del < name > | set timeout < name > < timeout > [now] | start | stop | list | status ]"
+            return "Refer to usage here: https://github.com/imayhaveborkedit/borkedbot#arguments-5"
 
     coms.append(command.Command('!recurring', f, bot, groups=me_and_broadcaster))
 
@@ -498,7 +498,7 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('Beep?', 'Boop!', bot, True, prependuser = False))
 
-    coms.append(command.SimpleCommand(['!source', '!guts'], "BLEUGH https://github.com/imayhaveborkedit/borkedbot", bot, True, prependuser=True, targeted=True))
+    coms.append(command.SimpleCommand(['!source', '!guts'], "BLEUGH https://github.com/imayhaveborkedit/borkedbot", bot, True, prependuser=True, repeatdelay=10, targeted=True))
 
     #TODO: ADD LIST OF BURSDAY SONGS?
     coms.append(command.SimpleCommand('#!bursday', "Happy Bursday! http://www.youtube.com/watch?v=WCYzk67y_wc", bot, True))
@@ -540,21 +540,21 @@ def generate_message_commands(bot):
         return get_process_output('ddate', shell=True)
     coms.append(command.Command('#!ddate', f, bot, True))
 
-    def f(channel, user, message, args, data, bot):
-        while True:
-            out = get_process_output('fortune', shell=True)
-            if len(out) <= 256:
-                return out
+    # def f(channel, user, message, args, data, bot):
+    #     while True:
+    #         out = get_process_output('fortune', shell=True)
+    #         if len(out) <= 256:
+    #             return out
 
-    coms.append(command.Command('#!fortune', f, bot, True))
+    # coms.append(command.Command('#!fortune', f, bot, True))
 
-    def f(channel, user, message, args, data, bot):
-        while True:
-            out = get_process_output('ofortune', shell=True)
-            if len(out) <= 256:
-                return out
+    # def f(channel, user, message, args, data, bot):
+    #     while True:
+    #         out = get_process_output('ofortune', shell=True)
+    #         if len(out) <= 256:
+    #             return out
 
-    coms.append(command.Command('#!ofortune', f, bot, True))
+    # coms.append(command.Command('#!ofortune', f, bot, True))
 
     def f(channel, user, message, args, data, bot):
         if args:
@@ -893,8 +893,11 @@ def generate_message_commands(bot):
             return
 
         if user == 'bluepowervan':
-            bot.botsay('.timeout bluepowervan 1')
+            bot.botsay('.timeout bluepowervan 10')
             return "You know that doesn't work for you, stop trying."
+
+        if user not in bot.oplist:
+            return
 
         if args:
             if args[0] == 'add' and len(args) >= 3:
@@ -916,11 +919,11 @@ def generate_message_commands(bot):
         else:
             return "No other notable players found in the current game."
 
-    coms.append(command.Command('!notableplayers', f, bot, True))
+    coms.append(command.Command('!notableplayers', f, bot, repeatdelay=10))
 
 
     coms.append(command.SimpleCommand('!mumble', 'doc.asdfxyz.de (default port) 100 slot open server, on 24/7.  Try not to be awful, or bork will ban you.',
-        bot, channels=['superjoe', 'monkeys_forever'], repeatdelay=10, targeted=True))
+        bot, channels=['superjoe', 'monkeys_forever'], repeatdelay=15, targeted=True))
 
     # Monkeys_forever ######################################################
 
@@ -1031,7 +1034,7 @@ def generate_message_commands(bot):
             elif steamid is False:
                 return "Steam api down, cannot resolve vanity name"
 
-            return "Bad id or something (try http://i.imgur.com/7Yepc8i.png )"
+            return "Bad id or something, I can't figure out who you are.  Try one of these: http://i.imgur.com/7Yepc8i.png"
         else:
             return "%s: You need to give me a steam id or profile link (see http://i.imgur.com/7Yepc8i.png )" % user
 
@@ -1045,7 +1048,7 @@ def generate_message_commands(bot):
         if blurb:
             return blurb
 
-    coms.append(command.Command('!lastmatch', f, bot, True, channels=['monkeys_forever']))
+    coms.append(command.Command(['!lastmatch', '!lastgame'], f, bot, channels=['monkeys_forever'], repeatdelay=30))
 
     # coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
@@ -1062,7 +1065,7 @@ def generate_message_commands(bot):
         "Console command: \"dota_embers 0\"  Then close, open, and close your console, and play a game.",
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
-    coms.append(command.SimpleCommand(['!rangefinder', '!greenarrow', '!green arrow'], "Here's the console command: dota_disable_range_finder 0",
+    coms.append(command.SimpleCommand(['!rangefinder', '!greenarrow'], "Here's the console command: dota_disable_range_finder 0",
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand(['!fountainhooks', '!pudgefail', '!pudgefails'], 'rip root http://www.youtube.com/watch?v=7ba9nCot71w&hd=1',
@@ -1071,17 +1074,17 @@ def generate_message_commands(bot):
     # Superjoe ######################################################
 
     coms.append(command.SimpleCommand('!youtube', 'Subscribe to Superjoe on youtube!  https://www.youtube.com/user/WatchSuperjoe',
-        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
+        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=10))
 
     coms.append(command.SimpleCommand('!twitter', 'Follow Superjoe on Twitter!  http://twitter.com/superjoeplays',
-        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
+        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=10))
 
     coms.append(command.SimpleCommand('!ytmnd', 'http://superjoe.ytmnd.com (courtesy of Slayerx1177)',
-        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
+        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=10))
 
     coms.append(command.SimpleCommand('!plugs', 'Youtube: https://youtube.com/user/WatchSuperjoe | Twitter: http://twitter.com/superjoeplays | ' +
         'Like/Follow/Subscribe/whatever you want, that\'s where you can find Superjoe!',
-        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=8))
+        bot, channels=['superjoe'], prependuser=False, targeted=True, repeatdelay=10))
 
 
     def f(channel, user, message, args, data, bot):
@@ -1090,248 +1093,250 @@ def generate_message_commands(bot):
         "Superjoe's secret cave under monkeys_forever's house.", "Superjoe's bathtub.", "Superjoe's slave dungeon.", "Superjoe's deflated bouncy castle.",
         "Superjoe's vault of broken promises and intangible dreams.", "Superjoe's corn field."]
 
+        random.shuffle(places)
+
         return 'It is currently %s in %s' % (time.asctime(), random.choice(places))
 
     coms.append(command.Command('!time', f, bot, channels=['superjoe'], repeatdelay=15))
 
-    def f(channel, user, message, args, data, bot):
-        try:
-            args[0]
-        except:
-            return '%s: You need to give me a name!  Please type !registersalem salemusername' % user
+    # def f(channel, user, message, args, data, bot):
+    #     try:
+    #         args[0]
+    #     except:
+    #         return '%s: You need to give me a name!  Please type !registersalem salemusername' % user
 
-        if user == 'superjoe':
-            return "Come on superjoe, everyone knows who you are."
-        elif user == 'imayhaveborkedit' and len(args) == 2:
-            user = args[1]
+    #     if user == 'superjoe':
+    #         return "Come on superjoe, everyone knows who you are."
+    #     elif user == 'imayhaveborkedit' and len(args) == 2:
+    #         user = args[1]
 
-        import cPickle, time
-        username = args[0].replace('"', '')
+    #     import cPickle, time
+    #     username = args[0].replace('"', '')
 
-        # Load names
-        nameDB = None
-        with open('/var/www/twitch/superjoe/salem/namemap', 'rb') as ndb:
-            nameDB = cPickle.load(ndb)
-            nameDB[user] = username
+    #     # Load names
+    #     nameDB = None
+    #     with open('/var/www/twitch/superjoe/salem/namemap', 'rb') as ndb:
+    #         nameDB = cPickle.load(ndb)
+    #         nameDB[user] = username
 
-        # Load subs
-        sublist = []
-        with open('/var/www/twitch/superjoe/salem/subs', 'rb') as sl:
-            sublist = cPickle.load(sl)
-            sublist.extend(bot.channelsubs)
-            sublist = list(set(sublist))
+    #     # Load subs
+    #     sublist = []
+    #     with open('/var/www/twitch/superjoe/salem/subs', 'rb') as sl:
+    #         sublist = cPickle.load(sl)
+    #         sublist.extend(bot.channelsubs)
+    #         sublist = list(set(sublist))
 
-        # Easy way to empty a file
-        open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
+    #     # Easy way to empty a file
+    #     open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
 
-        # Rewrite the file
-        with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
-            fi.write('<html>\n<link rel="stylesheet" type="text/css" href="main.css">\n<body>\n')
-            fi.write("<h1>Superjoe Town of Salem chat names</h1>\n<h5>Last update: %s</h5>\n\n" % time.asctime())
+    #     # Rewrite the file
+    #     with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
+    #         fi.write('<html>\n<link rel="stylesheet" type="text/css" href="main.css">\n<body>\n')
+    #         fi.write("<h1>Superjoe Town of Salem chat names</h1>\n<h5>Last update: %s</h5>\n\n" % time.asctime())
 
-            fi.write("<p>Name Format:<br />Twitch name: Salem name</p>\n")
-            fi.write("<p>superjoe: SuperJoe</p>\n\n")
+    #         fi.write("<p>Name Format:<br />Twitch name: Salem name</p>\n")
+    #         fi.write("<p>superjoe: SuperJoe</p>\n\n")
 
-            normals = []
-            subs = []
+    #         normals = []
+    #         subs = []
 
-            for u in nameDB.keys():
-                (subs if u in sublist else normals).append(u)
+    #         for u in nameDB.keys():
+    #             (subs if u in sublist else normals).append(u)
 
-            fi.write('<h2>Subs (%s)</h2>\n' % len(subs))
-            fi.write('<ul>\n')
+    #         fi.write('<h2>Subs (%s)</h2>\n' % len(subs))
+    #         fi.write('<ul>\n')
 
-            for d in sorted(subs):
-                if bot.usercolors.has_key(d):
-                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
-                else:
-                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
+    #         for d in sorted(subs):
+    #             if bot.usercolors.has_key(d):
+    #                 fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
+    #             else:
+    #                 fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
 
-            fi.write('\n</ul>\n\n')
+    #         fi.write('\n</ul>\n\n')
 
-            fi.write('<h2>Non-Subs (%s)</h2>\n' % len(normals))
+    #         fi.write('<h2>Non-Subs (%s)</h2>\n' % len(normals))
 
-            for d in sorted(normals):
-                # fi.write('<li>%s: %s</li>\n'%(d, nameDB[d]))
-                if bot.usercolors.has_key(d):
-                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
-                else:
-                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
+    #         for d in sorted(normals):
+    #             # fi.write('<li>%s: %s</li>\n'%(d, nameDB[d]))
+    #             if bot.usercolors.has_key(d):
+    #                 fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
+    #             else:
+    #                 fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
 
-            fi.write('\n</ul>\n')
+    #         fi.write('\n</ul>\n')
 
-            fi.write("</body></html>")
+    #         fi.write("</body></html>")
 
-        with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
-            cPickle.dump(nameDB, fi2)
+    #     with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
+    #         cPickle.dump(nameDB, fi2)
 
-        with open('/var/www/twitch/superjoe/salem/subs', 'wb') as sl:
-            cPickle.dump(sublist, sl)
+    #     with open('/var/www/twitch/superjoe/salem/subs', 'wb') as sl:
+    #         cPickle.dump(sublist, sl)
 
-        return "\"%s\" registered for %s" % (username, user)
+    #     return "\"%s\" registered for %s" % (username, user)
 
-    coms.append(command.Command('!registersalem', f, bot, channels=['superjoe'], groups=['salem']))
+    # coms.append(command.Command('!registersalem', f, bot, channels=['superjoe'], groups=['salem']))
 
-    def f(channel, user, message, args, data, bot):
-        import cPickle, time
+    # def f(channel, user, message, args, data, bot):
+    #     import cPickle, time
 
-        try: username = args[0]
-        except: username = None
+    #     try: username = args[0]
+    #     except: username = None
 
-        remname = None
-        nameDB = None
-        sublist = []
+    #     remname = None
+    #     nameDB = None
+    #     sublist = []
 
-        with open('/var/www/twitch/superjoe/salem/namemap', 'rb') as ndb:
-            nameDB = cPickle.load(ndb)
-            remname = nameDB.pop(username, None)
+    #     with open('/var/www/twitch/superjoe/salem/namemap', 'rb') as ndb:
+    #         nameDB = cPickle.load(ndb)
+    #         remname = nameDB.pop(username, None)
 
-        with open('/var/www/twitch/superjoe/salem/subs', 'rb') as sl:
-            sublist = cPickle.load(sl)
-            sublist.extend(bot.channelsubs)
-            sublist = list(set(sublist))
+    #     with open('/var/www/twitch/superjoe/salem/subs', 'rb') as sl:
+    #         sublist = cPickle.load(sl)
+    #         sublist.extend(bot.channelsubs)
+    #         sublist = list(set(sublist))
 
-        open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
+    #     open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
 
-        with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
-            fi.write('<html>\n<link rel="stylesheet" type="text/css" href="main.css">\n<body>\n')
-            fi.write("<h1>Superjoe Town of Salem chat names</h1>\n<h5>Last update: %s</h5>\n\n" % time.asctime())
+    #     with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
+    #         fi.write('<html>\n<link rel="stylesheet" type="text/css" href="main.css">\n<body>\n')
+    #         fi.write("<h1>Superjoe Town of Salem chat names</h1>\n<h5>Last update: %s</h5>\n\n" % time.asctime())
 
-            fi.write("<p>Name Format:<br />Twitch name: Salem name</p>\n")
-            fi.write("<p>superjoe: SuperJoe</p>\n\n")
+    #         fi.write("<p>Name Format:<br />Twitch name: Salem name</p>\n")
+    #         fi.write("<p>superjoe: SuperJoe</p>\n\n")
 
-            normals = []
-            subs = []
+    #         normals = []
+    #         subs = []
 
-            for u in nameDB.keys():
-                (subs if u in sublist else normals).append(u)
+    #         for u in nameDB.keys():
+    #             (subs if u in sublist else normals).append(u)
 
-            fi.write('<h2>Subs (%s)</h2>\n' % len(subs))
-            fi.write('<ul>\n')
+    #         fi.write('<h2>Subs (%s)</h2>\n' % len(subs))
+    #         fi.write('<ul>\n')
 
-            for d in sorted(subs):
-                # fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
-                if bot.usercolors.has_key(d):
-                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
-                else:
-                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
+    #         for d in sorted(subs):
+    #             # fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
+    #             if bot.usercolors.has_key(d):
+    #                 fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
+    #             else:
+    #                 fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
 
-            fi.write('\n</ul>\n\n')
+    #         fi.write('\n</ul>\n\n')
 
-            fi.write('<h2>Non-Subs (%s)</h2>\n' % len(normals))
+    #         fi.write('<h2>Non-Subs (%s)</h2>\n' % len(normals))
 
-            for d in sorted(normals):
-                # fi.write('<li>%s: %s</li>\n'%(d, nameDB[d]))
-                if bot.usercolors.has_key(d):
-                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
-                else:
-                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
+    #         for d in sorted(normals):
+    #             # fi.write('<li>%s: %s</li>\n'%(d, nameDB[d]))
+    #             if bot.usercolors.has_key(d):
+    #                 fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
+    #             else:
+    #                 fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
 
-            fi.write('\n</ul>\n')
+    #         fi.write('\n</ul>\n')
 
-            fi.write("</body></html>")
+    #         fi.write("</body></html>")
 
-        with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
-            cPickle.dump(nameDB, fi2)
+    #     with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
+    #         cPickle.dump(nameDB, fi2)
 
-        with open('/var/www/twitch/superjoe/salem/subs', 'wb') as sl:
-            cPickle.dump(sublist, sl)
+    #     with open('/var/www/twitch/superjoe/salem/subs', 'wb') as sl:
+    #         cPickle.dump(sublist, sl)
 
-        if remname: return "Removed %s from name list." % username
-        else: return "%s not found." % username
+    #     if remname: return "Removed %s from name list." % username
+    #     else: return "%s not found." % username
 
-    coms.append(command.Command('#!unregistersalem', f, bot, True, channels=['superjoe'], groups=['salem']))
+    # coms.append(command.Command('#!unregistersalem', f, bot, True, channels=['superjoe'], groups=['salem']))
 
-    ## Salem role curses
+    # ## Salem role curses
 
-    # Medium
+    # # Medium
 
-    def f(channel, user, message, args, data, bot):
-        import settings
-        cursecount = int(settings.trygetset('superjoe_mediums_curse', 0))
-        cursestring = "Oh noes!  The medium has died %s times on night 1."
+    # def f(channel, user, message, args, data, bot):
+    #     import settings
+    #     cursecount = int(settings.trygetset('superjoe_mediums_curse', 0))
+    #     cursestring = "Oh noes!  The medium has died %s times on night 1."
 
-        if user in bot.oplist:
-            try:
-                if args:
-                    watdo = args[0][0]
-                    if watdo in ['+','-']:
-                        cursecount += int(args[0][1:])
-                    else:
-                        cursecount = int(args[0][1:])
-            except: pass
-            else:
-                settings.setdata('superjoe_mediums_curse', cursecount)
-        elif args:
-            cursestring += '  (Only mods can change the count)'
+    #     if user in bot.oplist:
+    #         try:
+    #             if args:
+    #                 watdo = args[0][0]
+    #                 if watdo in ['+','-']:
+    #                     cursecount += int(args[0][1:])
+    #                 else:
+    #                     cursecount = int(args[0][1:])
+    #         except: pass
+    #         else:
+    #             settings.setdata('superjoe_mediums_curse', cursecount)
+    #     elif args:
+    #         cursestring += '  (Only mods can change the count)'
 
-        return cursestring % cursecount
+    #     return cursestring % cursecount
 
-    coms.append(command.Command(['!mediumscurse', '!mediumcurse'], f, bot, channels=['superjoe'], groups=['salem'], repeatdelay=10))
+    # coms.append(command.Command(['!mediumscurse', '!mediumcurse'], f, bot, channels=['superjoe'], groups=['salem'], repeatdelay=10))
 
-    # Escort
+    # # Escort
 
-    def f(channel, user, message, args, data, bot):
-        import settings
-        cursecount = int(settings.trygetset('superjoe_escorts_curse', 0))
-        cursestring = "Oh noes!  The Escort has found the Serial Killer on the first night %s times."
+    # def f(channel, user, message, args, data, bot):
+    #     import settings
+    #     cursecount = int(settings.trygetset('superjoe_escorts_curse', 0))
+    #     cursestring = "Oh noes!  The Escort has found the Serial Killer on the first night %s times."
 
-        if user in bot.oplist:
-            try:
-                if args:
-                    watdo = args[0][0]
-                    if watdo in ['+','-']:
-                        cursecount += int(args[0])
-                    else:
-                        cursecount = int(args[0])
-            except: pass
-            else:
-                settings.setdata('superjoe_escorts_curse', cursecount)
-        elif args:
-            cursestring += '  (Only mods can change the count)'
+    #     if user in bot.oplist:
+    #         try:
+    #             if args:
+    #                 watdo = args[0][0]
+    #                 if watdo in ['+','-']:
+    #                     cursecount += int(args[0])
+    #                 else:
+    #                     cursecount = int(args[0])
+    #         except: pass
+    #         else:
+    #             settings.setdata('superjoe_escorts_curse', cursecount)
+    #     elif args:
+    #         cursestring += '  (Only mods can change the count)'
 
-        return  cursestring % cursecount
-    coms.append(command.Command(['!escortscurse', '!escortcurse'], f, bot, channels=['superjoe'], groups=['salem'], repeatdelay=10))
+    #     return  cursestring % cursecount
+    # coms.append(command.Command(['!escortscurse', '!escortcurse'], f, bot, channels=['superjoe'], groups=['salem'], repeatdelay=10))
 
-    ####################
+    # ####################
 
-    coms.append(command.SimpleCommand(['!salem', '!salemhelp', '!saleminfo'],
-        "Play Town of Salem here: http://www.blankmediagames.com/TownOfSalem/ Make an account, "+
-        "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  "+
-        "Registering in chat isn't required but it helps Superjoe keep track of who's who.  "+
-        "Subs get priority but everyone else gets invited afterwards.",
-        bot, channels=['superjoe'], groups=['salem'], repeatdelay=6, prependuser=False, targeted=True))
+    # coms.append(command.SimpleCommand(['!salem', '!salemhelp', '!saleminfo'],
+    #     "Play Town of Salem here: http://www.blankmediagames.com/TownOfSalem/ Make an account, "+
+    #     "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  "+
+    #     "Registering in chat isn't required but it helps Superjoe keep track of who's who.  "+
+    #     "Subs get priority but everyone else gets invited afterwards.",
+    #     bot, channels=['superjoe'], groups=['salem'], repeatdelay=6, prependuser=False, targeted=True))
 
-    coms.append(command.SimpleCommand('!salemnames', 'http://doc.asdfxyz.de:81/twitch/superjoe/salem/',
-        bot, channels=['superjoe'], groups=['salem'], repeatdelay=8, targeted=True))
+    # coms.append(command.SimpleCommand('!salemnames', 'http://doc.asdfxyz.de:81/twitch/superjoe/salem/',
+    #     bot, channels=['superjoe'], groups=['salem'], repeatdelay=8, targeted=True))
 
-    def f(channel, user, message, args, data, bot):
-        if not len(args) or 'wiki' in args[0]:
-            return "%s: http://town-of-salem.wikia.com/wiki/Roles" % user
+    # def f(channel, user, message, args, data, bot):
+    #     if not len(args) or 'wiki' in args[0]:
+    #         return "%s: http://town-of-salem.wikia.com/wiki/Roles" % user
 
-        import difflib
+    #     import difflib
 
-        searchterm = difflib.get_close_matches(args[0].lower(), data.keys(), 1)
+    #     searchterm = difflib.get_close_matches(args[0].lower(), data.keys(), 1)
 
-        if searchterm:
-            return "%s (%s): %s" % data[searchterm[0].lower()]
-        else:
-            return "No match for \"%s\"" % args[0]
+    #     if searchterm:
+    #         return "%s (%s): %s" % data[searchterm[0].lower()]
+    #     else:
+    #         return "No match for \"%s\"" % args[0]
 
-    coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=4))
+    # coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=4))
 
-    def f(channel, user, message, args, data, bot):
-        try:
-            x = int(args[0])
-        except:
-            return "Are you sure that's a number?"
-        for i in range(2, x-1):
-            if x % i == 0:
-                return 'False'
-        else:
-            return 'True'
+    # def f(channel, user, message, args, data, bot):
+        # try:
+            # x = int(args[0])
+        # except:
+            # return "Are you sure that's a number?"
+        # for i in range(2, x-1):
+            # if x % i == 0:
+                # return 'False'
+        # else:
+            # return 'True'
 
-    coms.append(command.Command('!isprime', f, bot, channels=['superjoe']))
+    # coms.append(command.Command('!isprime', f, bot, channels=['superjoe']))
 
     # Kizzmett ##########
 
@@ -1339,12 +1344,14 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!plugs', 'Facebook: http://www.facebook.com/unsanitylive | Twitter: http://twitter.com/unsanitylive | ' +
         'Like/Follow/Subscribe/whatever you want, that\'s where you can find Tom!',
-        bot, channels=['unsanitylive'], prependuser=False, repeatdelay=8))
+        bot, channels=['unsanitylive'], prependuser=False, repeatdelay=10))
 
 
     # Cosmo ##############
 
     def f(channel, user, message, args, data, bot):
+        return "This command is disabled.  Contact imayhaveborkedit to re-enable it."
+        
         if args:
             import settings, cosmo_rng
 
@@ -1387,7 +1394,6 @@ def generate_message_commands(bot):
         return 'task deferred for 5 seconds'
 
     coms.append(command.Command('!defertest', f, bot, groups=me_only_group))
-
 
 
     ######################################################################
