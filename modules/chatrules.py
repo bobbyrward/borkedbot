@@ -108,6 +108,7 @@ salem_roles = dict(salem_townies.items() + salem_mafia.items() + salem_neutrals.
 message_commands = []
 joinpart_commands = []
 
+global_channel_blacklist = ['cosmowright']
 
 def setup(bot):
     reload(command)
@@ -118,6 +119,9 @@ def setup(bot):
 
 def alert(event):
     if event.etype == 'msg':
+        if event.channel in global_channel_blacklist:
+            return
+
         tstart = time.time()
         for comm in message_commands:
             t1 = time.time()
@@ -500,13 +504,11 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand(['!source', '!guts'], "BLEUGH https://github.com/imayhaveborkedit/borkedbot", bot, True, prependuser=True, repeatdelay=10, targeted=True))
 
-    #TODO: ADD LIST OF BURSDAY SONGS?
     coms.append(command.SimpleCommand('#!bursday', "Happy Bursday! http://www.youtube.com/watch?v=WCYzk67y_wc", bot, True))
 
     coms.append(command.SimpleCommand('#!riot', 'ヽ༼ຈل͜ຈ༽ﾉ', bot, True, prependuser = False))
     coms.append(command.SimpleCommand('#!shrug', '¯\_(ツ)_/¯', bot, True, prependuser = False))
 
-    #coms.append(command.SimpleCommand('#!subcount', '%s' % len(bot.channelsubs), bot, True))
 
     # def f(channel, user, message, args, data, bot):
     #     if 'nightbot' in set(bot.oplist + bot.userlist):
@@ -597,18 +599,6 @@ def generate_message_commands(bot):
             channel = args[0].lower()
         streamdata = twitchapi.get('streams/%s' % channel.replace('#',''), 'stream')
 
-        day_str = "{0}, {1} has been streaming for approximately {2.days} days, {2.hours} hours and {2.minutes} minutes."
-        hour_str = "{0}, {1} has been streaming for approximately {2.hours} hours and {2.minutes} minutes."
-
-        if settings.getdata('%s_is_hosting' % channel) and not args:
-            hc = settings.getdata('%s_hosted_channel' % channel)
-
-            if hc and not args:
-                streamdata = twitchapi.get('streams/%s' % hc, 'stream')
-                channel = hc
-                day_str += ' (hosted channel)'
-                hour_str += ' (hosted channel)'
-
         if streamdata is None:
             return "There is no stream D:"
 
@@ -619,10 +609,29 @@ def generate_message_commands(bot):
 
         reldelta = dateutil.relativedelta.relativedelta(t_now, t_0)
 
-        if reldelta.days:
-            return day_str.format(user, channel, reldelta)
-        else:
-            return hour_str.format(user, channel, reldelta)
+        daystr = '{0.days} day'.format(reldelta)
+        daystr += 's' if int(daystr.split()[0]) > 1 else ''
+
+        hourstr = '{0.hours} hour'.format(reldelta)
+        hourstr += 's' if int(hourstr.split()[0]) > 1 else ''
+
+        minutestr = '{0.minutes} minute'.format(reldelta)
+        minutestr += 's' if int(minutestr.split()[0]) > 1 else ''
+
+        timestr = ', '.join([x for x in [daystr, hourstr, minutestr] if not x.startswith('0')])
+        timestr = ' and '.join(timestr.rsplit(', '))
+
+        textstr = "{0}, {1} has been streaming for approximately " + timestr + '.'
+
+        if settings.getdata('%s_is_hosting' % channel) and not args:
+            hc = settings.getdata('%s_hosted_channel' % channel)
+
+            if hc and not args:
+                streamdata = twitchapi.get('streams/%s' % hc, 'stream')
+                channel = hc
+                textstr += ' (hosted channel)'
+
+        return textstr.format(user, channel)
 
     coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
 
@@ -653,19 +662,14 @@ def generate_message_commands(bot):
         isupdate = args and args[0].lower() == 'update' and user in bot.oplist | {'imayhaveborkedit'}
 
         if args and 'update' in args[0].lower() and not isupdate:
-            if user == 'gggccca7x':
-                return "stfu gggccca7x"
-            else:
-                outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
+            outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
         else:
             outputstring = "Solo: %s | Party: %s"
 
         if isupdate:
             print "Updating mmr"
 
-
             olddotadata = dota.getUserDotaData(channel)
-
 
             wentok = dota.updateMMR(channel)
 
@@ -1043,7 +1047,6 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import dota
         blurb = dota.latestBlurb(channel, True)
-        print 'blurb: %s' % blurb
 
         if blurb:
             return blurb
@@ -1058,7 +1061,7 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('!songrequest', 'This aint no nightbot stream', bot, channels=['monkeys_forever'], repeatdelay=10))
 
     coms.append(command.SimpleCommand(['!song', '!currentsong', '!songname'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
-        channels=['monkeys_forever'], repeatdelay=10, targeted=True))
+        channels=['monkeys_forever'], repeatdelay=15, targeted=True))
 
     coms.append(command.SimpleCommand('!background',
         "It's a bug with the TI2 animated background.  Launch option: \"-dashboard international_2012\" "+
@@ -1349,32 +1352,32 @@ def generate_message_commands(bot):
 
     # Cosmo ##############
 
-    def f(channel, user, message, args, data, bot):
-        return "This command is disabled.  Contact imayhaveborkedit to re-enable it."
-        
-        if args:
-            import settings, cosmo_rng
+    # def f(channel, user, message, args, data, bot):
+    #     return "This command is disabled.  Contact imayhaveborkedit to re-enable it."
 
-            if args[0].lower() == 'on':
-                settings.setdata('cosmo_rng_mode', True)
-                return "RNG godmode turned on."
-            elif args[0].lower() == 'off':
-                settings.setdata('cosmo_rng_mode', False)
-                return "RNG godmode turned off."
-            elif args[0].lower() == 'maxtimeout':
-                try:
-                    settings.setdata('cosmo_rng_maxto', int(args[1]))
-                    return "Max timeout duration set to %s seconds." % args[1]
-                except:
-                    return "That's not a number"
-            elif args[0].lower() == 'powerup':
-                settings.setdata('cosmo_rng_last_powerup', 0)
-            elif args[0].lower() == 'test':
-                return cosmo_rng.test()
-        else:
-            return "RNG mode is %s" % 'on' if settings.getdata('cosmo_rng_mode') else 'off'
+    #     if args:
+    #         import settings, cosmo_rng
 
-    coms.append(command.Command('!RNGmode', f, bot, channels=['cosmowright'], groups=me_and_broadcaster))
+    #         if args[0].lower() == 'on':
+    #             settings.setdata('cosmo_rng_mode', True)
+    #             return "RNG godmode turned on."
+    #         elif args[0].lower() == 'off':
+    #             settings.setdata('cosmo_rng_mode', False)
+    #             return "RNG godmode turned off."
+    #         elif args[0].lower() == 'maxtimeout':
+    #             try:
+    #                 settings.setdata('cosmo_rng_maxto', int(args[1]))
+    #                 return "Max timeout duration set to %s seconds." % args[1]
+    #             except:
+    #                 return "That's not a number"
+    #         elif args[0].lower() == 'powerup':
+    #             settings.setdata('cosmo_rng_last_powerup', 0)
+    #         elif args[0].lower() == 'test':
+    #             return cosmo_rng.test()
+    #     else:
+    #         return "RNG mode is %s" % 'on' if settings.getdata('cosmo_rng_mode') else 'off'
+
+    # coms.append(command.Command('!RNGmode', f, bot, channels=['cosmowright'], groups=me_and_broadcaster))
 
     ######################################################################
     #
@@ -1393,14 +1396,61 @@ def generate_message_commands(bot):
             num_viewers = 0
 
         return 'Viewers: %s, Chatters: %s, Mods: %s%s%s' % (
-            num_viewers, num_chatters, len(chatters['chatters']['moderators']), 
-            ', Admin: %s' % len(chatters['chatters']['admins']) if len(chatters['chatters']['admins']) else '', 
+            num_viewers, num_chatters, len(chatters['chatters']['moderators']),
+            ', Admin: %s' % len(chatters['chatters']['admins']) if len(chatters['chatters']['admins']) else '',
             ', Staff: %s' % len(chatters['chatters']['staff']) if len(chatters['chatters']['staff']) else '')
 
     coms.append(command.Command('!chatters', f, bot, groups=me_only_group))
 
+    def f(channel, user, message, args, data, bot):
+        import settings, dota
+        if args:
+            player_datas = settings.getdata('dota_notable_players')
+            
+            if args[0] == 'add':
+                try:
+                    new_player_id = int(args[1])
+                    new_player_name = ''.join(args[2:])
+                except:
+                    return 'Usage: !notable add steamid playername'
+                else:
+                    if player_datas.get(int(args[1])):
+                        return "This id belongs to %s, use the 'rename' option to change it." % player_datas.get(new_player_id)
+                    player_datas[new_player_id] = new_player_name
+                    settings.setdata('dota_notable_players', player_datas, announce=False)
+                    return "%s registered as a notable player." % new_player_name
+
+            if args[0] == 'remove' and len(args) == 2:
+                try:
+                    player_id = int(args[1])
+                except:
+                    return "Bad player id"
+                else:
+                    if player_id in player_datas:
+                        rip = player_datas[player_id]
+                        del player_datas[player_id]
+                        settings.setdata('dota_notable_players', player_datas, announce=False)
+                        return "Removed %s from notable player list." % rip
+                    else:
+                        return "That id is not in the list."
+            
+            if args[0] == 'rename':
+                try:
+                    player_id = int(args[1])
+                    new_name = ''.join(args[2:])
+                except:
+                    return "Bad player id"
+                else:
+                    if player_id in player_datas:
+                        old_name = player_datas[player_id]
+                        player_datas[player_id] = new_name
+                        settings.setdata('dota_notable_players', player_datas, announce=False)
+                        return "Player name changed: %s -> %s" % (old_name, new_name)
+                    else:
+                        return "That id is not in the list."
 
 
+    coms.append(command.Command('!notable', f, bot, groups=me_only_group))
 
     ######################################################################
 

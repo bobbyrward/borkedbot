@@ -1,8 +1,10 @@
 import sys
 sys.dont_write_bytecode = True
 
-import os, time, json, subprocess, shlex
+import os, time, json, subprocess, shlex, requests
+from HTMLParser import HTMLParser
 import steamapi, twitchapi, settings, node
+
 
 LOAD_ORDER = 35
 
@@ -160,11 +162,18 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     d_victory = 'Victory' if not (matchdata['result']['radiant_win'] ^ (d_team == 'Radiant')) else 'Defeat'
 
-    matchskipstr = ' (%s skipped)' % skippedmatches if skippedmatches else ''
+    # matchskipstr = ' (%s skipped)' % skippedmatches if skippedmatches < 0 else ''
+
+    print "Skipped matches"
+
     if skippedmatches == -1:
-        matchskipstr = ' (Last match)'
+        matchskipstr = ' (Previous match)'
+    elif skippedmatches < -1:
+        matchskipstr = ' (%s games ago)' % skippedmatches * -1
+    elif skippedmatches > 1:
+        matchskipstr = ' (%s skipped)' % skippedmatches
     else:
-        matchskipstr = ' (%s matches ago)' % skippedmatches * -1
+        matchskipstr = ''
 
     matchoutput = "%s has %s a game%s.  http://www.dotabuff.com/matches/%s " % (
         enabled_channels[channel][0], 'won' if d_victory == 'Victory' else 'lost', matchskipstr, latestmatch['match_id'])
@@ -175,16 +184,8 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     finaloutput = matchoutput + (getMMRData(channel, dotaid) if getmmr else '') + extramatchdata + (notableplayerdata if notableplayerdata else '')
 
-    print "[Dota] Blurb output: " + finaloutput
+    # print "[Dota] Blurb output: " + finaloutput
     return finaloutput
-
-    #if getmmr:
-    #    mmrstring = getMMRData(channel, dotaid)
-    #    print "[Dota] Blurb output: " + matchoutput + mmrstring + extramatchdata
-    #    return matchoutput + mmrstring + extramatchdata
-    #else:
-    #    print "[Dota] Blurb output: " + matchoutput + extramatchdata
-    #    return matchoutput + extramatchdata
 
 
 def getMMRData(channel, dotaid):
@@ -195,7 +196,6 @@ def getMMRData(channel, dotaid):
     with open('/var/www/twitch/%s/data' % channel, 'r') as d:
         olddotadata = json.loads(d.readline())
 
-    # os.system('cd modules/node; nodejs mmr.js %s %s' % (channel, dotaid))
     wentok = updateMMR(channel)
     if not wentok:
         print "[MMR] SOMETHING MAY HAVE GONE HORRIBLY WRONG GETTING MMR"
@@ -314,6 +314,43 @@ def searchForNotablePlayers(targetdotaid, pages=3):
             # print 'searched game %s, T+%4.4fms' % (games.index(game), (time.time()-t0)*1000)
 
         print 'searched game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
+
+
+def update_verified_notable_players():
+    class DotabuffParser(HTMLParser):
+        table_active = False
+        img_section_active = False
+        player_datas = list()
+
+        def handle_starttag(self, tag, attrs):
+            if tag == 'tbody':
+                self.table_active = True
+            if tag == 'img':
+                self.img_section_active = True
+            if not self.table_active: return 
+            if not self.img_section_active: return
+
+            fulldatas = dict((x,y) for x,y in attrs)
+            self.player_datas.append((int(fulldatas['data-tooltip-url'].split('/')[2]), fulldatas['title']))
+
+        def handle_endtag(self, tag):
+            if tag == 'tbody':
+                self.table_active = False
+            if tag == 'img':
+                self.img_section_active = False
+            if not self.table_active: return 
+            if not self.img_section_active: return
+
+    parser = DotabuffParser()
+
+    r = requests.get('http://www.dotabuff.com/players/verified')
+    htmldata = unicode(r.text).encode('utf8')
+    parser.feed(htmldata)
+
+    old_players = settings.getdata('dota_notable_players')
+    updated_players = dict(old_players.items() + parser.player_datas)
+
+    settings.setdata('dota_notable_players', updated_players, announce=False)
 
 
 
