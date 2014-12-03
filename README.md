@@ -369,7 +369,7 @@ Encourages the user to widen their occular orifices.  The song is always in the 
 <!-- ##### Channels: `monkeys_forever` -->
 ##### Permission: `All`
 ##### Typical output: `{user}: The name of the song is in the top left of the stream.  Open your eyeholes!`
-##### Cooldown: `10 seconds`
+##### Cooldown: `15 seconds`
 ##### Arguments:
 `[user]` - Prepends the output with the supplied user instead of the one who invoked the command.
 
@@ -478,11 +478,6 @@ Convience command for listing the facebook and twitter links.
 ##### Permission: `All`
 ##### Typical output: `both facebook and twitter links`
 ##### Cooldown: `10 seconds`
-
----
-
-
-
 
 
 

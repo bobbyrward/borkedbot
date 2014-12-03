@@ -96,8 +96,8 @@ def _manage_modules():
                 if_issue = True
                 new_imports.remove(ni)
 
-            elif getattr(ni, 'DISABLE_MODULE', False):
-                _info("%s has been disabled and will not be imported." % ni.__name__)
+            elif getattr(ni, 'DO_NOT_IMPORT', False):
+                # _info("%s has been disabled and will not be imported." % ni.__name__)
                 if_issue = True
                 new_imports.remove(ni)
 

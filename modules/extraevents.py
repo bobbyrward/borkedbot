@@ -20,3 +20,8 @@ def alert(event):
                     extra = ' | If you want an invite to the sub guild use !guildinvite steamid'
 
                 event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s%s' % (event.data.split()[0].upper(), extra))
+
+    if event.etype == 'action':
+        if event.user == 'hambergo':
+            if 'hugs imayhaveborkedit' in event.data:
+                print "(▀̿̿Ĺ̯̿̿▀̿ ̿) No touching."
