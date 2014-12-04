@@ -513,8 +513,8 @@ Logs chat to a file.  Can be used in conjunction with an IRC stats page like [th
 #### command.py
 Command class definition file.  Used by chatrules.py for processing commands.  Pending command system overhaul.
 
-#### cosmo_rng.py
-Silly module made for cosmo. See [this tweet](https://twitter.com/cosmowright/status/535216896069890048).
+<!-- #### cosmo_rng.py
+Silly module made for cosmo. See [this tweet](https://twitter.com/cosmowright/status/535216896069890048). -->
 
 #### dota.py
 Interfaces with the node process and steam api to provide dota/steam related functionality.
