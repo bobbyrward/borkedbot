@@ -11,7 +11,7 @@ import chatmanager
 
 
 class MyBot(irc.IRCClient):
-    lineRate = 3
+    lineRate = 2
 
     opsinchan = set()
     oplist = set()

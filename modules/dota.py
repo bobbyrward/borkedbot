@@ -1,8 +1,8 @@
 import sys
 sys.dont_write_bytecode = True
 
-import os, time, json, subprocess, shlex, requests
 from HTMLParser import HTMLParser
+import os, time, json, subprocess, shlex, requests
 import steamapi, twitchapi, settings, node
 
 
@@ -132,15 +132,15 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
         for p in matchdata['result']['players']:
             # print 'looking up %s' % p['account_id']
             if p['account_id'] in notable_players:
-                print 'Found notable player %s' % notable_players[p['account_id']]
+                print '[Dota] Found notable player %s' % notable_players[p['account_id']]
                 playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(p['hero_id'])][0]) # p['heroId'] ?
                 notable_players_found.append((notable_players[p['account_id']], playerhero))
 
         if notable_players_found:
             notableplayerdata = "| Notable players found: %s" % ', '.join(['%s - %s' % (p,h) for p,h in notable_players_found])
-            print "notable player data: " + notableplayerdata
+            print "[Dota] notable player data: " + notableplayerdata
         else:
-            print 'No notable players found'
+            print '[Dota] No notable players found'
 
     try:
         d_hero = [h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(playerdata['hero_id'])][0]
@@ -164,7 +164,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     # matchskipstr = ' (%s skipped)' % skippedmatches if skippedmatches < 0 else ''
 
-    print "Skipped matches"
+    print "[Dota] Skipped %s matches" % skippedmatches
 
     if skippedmatches == -1:
         matchskipstr = ' (Previous match)'
@@ -191,14 +191,14 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 def getMMRData(channel, dotaid):
     outputstring = "Updated MMR: Solo: %s | Party: %s "
 
-    print "[MMR] Updating mmr"
+    print "[Dota-MMR] Updating mmr"
 
     with open('/var/www/twitch/%s/data' % channel, 'r') as d:
         olddotadata = json.loads(d.readline())
 
     wentok = updateMMR(channel)
     if not wentok:
-        print "[MMR] SOMETHING MAY HAVE GONE HORRIBLY WRONG GETTING MMR"
+        print "[Dota-MMR] SOMETHING MAY HAVE GONE HORRIBLY WRONG GETTING MMR"
 
     with open('/var/www/twitch/%s/data' % channel, 'r') as d:
         dotadata = json.loads(d.readline())

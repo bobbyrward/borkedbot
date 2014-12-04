@@ -904,11 +904,6 @@ def generate_message_commands(bot):
             return
 
         if args:
-            if args[0] == 'add' and len(args) >= 3:
-                # 106231948 Fitzy
-                return
-
-        if args:
             pages = int(args[0])
         else:
             pages = 8
@@ -1406,7 +1401,7 @@ def generate_message_commands(bot):
         import settings, dota
         if args:
             player_datas = settings.getdata('dota_notable_players')
-            
+
             if args[0] == 'add':
                 try:
                     new_player_id = int(args[1])
@@ -1433,7 +1428,7 @@ def generate_message_commands(bot):
                         return "Removed %s from notable player list." % rip
                     else:
                         return "That id is not in the list."
-            
+
             if args[0] == 'rename':
                 try:
                     player_id = int(args[1])

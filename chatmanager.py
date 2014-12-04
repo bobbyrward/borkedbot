@@ -25,6 +25,11 @@ def doreload(bot):
         _manage_modules()
 
         for m in imported_modules:
+            try:
+               os.path.getmtime(m.__file__) > modules_mtime[m]
+            except:
+                continue #TODO: FIX
+
             if os.path.getmtime(m.__file__) > modules_mtime[m]:
                 _info("Reloading %s" % m.__name__)
                 try:
@@ -96,7 +101,7 @@ def _manage_modules():
                 if_issue = True
                 new_imports.remove(ni)
 
-            elif getattr(ni, 'DO_NOT_IMPORT', False):
+            elif getattr(ni, 'DO_NOT_IMPORT', False): # Maybe I need `if` instead of `elif`?
                 # _info("%s has been disabled and will not be imported." % ni.__name__)
                 if_issue = True
                 new_imports.remove(ni)
