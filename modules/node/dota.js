@@ -10,23 +10,7 @@ var steam = require("steam"),
     adminids = ['76561198030495011'],
     chatkeymap = {},
     pendingenables = {},
-
-    mmregions = ['USWest',
-                 'USEast',
-                 'Europe',
-                 'Singapore',
-                 'Shanghai',
-                 'Brazil',
-                 'Korea',
-                 'Austria',
-                 'Stockholm',
-                 'Australia',
-                 'SouthAfrica',
-                 'PerfectWorldTelecom',
-                 'PerfectWorldUnicom',
-                 'Dubai',
-                 'Chile',
-                 'Peru'];
+    dotauserstatus = {};
 
 
 /* Steam logic */
@@ -164,6 +148,22 @@ var onSteamLogOn = function onSteamLogOn(){
         }
         // send message to verify or whatever?
     },
+    onRichPresence = function onRichPresence(steamid, userstate) {
+        userstate = typeof userstate == 'string' ? userstate : '#closing';
+
+        userstatusstring = DOTA_RP_STATUSES[userstate.slice(1)];
+        otherargs = arguments;
+        delete otherargs[0];
+        delete otherargs[1];
+
+        // util.log('Dota status: ' + steamid + ' - ' + userstatusstring + ' - ' + JSON.stringify(otherargs));
+        if (userstate !== '#DOTA_RP_PLAYING_AS') {
+            util.log('Dota status: ' + steamid + ' - ' + userstatusstring);
+        }
+
+        dotauserstatus[steamid] = userstate;
+
+    },
     onSteamError = function onSteamError(err) {
         util.error("steam: Help something borked ", err);
         if (err.eresult == 34) {
@@ -200,6 +200,7 @@ bot.on("loggedOn", onSteamLogOn)
     .on('servers', onSteamServers)
     .on('webSessionID', onWebSessionID)
     .on('message', onMessage)
+    .on('richPresence', onRichPresence)
     .on('friend', onFriend)
     .on('error', onSteamError);
 
@@ -300,7 +301,7 @@ var zrpcserver = new zerorpc.Server({
             return;
         };
 
-        util.log("ZRPC: Updating mmr for ", channel);
+        util.log("ZRPC: Updating mmr for " + channel);
 
         Dota2.profileRequest(dotaid, true, function(err, body){
             fs.writeFileSync(util.format('/var/www/twitch/%s/data', channel), JSON.stringify(body));
@@ -745,3 +746,54 @@ request.post('http://steamcommunity.com/groups/group_url/announcements', {form: 
 
 
 */
+
+var DOTA_RP_STATUSES = {
+    "closing"                            : "Closing",
+    "DOTA_RP_INIT"                       : "Main Menu",
+    "DOTA_RP_IDLE"                       : "Main Menu (Idle)",
+    "DOTA_RP_WAIT_FOR_PLAYERS_TO_LOAD"   : "Waiting for loaders",
+    "DOTA_RP_HERO_SELECTION"             : "Hero Selection",
+    "DOTA_RP_STRATEGY_TIME"              : "Strategy Time",
+    "DOTA_RP_PRE_GAME"                   : "Pre Game",
+    "DOTA_RP_GAME_IN_PROGRESS"           : "Playing A Game",
+    "DOTA_RP_GAME_IN_PROGRESS_CUSTOM"    : "Playing %s1",
+    "DOTA_RP_PLAYING_AS"                 : "as %s2 (Lvl %s1)",
+    "DOTA_RP_POST_GAME"                  : "Post Game",
+    "DOTA_RP_DISCONNECT"                 : "Disconnecting",
+    "DOTA_RP_SPECTATING"                 : "Spectating A Game",
+    "DOTA_RP_CASTING"                    : "Casting A Game",
+    "DOTA_RP_WATCHING_REPLAY"            : "Watching A Replay",
+    "DOTA_RP_WATCHING_TOURNAMENT"        : "Watching A Tournament Game",
+    "DOTA_RP_WATCHING_TOURNAMENT_REPLAY" : "Watching A Tournament Replay",
+    "DOTA_RP_FINDING_MATCH"              : "Finding A Match",
+    "DOTA_RP_SPECTATING_WHILE_FINDING"   : "Finding A Match & Spectacting",
+    "DOTA_RP_PENDING"                    : "Friend Request Pending",
+    "DOTA_RP_ONLINE"                     : "Online",
+    "DOTA_RP_BUSY"                       : "Busy",
+    "DOTA_RP_AWAY"                       : "Away",
+    "DOTA_RP_SNOOZE"                     : "Snooze",
+    "DOTA_RP_LOOKING_TO_TRADE"           : "Looking To Trade",
+    "DOTA_RP_LOOKING_TO_PLAY"            : "Looking To Play",
+    "DOTA_RP_PLAYING_OTHER"              : "Playing Other Game",
+    "DOTA_RP_ACCOUNT_DISABLED"           : "Matchmaking Disabled Temporarily",
+    "DOTA_RichPresence_Help"             : "What's new? Set a custom status here!",
+    "DOTA_RP_QUEST"                      : "On A Training Mission",
+    "DOTA_RP_BOTPRACTICE"                : "Playing Against Bots",
+    "DOTA_RP_TRAINING"                   : "On a Training Mission" },
+
+    mmregions = ['USWest',
+                 'USEast',
+                 'Europe',
+                 'Singapore',
+                 'Shanghai',
+                 'Brazil',
+                 'Korea',
+                 'Austria',
+                 'Stockholm',
+                 'Australia',
+                 'SouthAfrica',
+                 'PerfectWorldTelecom',
+                 'PerfectWorldUnicom',
+                 'Dubai',
+                 'Chile',
+                 'Peru'];
