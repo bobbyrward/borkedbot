@@ -23,8 +23,15 @@ def setup(bot):
     return
 
 def alert(event):
-    if event.channel in enabled_channels and event.etype == 'msg': # Meh
-        blurb(event.channel, event.bot)
+    if event.channel in enabled_channels:
+        if event.etype == 'msg': # Meh
+            blurb(event.channel, event.bot)
+
+        nblurb = notablePlayerBlurb(event.channel)
+        if nblurb:
+            print '[Dotas] ' + nblurb
+
+
 
 def blurb(channel, bot, override=False):
     t1 = time.time()
@@ -76,6 +83,7 @@ def latestBlurb(channel, override=False):
                 skippedmatches = 0
 
             update_channels()
+            settings.setdata('%s_notable_last_check' % channel, time.time() - 420.0)
 
             print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previoussavedmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
             return getLatestGameBlurb(channel, dotaid, latestmatch, skippedmatches=skippedmatches, getmmr = enabled_channels[channel][1] and str(latestmatch['lobby_type']) == '7')
@@ -162,7 +170,6 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     d_victory = 'Victory' if not (matchdata['result']['radiant_win'] ^ (d_team == 'Radiant')) else 'Defeat'
 
-    # matchskipstr = ' (%s skipped)' % skippedmatches if skippedmatches < 0 else ''
 
     print "[Dota] Skipped %s matches" % skippedmatches
 
@@ -184,7 +191,6 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     finaloutput = matchoutput + (getMMRData(channel, dotaid) if getmmr else '') + extramatchdata + (notableplayerdata if notableplayerdata else '')
 
-    # print "[Dota] Blurb output: " + finaloutput
     return finaloutput
 
 
@@ -316,6 +322,36 @@ def searchForNotablePlayers(targetdotaid, pages=3):
         print 'searched game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
 
+def getNotableCheckReady(channel):
+    lastcheck = settings.trygetset('%s_notable_last_check' % channel, time.time())
+    if time.time() - lastcheck > 600.0:
+        settings.setdata('%s_notable_last_check' % channel, time.time(), announce=False)
+        print 'Ding!'
+        return True
+    else:
+        # print 600.0 - (time.time() - lastcheck)
+        return False
+
+
+def notablePlayerBlurb(channel, pages=20):
+    userstatus = node.get_user_status(dotaToSteam(settings.getdata('%s_dota_id' % channel)))
+    if userstatus:
+        # print 'Dota status for %s: %s' % (channel, userstatus)
+
+        if userstatus.replace('#','') in ["DOTA_RP_PRE_GAME", "DOTA_RP_GAME_IN_PROGRESS", "DOTA_RP_PLAYING_AS"]:
+            if getNotableCheckReady(channel):
+                if twitchapi.is_streaming(channel):
+                    print "doing search for notable players"
+                    players = searchForNotablePlayers(settings.getdata('%s_dota_id' % channel), pages)
+
+                    if players is None:
+                        return
+                    elif players:
+                        return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
+        else:
+            settings.setdata('%s_notable_last_check' % channel, time.time() - 420.0, announce=False)
+
+
 def update_verified_notable_players():
     class DotabuffParser(HTMLParser):
         table_active = False
@@ -327,7 +363,7 @@ def update_verified_notable_players():
                 self.table_active = True
             if tag == 'img':
                 self.img_section_active = True
-            if not self.table_active: return 
+            if not self.table_active: return
             if not self.img_section_active: return
 
             fulldatas = dict((x,y) for x,y in attrs)
@@ -338,7 +374,7 @@ def update_verified_notable_players():
                 self.table_active = False
             if tag == 'img':
                 self.img_section_active = False
-            if not self.table_active: return 
+            if not self.table_active: return
             if not self.img_section_active: return
 
     parser = DotabuffParser()

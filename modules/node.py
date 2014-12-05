@@ -168,3 +168,6 @@ def kick_from_guild(guildid, targetid):
 
 def get_source_tv_games(page=0):
     return zrpc.getsourcetvgames(page*6)
+
+def get_user_status(steamid):
+    return zrpc.evaljs("dotauserstatus['%s']" % steamid)
