@@ -191,7 +191,7 @@ class MyBot(irc.IRCClient):
         self.send_event(self.chan(channel), None, 'part', user, self, user in self.oplist)
 
     def botsay(self, msg):
-        self.say(self.factory.channel, msg)
+        self.say(self.factory.channel, str(msg))
         self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.nickname in self.oplist)
 
     def quirkyMessage(self, s):
