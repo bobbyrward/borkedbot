@@ -85,7 +85,7 @@ def latestBlurb(channel, override=False):
 
             update_channels()
             settings.setdata('%s_notable_last_check' % channel, time.time() - 480.0, announce=False)
-            settings.setdata('%s_notable_message_count' % channel, 35, announce=False)
+            settings.setdata('%s_notable_message_count' % channel, 30, announce=False)
 
             print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previoussavedmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
             return getLatestGameBlurb(channel, dotaid, latestmatch, skippedmatches=skippedmatches, getmmr = enabled_channels[channel][1] and str(latestmatch['lobby_type']) == '7')
@@ -287,9 +287,10 @@ def determineSteamid(steamthing):
     return maybesteamid
 
 
-def searchForNotablePlayers(targetdotaid, pages=3):
+def searchForNotablePlayers(targetdotaid, pages=4):
     # Needs check for if in a game (maybe need a status indicator for richPresence)
     t0 = time.time()
+    herodata = steamapi.GetHeroes()
     for pagenum in range(0, pages):
         # print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
         games = node.get_source_tv_games(pagenum)['games']
@@ -308,11 +309,10 @@ def searchForNotablePlayers(targetdotaid, pages=3):
                     print '[Dota-Notable] found notable player %s (%s)' % (player['name'], notable_players[steamToDota(player['steamId'])])
 
                     try:
-                        herodata = steamapi.GetHeroes()
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
-                        playerhero = 'Unknown Hero (no hero selected/something borked)'
-                        print '[Dota-ERROR] WTF is this shit: %s' % str(player['heroId'])
+                        playerhero = 'Unknown Hero/No hero selected'
+                        print '[Dota-ERROR] WTF is this shit, look it up if it isn\'t 0 or something: %s' % str(player['heroId'])
 
                     notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
 
@@ -338,7 +338,7 @@ def getNotableCheckReady(channel):
     lastcheck = settings.trygetset('%s_notable_last_check' % channel, time.time())
     if time.time() - lastcheck > 600.0:
         mes_count = settings.trygetset('%s_notable_message_count' % channel, 1)
-        if mes_count <= 35:
+        if mes_count <= 30:
             return False
         settings.setdata('%s_notable_last_check' % channel, time.time(), announce=False)
         return True
