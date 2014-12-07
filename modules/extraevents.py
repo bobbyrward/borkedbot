@@ -23,5 +23,5 @@ def alert(event):
 
     if event.etype == 'action':
         if event.user == 'hambergo':
-            if 'hugs imayhaveborkedit' in event.data:
+            if 'hugs imayhaveborkedit' in event.data.lower():
                 print "(▀̿̿Ĺ̯̿̿▀̿ ̿) No touching."
