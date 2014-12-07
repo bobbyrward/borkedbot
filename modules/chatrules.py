@@ -1444,6 +1444,9 @@ def generate_message_commands(bot):
                     else:
                         return "That id is not in the list."
 
+            if args[0] == 'update':
+                changed = dota.update_verified_notable_players()
+                return "Updated list, %s entries changed." % changed
 
     coms.append(command.Command('!notable', f, bot, groups=me_only_group))
 

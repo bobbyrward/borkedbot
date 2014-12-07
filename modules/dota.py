@@ -25,12 +25,13 @@ def setup(bot):
 def alert(event):
     if event.channel in enabled_channels:
         if event.etype == 'msg': # Meh
+            mes_count = settings.trygetset('%s_notable_message_count' % event.channel, 1)
+            settings.setdata('%s_notable_message_count' % event.channel, mes_count + 1, announce=False)
             blurb(event.channel, event.bot)
 
         nblurb = notablePlayerBlurb(event.channel)
         if nblurb:
-            print '[Dotas] ' + nblurb
-
+            event.bot.botsay(nblurb)
 
 
 def blurb(channel, bot, override=False):
@@ -83,7 +84,8 @@ def latestBlurb(channel, override=False):
                 skippedmatches = 0
 
             update_channels()
-            settings.setdata('%s_notable_last_check' % channel, time.time() - 420.0)
+            settings.setdata('%s_notable_last_check' % channel, time.time() - 480.0, announce=False)
+            settings.setdata('%s_notable_message_count' % channel, 35, announce=False)
 
             print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previoussavedmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
             return getLatestGameBlurb(channel, dotaid, latestmatch, skippedmatches=skippedmatches, getmmr = enabled_channels[channel][1] and str(latestmatch['lobby_type']) == '7')
@@ -93,15 +95,19 @@ def checktimeout(channel):
     twitchchecktimeout = settings.trygetset('twitch_online_check_timeout', 15)
     lastonlinecheck = settings.trygetset('twitch_online_last_check', time.time())
 
-    if time.time() - int(twitchchecktimeout) > float(lastonlinecheck):
-        settings.setdata('twitch_online_last_check', time.time(), announce=False)
-        try:
-            if not twitchapi.is_streaming(channel):
-               return False
-        except Exception as e:
-            print '[Dota] twitch api check error:',e
-            return False
-    else: return True
+    try:
+        is_streaming = twitchapi.is_streaming(channel)
+    except Exception as e:
+        print '[Dota] twitch api check error:',e
+        return False
+
+    if is_streaming:
+        if time.time() - int(twitchchecktimeout) > float(lastonlinecheck):
+            settings.setdata('twitch_online_last_check', time.time(), announce=False)
+        else: 
+            return True
+    else:
+        return False
 
     laststreamcheck = settings.trygetset('%s_last_is_streaming_check' % channel, time.time())
     streamchecktimeout = settings.trygetset('%s_is_streaming_timeout' % channel, 30)
@@ -140,15 +146,15 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
         for p in matchdata['result']['players']:
             # print 'looking up %s' % p['account_id']
             if p['account_id'] in notable_players:
-                print '[Dota] Found notable player %s' % notable_players[p['account_id']]
+                print '[Dota-Notable] Found notable player %s' % notable_players[p['account_id']]
                 playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(p['hero_id'])][0]) # p['heroId'] ?
                 notable_players_found.append((notable_players[p['account_id']], playerhero))
 
         if notable_players_found:
             notableplayerdata = "| Notable players found: %s" % ', '.join(['%s - %s' % (p,h) for p,h in notable_players_found])
-            print "[Dota] notable player data: " + notableplayerdata
+            print "[Dota-Notable] notable player data: " + notableplayerdata
         else:
-            print '[Dota] No notable players found'
+            print '[Dota-Notable] No notable players found'
 
     try:
         d_hero = [h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(playerdata['hero_id'])][0]
@@ -299,57 +305,69 @@ def searchForNotablePlayers(targetdotaid, pages=3):
 
             for player in players:
                 if steamToDota(player['steamId']) in notable_players:
-                    print 'found player %s (%s)' % (player['name'], notable_players[steamToDota(player['steamId'])])
+                    print '[Dota-Notable] found notable player %s (%s)' % (player['name'], notable_players[steamToDota(player['steamId'])])
 
                     try:
                         herodata = steamapi.GetHeroes()
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
                         playerhero = 'Unknown Hero (no hero selected/something borked)'
+                        print '[Dota-ERROR] WTF is this shit: %s' % str(player['heroId'])
 
                     notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
 
                 if steamToDota(player['steamId']) == long(targetdotaid):
-                    print 'found target player'
+                    print '[Dota-Notable] found target player,',
                     target_found = True
 
-            if target_found:
-                print 'Managed to find: %s' % notable_players_found
-                return notable_players_found
+            #TODO: ADD THE OTHER DATA IN HERE SOMEWHERE
 
+            if target_found:
+                if notable_players_found:
+                    print 'managed to find: %s' % notable_players_found
+                else:
+                    print 'no notable players.'
+
+                return notable_players_found
             # print 'searched game %s, T+%4.4fms' % (games.index(game), (time.time()-t0)*1000)
 
-        print 'searched game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
+        print '[Dota-Notable] searched game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
 
 def getNotableCheckReady(channel):
     lastcheck = settings.trygetset('%s_notable_last_check' % channel, time.time())
     if time.time() - lastcheck > 600.0:
+        mes_count = settings.trygetset('%s_notable_message_count' % channel, 1)
+        if mes_count <= 35:
+            return False
         settings.setdata('%s_notable_last_check' % channel, time.time(), announce=False)
-        print 'Ding!'
         return True
     else:
         # print 600.0 - (time.time() - lastcheck)
         return False
 
-
+# TODO:
+#    Stop further searches if no players are found
+#    Store results for use in end game blurb
+#    Fine tune usage frequency
 def notablePlayerBlurb(channel, pages=20):
     userstatus = node.get_user_status(dotaToSteam(settings.getdata('%s_dota_id' % channel)))
     if userstatus:
         # print 'Dota status for %s: %s' % (channel, userstatus)
 
-        if userstatus.replace('#','') in ["DOTA_RP_PRE_GAME", "DOTA_RP_GAME_IN_PROGRESS", "DOTA_RP_PLAYING_AS"]:
+        if userstatus.replace('#','') in ["DOTA_RP_HERO_SELECTION", "DOTA_RP_PRE_GAME", "DOTA_RP_GAME_IN_PROGRESS", "DOTA_RP_PLAYING_AS"]:
             if getNotableCheckReady(channel):
                 if twitchapi.is_streaming(channel):
-                    print "doing search for notable players"
+                    # print "doing search for notable players"
                     players = searchForNotablePlayers(settings.getdata('%s_dota_id' % channel), pages)
+                    settings.setdata('%s_notable_message_count' % channel, 0, announce=False)
 
                     if players is None:
                         return
                     elif players:
                         return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
         else:
-            settings.setdata('%s_notable_last_check' % channel, time.time() - 420.0, announce=False)
+            settings.setdata('%s_notable_last_check' % channel, time.time() - 480.0, announce=False)
 
 
 def update_verified_notable_players():
@@ -387,6 +405,16 @@ def update_verified_notable_players():
     updated_players = dict(old_players.items() + parser.player_datas)
 
     settings.setdata('dota_notable_players', updated_players, announce=False)
+
+    tn = 0
+    for p in dict(parser.player_datas):
+        o = old_players[p]
+        n = dict(parser.player_datas)[p]
+        if o != n:
+            print '[Dota-Notable] Updated player: %s -> %s' % (o, n)
+            tn += 1
+
+    return tn
 
 
 
