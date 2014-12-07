@@ -56,8 +56,7 @@ class MyBot(irc.IRCClient):
         print '[Borkedbot] %s' % txt
 
     def update_mods(self):
-        self.botsay('/mods')
-
+        self.say(self.factory.channel, '/mods')
 
     def signedOn(self):
         self.sendLine('TWITCHCLIENT 3') # Oh boy here we go
@@ -103,7 +102,7 @@ class MyBot(irc.IRCClient):
             self.log("WE HAVE A MOD DISCREPANCY HERE:")
             print self.opsinchan - self.oplist
             print
-            # self.update_mods()
+            self.update_mods()
 
 
     def action(self, user, channel, data):

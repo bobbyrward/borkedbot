@@ -177,7 +177,7 @@ def _init_module(m, bot):
 
 # This is what gets called by the bot to distribute events to modules
 def event(channel, user, etype, data, bot, isop, extratags=[]):
-    if etype not in ['msg', 'timer', 'action']:
+    if etype not in ['msg', 'timer', 'action', 'botsay']:
         print "[ChatManager] Received event, %s: %s" % (etype, data)
 
     doreload(bot)
