@@ -651,7 +651,7 @@ def generate_message_commands(bot):
 
         if channel in dota.enabled_channels.keys() and not dota.enabled_channels[channel][1]:
             if user == channel:
-                rs = '''Hi %s, I can provide accurate MMR and automatically announce ranked \
+                rs = '''Hi %s, I can provide accurate MMR and automatically announce \
                 games when they are finished with mmr change and totals.  \
                 All that is required is that you add me on steam and that your dota profile isn't private.  \
                 Type "!mmrsetup" to get started (broadcaster only command).''' % channel
@@ -745,21 +745,33 @@ def generate_message_commands(bot):
                 # "When you add me, send me the following as a message through steam: verifytwitch %s" % channel
                 # NODEJS REPLY TO MESSAGE: "To finish verification: say the following message in twitch chat: !mmrsetup verify {code}"
 
-            if args[0].lower() == 'verify' and len(args) >= 2:
+            if args[0].lower() == 'verify':
                 if user not in [channel, 'imayhaveborkedit']:
                     return
 
-                if args[1].lower() == 'help':
-                    return 'blah blah help'
+                try:
+                    args[1]
+                except:
+                    return "I need the code from the steam message."
+                
+                # if args[1].lower() == 'help':
+                    # return 'blah blah help'
 
-                verified = node.verify_code(channel, args[1].lower())
+                if user == 'imayhaveborkedit':
+                    verified = user == 'imayhaveborkedit'
+                else:
+                    verified = node.verify_code(channel, args[1].lower())
 
                 if verified:
                     node.delete_key(channel)
 
                     en_chans = settings.getdata('dota_enabled_channels')
                     if channel in en_chans:
-                        return "Wtf you're already enabled.  If you want to change something use [commands i need to write]"
+                        try:
+                            if settings.getdata('%s_mmr_enabled' % channel):
+                                return "Wtf you're already enabled.  If you want to change something use [commands i need to write]"
+                        except:
+                            pass
 
                     settings.setdata('dota_enabled_channels', en_chans + [channel])
                     settings.trygetset('%s_common_name' % channel, channel)
@@ -776,6 +788,7 @@ def generate_message_commands(bot):
                     return "You did it!  Thanks for using this feature.  If you encounter any bugs or issues, let imayhaveborkedit know."
                 else:
                     return "Bad code."
+
 
 
             # if args[0].lower() == 'setname' and len(args) >= 2 and user in [channel, 'imayhaveborkedit']:

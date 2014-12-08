@@ -84,7 +84,7 @@ def latestBlurb(channel, override=False):
                 skippedmatches = 0
 
             update_channels()
-            settings.setdata('%s_notable_last_check' % channel, time.time() - 480.0, announce=False)
+            settings.setdata('%s_notable_last_check' % channel, time.time() - 720.0, announce=False)
             settings.setdata('%s_notable_message_count' % channel, 30, announce=False)
 
             print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previoussavedmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
@@ -142,6 +142,9 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
         # print "notable player lookup requested"
         notable_players = settings.getdata('dota_notable_players')
         notable_players_found = []
+
+        if dotaid in notable_players:
+            notable_players.pop(dotaid)
 
         for p in matchdata['result']['players']:
             # print 'looking up %s' % p['account_id']
@@ -311,10 +314,13 @@ def searchForNotablePlayers(targetdotaid, pages=4):
                     try:
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
-                        playerhero = 'Unknown Hero/No hero selected'
+                        playerhero = 'Unknown/unselected hero'
                         print '[Dota-ERROR] WTF is this shit, look it up if it isn\'t 0 or something: %s' % str(player['heroId'])
 
-                    notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
+                    if long(steamToDota(player['steamId'])) != long(targetdotaid):
+                        notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
+                    else:
+                        print '[Dota-Notable] Discounting target player'
 
                 if steamToDota(player['steamId']) == long(targetdotaid):
                     print '[Dota-Notable] found target player,',
@@ -336,7 +342,7 @@ def searchForNotablePlayers(targetdotaid, pages=4):
 
 def getNotableCheckReady(channel):
     lastcheck = settings.trygetset('%s_notable_last_check' % channel, time.time())
-    if time.time() - lastcheck > 600.0:
+    if time.time() - lastcheck > 900.0:
         mes_count = settings.trygetset('%s_notable_message_count' % channel, 1)
         if mes_count <= 30:
             return False
@@ -367,7 +373,7 @@ def notablePlayerBlurb(channel, pages=20):
                     elif players:
                         return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
         else:
-            settings.setdata('%s_notable_last_check' % channel, time.time() - 480.0, announce=False)
+            settings.setdata('%s_notable_last_check' % channel, time.time() - 720.0, announce=False)
 
 
 def update_verified_notable_players():
