@@ -128,9 +128,9 @@ def alert(event):
             output = comm.process(event.channel, event.user, event.data, _getargs(event.data))
             t2 = time.time()
             if output[1] is command.OK:
-                print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
-                print "[Chatrules] Command time: %4.4fms, Total time: %4.4fms" % ((t2-t1)*1000, (t2-tstart)*1000)
-                event.bot.say(event.channel, str(output[0]))
+                # print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
+                print "[Chatrules] '%s': %4.4fms, Total time: %4.4fms" % (comm.trigger, (t2-t1)*1000, (t2-tstart)*1000)
+                event.bot.botsay(str(output[0]))
 
     #if event.etype in ['join', 'part']:
     #    # not quite yet, maybe not for a while
@@ -758,7 +758,7 @@ def generate_message_commands(bot):
                     # return 'blah blah help'
 
                 if user == 'imayhaveborkedit':
-                    verified = user == 'imayhaveborkedit'
+                    verified = args[1]
                 else:
                     verified = node.verify_code(channel, args[1].lower())
 
@@ -769,7 +769,7 @@ def generate_message_commands(bot):
                     if channel in en_chans:
                         try:
                             if settings.getdata('%s_mmr_enabled' % channel):
-                                return "Wtf you're already enabled.  If you want to change something use [commands i need to write]"
+                                return "Wtf you're already enabled.  If you want to change something use !dotaconfig"
                         except:
                             pass
 
@@ -1445,7 +1445,7 @@ def generate_message_commands(bot):
             if args[0] == 'rename':
                 try:
                     player_id = int(args[1])
-                    new_name = ''.join(args[2:])
+                    new_name = ' '.join(args[2:])
                 except:
                     return "Bad player id"
                 else:

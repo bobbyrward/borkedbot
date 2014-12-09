@@ -221,13 +221,13 @@ class Commander(object):
     PERMISSION_BLACKLIST = 6
     PERMISSION_WHITELIST_AND_BLACKLIST = 7
 
-    def __init__(self, modulename, eventtypes=['msg']):
+    def __init__(self, modulename, eventtypes=['msg'], submodulepart=''):
         import time, command
 
         self.commands = []
         self.modulename = modulename
         self.eventtypes = eventtypes
-
+        self.submodulepart = submodulepart
 
     def addCommand(self, newcom):
         self.commands.append(newcom)
@@ -250,7 +250,7 @@ class Commander(object):
                 if output[1] is command.OK:
                     print "[%s] Command time: %4.4fms, Total time: %4.4fms" % (self.modulename, (t2-t1)*1000,(t2-tstart)*1000)
                     print "[%s] Output for %s: %s" % (self.modulename, comm.trigger, output[0])
-                    event.bot.say(event.channel, output[0])
+                    event.bot.botsay(output[0])
 
     def _getargs(self, msg):
         try:

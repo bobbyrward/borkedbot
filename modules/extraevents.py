@@ -21,7 +21,7 @@ def alert(event):
 
                 event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s%s' % (event.data.split()[0].upper(), extra))
 
-    if event.etype == 'action':
-        if event.user == 'hambergo':
-            if 'hugs imayhaveborkedit' in event.data.lower():
-                print "(▀̿̿Ĺ̯̿̿▀̿ ̿) No touching."
+    # if event.etype == 'action':
+        # if event.user == 'hambergo':
+            # if 'hugs imayhaveborkedit' in event.data.lower():
+                # event.bot.botsay("(▀̿̿Ĺ̯̿̿▀̿ ̿) No touching.")

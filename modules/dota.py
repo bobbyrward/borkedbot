@@ -2,7 +2,7 @@ import sys
 sys.dont_write_bytecode = True
 
 from HTMLParser import HTMLParser
-import os, time, json, subprocess, shlex, requests
+import os, time, json, subprocess, shlex, requests, feedparser
 import steamapi, twitchapi, settings, node
 
 
@@ -12,6 +12,14 @@ LOAD_ORDER = 35
 enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
 STEAM_TO_DOTA_CONSTANT = 76561197960265728
+
+
+def dotaToSteam(dotaid):
+    return long(dotaid) + STEAM_TO_DOTA_CONSTANT
+
+def steamToDota(steamid):
+    return long(steamid) - STEAM_TO_DOTA_CONSTANT
+
 
 def update_channels():
     global enabled_channels
@@ -32,6 +40,12 @@ def alert(event):
         nblurb = notablePlayerBlurb(event.channel)
         if nblurb:
             event.bot.botsay(nblurb)
+
+        # online check
+        # rss_update = check_for_steam_dota_rss_update(event.channel)
+        # if rss_update:
+            # if twitchapi.is_streaming(event.channel):
+                # event.bot.botsay(rss_update)
 
 
 def blurb(channel, bot, override=False):
@@ -85,7 +99,7 @@ def latestBlurb(channel, override=False):
 
             update_channels()
             settings.setdata('%s_notable_last_check' % channel, time.time() - 720.0, announce=False)
-            settings.setdata('%s_notable_message_count' % channel, 30, announce=False)
+            settings.setdata('%s_notable_message_count' % channel, settings.trygetset('%s_notable_message_limit' % channel, 50), announce=False)
 
             print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previoussavedmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
             return getLatestGameBlurb(channel, dotaid, latestmatch, skippedmatches=skippedmatches, getmmr = enabled_channels[channel][1] and str(latestmatch['lobby_type']) == '7')
@@ -104,7 +118,7 @@ def checktimeout(channel):
     if is_streaming:
         if time.time() - int(twitchchecktimeout) > float(lastonlinecheck):
             settings.setdata('twitch_online_last_check', time.time(), announce=False)
-        else: 
+        else:
             return True
     else:
         return False
@@ -294,11 +308,12 @@ def searchForNotablePlayers(targetdotaid, pages=4):
     # Needs check for if in a game (maybe need a status indicator for richPresence)
     t0 = time.time()
     herodata = steamapi.GetHeroes()
+    notable_players = settings.getdata('dota_notable_players')
+    
     for pagenum in range(0, pages):
         # print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
         games = node.get_source_tv_games(pagenum)['games']
         # print 'received game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
-        notable_players = settings.getdata('dota_notable_players')
 
         for game in games:
             players = []
@@ -315,7 +330,6 @@ def searchForNotablePlayers(targetdotaid, pages=4):
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
                         playerhero = 'Unknown/unselected hero'
-                        print '[Dota-ERROR] WTF is this shit, look it up if it isn\'t 0 or something: %s' % str(player['heroId'])
 
                     if long(steamToDota(player['steamId'])) != long(targetdotaid):
                         notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
@@ -342,9 +356,11 @@ def searchForNotablePlayers(targetdotaid, pages=4):
 
 def getNotableCheckReady(channel):
     lastcheck = settings.trygetset('%s_notable_last_check' % channel, time.time())
+    message_limit = settings.trygetset('%s_notable_message_limit' % channel, 50)
+
     if time.time() - lastcheck > 900.0:
         mes_count = settings.trygetset('%s_notable_message_count' % channel, 1)
-        if mes_count <= 30:
+        if mes_count <= message_limit:
             return False
         settings.setdata('%s_notable_last_check' % channel, time.time(), announce=False)
         return True
@@ -368,9 +384,7 @@ def notablePlayerBlurb(channel, pages=20):
                     players = searchForNotablePlayers(settings.getdata('%s_dota_id' % channel), pages)
                     settings.setdata('%s_notable_message_count' % channel, 0, announce=False)
 
-                    if players is None:
-                        return
-                    elif players:
+                    if players:
                         return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
         else:
             settings.setdata('%s_notable_last_check' % channel, time.time() - 720.0, announce=False)
@@ -423,12 +437,32 @@ def update_verified_notable_players():
     return tn
 
 
+def check_for_steam_dota_rss_update(channel, setkey=True):
+    last_rss_check = settings.trygetset('%s_last_dota_rss_check' % channel, time.time())
 
-def dotaToSteam(dotaid):
-    return long(dotaid) + STEAM_TO_DOTA_CONSTANT
 
-def steamToDota(steamid):
-    return long(steamid) - STEAM_TO_DOTA_CONSTANT
+    t_0 = time.time()
+    feed = feedparser.parse('http://store.steampowered.com/feeds/news.xml')
+    t_1 = time.time()
+
+    last_feed_url = settings.trygetset('%s_dota_last_rss_update_url' % channel, 'derp')
+    for f in feed['entries']:
+        if f['author'] == 'Valve' and 'Dota 2' in f['title']:
+            if f['id'] != last_feed_url:
+                print "[Dota-RSS] Got rss feed in %4.4fs, update found"% ((t_1-t_0)*1000)
+                settings.setdata('%s_dota_last_rss_update_url' % channel, str(f['id']))
+                
+                # print "[Dota-RSS] Got new Dota 2 RSS update: %s - %s" % (f['title'], f['id'])
+                return str("Steam RSS News Feed: %s - %s" % (f['title'], f['id']))
+
+
+def get_latest_steam_dota_rss_update():
+    feed = feedparser.parse('http://store.steampowered.com/feeds/news.xml')
+
+    for f in feed['entries']:
+        if f['author'] == 'Valve' and 'Dota 2' in f['title']:
+            return str("Steam RSS News Feed: %s - %s" % (f['title'], f['id']))
+
 
 
 class Lobby(object):
