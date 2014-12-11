@@ -623,7 +623,7 @@ def generate_message_commands(bot):
 
         textstr = "{0}, {1} has been streaming for approximately " + timestr + '.'
 
-        if settings.getdata('%s_is_hosting' % channel) and not args:
+        if not args and settings.getdata('%s_is_hosting' % channel):
             hc = settings.getdata('%s_hosted_channel' % channel)
 
             if hc and not args:
