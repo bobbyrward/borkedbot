@@ -47,10 +47,12 @@ class MyBot(irc.IRCClient):
     def timer(self):
         self.send_event(self.chan(), None, 'timer', time.time(), self, None)
 
-
     def send_event(self, channel, user, etype, data, bot, isop, extratags=[]):
         del self
         chatmanager.event(**vars())
+
+    def reload_manager(self):
+        reload(chatmanager)
 
     def log(self, txt):
         print '[Borkedbot] %s' % txt

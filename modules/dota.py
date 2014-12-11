@@ -381,7 +381,7 @@ def getNotableCheckReady(channel):
 #    Stop further searches if no players are found
 #    Store results for use in end game blurb
 #    Fine tune usage frequency
-def notablePlayerBlurb(channel, pages=20):
+def notablePlayerBlurb(channel, pages=30):
     userstatus = node.get_user_status(dotaToSteam(settings.getdata('%s_dota_id' % channel)))
     if userstatus:
         # print 'Dota status for %s: %s' % (channel, userstatus)
@@ -453,7 +453,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
     if time.time() - last_rss_check < 30.0:
         return 
 
-    settings.setdata('%s_last_dota_rss_check' % channel, time.time())
+    settings.setdata('%s_last_dota_rss_check' % channel, time.time(), announce=False)
 
     t_0 = time.time()
     rs = node.get_steam_rss()
