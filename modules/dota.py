@@ -35,17 +35,26 @@ def alert(event):
         if event.etype == 'msg': # Meh
             mes_count = settings.trygetset('%s_notable_message_count' % event.channel, 1)
             settings.setdata('%s_notable_message_count' % event.channel, mes_count + 1, announce=False)
-            blurb(event.channel, event.bot)
+            
+            try:
+                blurb(event.channel, event.bot)
+            except Exception, e:
+                print '[Dota-Error] Match blurb failure: %s' % e
 
-        nblurb = notablePlayerBlurb(event.channel)
-        if nblurb:
-            event.bot.botsay(nblurb)
+            try:
+                rss_update = check_for_steam_dota_rss_update(event.channel)
+                if rss_update:
+                    if twitchapi.is_streaming(event.channel):
+                        event.bot.botsay(rss_update)
+            except Exception, e:
+                print '[Dota-Error] RSS check failure: %s' % e
 
-        # online check
-        # rss_update = check_for_steam_dota_rss_update(event.channel)
-        # if rss_update:
-            # if twitchapi.is_streaming(event.channel):
-                # event.bot.botsay(rss_update)
+        try:
+            nblurb = notablePlayerBlurb(event.channel)
+            if nblurb:
+                event.bot.botsay(nblurb)
+        except Exception, e:
+            print '[Dota-Error] Notable player blurb failure: %s' % e
 
 
 def blurb(channel, bot, override=False):
