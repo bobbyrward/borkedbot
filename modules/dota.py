@@ -309,7 +309,7 @@ def searchForNotablePlayers(targetdotaid, pages=4):
     t0 = time.time()
     herodata = steamapi.GetHeroes()
     notable_players = settings.getdata('dota_notable_players')
-    
+
     for pagenum in range(0, pages):
         # print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
         games = node.get_source_tv_games(pagenum)['games']
@@ -386,6 +386,8 @@ def notablePlayerBlurb(channel, pages=20):
 
                     if players:
                         return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
+                    else:
+                        pass
         else:
             settings.setdata('%s_notable_last_check' % channel, time.time() - 720.0, announce=False)
 
@@ -436,32 +438,34 @@ def update_verified_notable_players():
 
     return tn
 
-
 def check_for_steam_dota_rss_update(channel, setkey=True):
     last_rss_check = settings.trygetset('%s_last_dota_rss_check' % channel, time.time())
 
+    if time.time() - last_rss_check < 30.0:
+        return 
+
+    settings.setdata('%s_last_dota_rss_check' % channel, time.time())
 
     t_0 = time.time()
-    feed = feedparser.parse('http://store.steampowered.com/feeds/news.xml')
+    rs = node.get_steam_rss()
     t_1 = time.time()
 
     last_feed_url = settings.trygetset('%s_dota_last_rss_update_url' % channel, 'derp')
-    for f in feed['entries']:
-        if f['author'] == 'Valve' and 'Dota 2' in f['title']:
-            if f['id'] != last_feed_url:
+    for item in rs:
+        if item['author'] == 'Valve' and 'Dota 2 Update' in item['title']:
+            if item['guid'] != last_feed_url:
                 print "[Dota-RSS] Got rss feed in %4.4fs, update found"% ((t_1-t_0)*1000)
-                settings.setdata('%s_dota_last_rss_update_url' % channel, str(f['id']))
-                
-                # print "[Dota-RSS] Got new Dota 2 RSS update: %s - %s" % (f['title'], f['id'])
-                return str("Steam RSS News Feed: %s - %s" % (f['title'], f['id']))
+                settings.setdata('%s_dota_last_rss_update_url' % channel, str(item['guid']))
+
+                return str("Steam RSS News Feed: %s - %s" % (item['title'], item['id']))
 
 
 def get_latest_steam_dota_rss_update():
-    feed = feedparser.parse('http://store.steampowered.com/feeds/news.xml')
+    rs = node.get_steam_rss()
 
-    for f in feed['entries']:
-        if f['author'] == 'Valve' and 'Dota 2' in f['title']:
-            return str("Steam RSS News Feed: %s - %s" % (f['title'], f['id']))
+    for item in rs:
+        if item['author'] == 'Valve' and 'Dota 2 Update' in item['title']:
+            return str("Steam RSS News Feed: %s - %s" % (item['title'], item['guid']))
 
 
 

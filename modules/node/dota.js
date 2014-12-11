@@ -10,7 +10,9 @@ var steam = require("steam"),
     adminids = ['76561198030495011'],
     chatkeymap = {},
     pendingenables = {},
-    dotauserstatus = {};
+    dotauserstatus = {},
+
+    dota_rss_datas = [];
 
 
 /* Steam logic */
@@ -648,6 +650,13 @@ var zrpcserver = new zerorpc.Server({
     },
 
     /*
+        RSS stuff
+    */
+
+    
+
+
+    /*
         Exiting stuff
     */
 
@@ -697,6 +706,76 @@ zrpcserver.bind("tcp://0.0.0.0:29390");
 process.on('error', function(err) {
     console.error("Help something borked ", err);
 });
+
+
+// 
+// RSS stuff
+// 
+
+var request = require('request'),
+    FeedParser = require('feedparser');
+    
+
+function done(err) {
+    if (err) {
+        console.log('WE HAVE ERROR');
+        console.log(err, err.stack);
+    }
+}
+
+function get_steam_news_rss(entries) {
+    entries = typeof entries == 'number' ? entries : 1;
+
+    var feedparser = new FeedParser();
+    dota_rss_datas = [];
+
+    feedparser.on('error', done);
+    feedparser.on('end', done);
+
+    feedparser.on('readable', function() {
+        // console.log('ready to read');
+        setTimeout(function(e){
+            for (var i = 0; i < e; i++) {
+                var rsss = feedparser.read();
+                dota_rss_datas[i] = rsss;
+            };
+        }, 500, entries);
+    });
+
+
+    req = request('http://store.steampowered.com/feeds/news.xml', {
+        timeout: 10000,
+        pool: false 
+    });
+
+    req.setMaxListeners(50);
+
+    // Define our handlers
+    req.on('error', done);
+    req.on('response', function(res) {
+        // console.log('HONK');
+        if (res.statusCode != 200) return this.emit('error', new Error('Bad status code'));
+        // And boom goes the dynamite
+        res.pipe(feedparser);
+    });
+}
+
+
+var rssEvent = setInterval(function() {
+    util.log('Grabbing rss');
+
+    try {
+        get_steam_news_rss(10);
+    } catch (ex) {
+        util.log(ex);
+    }
+}, 120000);
+rssEvent.unref();
+
+
+// 
+// 
+// 
 
 /*
 
