@@ -640,16 +640,22 @@ var zrpcserver = new zerorpc.Server({
         reply = arguments[arguments.length - 1];
 
         gameoffset = typeof gameoffset == 'number' ? gameoffset : null;
-        h_id = typeof h_id == 'number' ? h_id : null;
+        // h_id = typeof h_id == 'number' ? h_id : null;
 
         if (!Dota2._gcReady) {
             reply('GC unready');
             return;
         };
 
-        Dota2.findSourceTVGames({start:gameoffset, heroid:h_id}, function(resp) {
-            reply(null, resp);
-        });
+        if (typeof h_id == 'number') {
+            Dota2.findSourceTVGames({start:gameoffset, heroid:h_id}, function(resp) {
+                reply(null, resp);
+            });
+        } else {
+            Dota2.findSourceTVGames({start:gameoffset}, function(resp) {
+                reply(null, resp);
+            });
+        };
     },
 
     /*

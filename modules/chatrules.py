@@ -621,7 +621,10 @@ def generate_message_commands(bot):
         timestr = ', '.join([x for x in [daystr, hourstr, minutestr] if not x.startswith('0')])
         timestr = ' and '.join(timestr.rsplit(', '))
 
-        textstr = "{0}, {1} has been streaming for approximately " + timestr + '.'
+        if timestr:
+            textstr = "{0}, {1} has been streaming for " + timestr + '.'
+        else:
+            textstr = "{0}, the stream just started."
 
         if not args and settings.getdata('%s_is_hosting' % channel):
             hc = settings.getdata('%s_hosted_channel' % channel)
@@ -1054,12 +1057,10 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         import dota
-        blurb = dota.latestBlurb(channel, True)
-
-        if blurb:
-            return blurb
+        return dota.latestBlurb(channel, True)
 
     coms.append(command.Command(['!lastmatch', '!lastgame'], f, bot, channels=['monkeys_forever'], repeatdelay=30))
+
 
     # coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
@@ -1462,6 +1463,24 @@ def generate_message_commands(bot):
                 return "Updated list, %s entries changed." % changed
 
     coms.append(command.Command('!notable', f, bot, groups=me_only_group))
+
+
+    def f(channel, user, message, args, data, bot):
+        import requests
+
+        r = requests.get('http://last.fm/user/totalbiscuit/now')
+
+        r_nameindex = r.text.index('class="track-name')
+        nameindex = r_nameindex + r.text[r_nameindex:].index('>') + 1
+        songname = r.text[nameindex:].split('<')[0]
+
+        artistname = r.text[r.text.index('<div class="artist-name">'):].split('>')[2].strip().split('\n')[0]
+
+        # THIS IS SO AWFUL I KNOW I'M GOING TO REDO IT SOMETIME
+
+        return songname + ' -- ' + artistname
+
+    coms.append(command.Command('!songtext', f, bot, groups=me_only_group))
 
     ######################################################################
 

@@ -13,6 +13,8 @@ enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata
 
 STEAM_TO_DOTA_CONSTANT = 76561197960265728
 
+POSITION_COLORS = ['Blue', 'Teal', 'Purple' 'Yellow', 'Orange', 'Pink' , 'Gray', 'Light Blue', 'Green', 'Brown']
+
 
 def dotaToSteam(dotaid):
     return long(dotaid) + STEAM_TO_DOTA_CONSTANT
@@ -23,9 +25,9 @@ def steamToDota(steamid):
 
 def update_channels():
     global enabled_channels
-    print "[Dota] Updating enabled channels"
+    # print "[Dota] Updating enabled channels"
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
-    os.system('touch %s' % os.path.abspath(__file__))
+    # os.system('touch %s' % os.path.abspath(__file__))
 
 def setup(bot):
     return
@@ -35,7 +37,7 @@ def alert(event):
         if event.etype == 'msg': # Meh
             mes_count = settings.trygetset('%s_notable_message_count' % event.channel, 1)
             settings.setdata('%s_notable_message_count' % event.channel, mes_count + 1, announce=False)
-            
+
             try:
                 blurb(event.channel, event.bot)
             except Exception, e:
@@ -44,8 +46,7 @@ def alert(event):
             try:
                 rss_update = check_for_steam_dota_rss_update(event.channel)
                 if rss_update:
-                    if twitchapi.is_streaming(event.channel):
-                        event.bot.botsay(rss_update)
+                    event.bot.botsay(rss_update)
             except Exception, e:
                 print '[Dota-Error] RSS check failure: %s' % e
 
@@ -107,7 +108,9 @@ def latestBlurb(channel, override=False):
                 skippedmatches = 0
 
             update_channels()
-            settings.setdata('%s_notable_last_check' % channel, time.time() - 720.0, announce=False)
+            notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 900.0)
+
+            settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 180.0, announce=False)
             settings.setdata('%s_notable_message_count' % channel, settings.trygetset('%s_notable_message_limit' % channel, 50), announce=False)
 
             print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previoussavedmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
@@ -172,9 +175,11 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
         for p in matchdata['result']['players']:
             # print 'looking up %s' % p['account_id']
             if p['account_id'] in notable_players:
-                print '[Dota-Notable] Found notable player %s' % notable_players[p['account_id']]
+                # print '[Dota-Notable] Found notable player %s' % notable_players[p['account_id']]
                 playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(p['hero_id'])][0]) # p['heroId'] ?
-                notable_players_found.append((notable_players[p['account_id']], playerhero))
+
+                if int(p['account_id']) != int(dotaid):
+                    notable_players_found.append((notable_players[p['account_id']], playerhero))
 
         if notable_players_found:
             notableplayerdata = "| Notable players found: %s" % ', '.join(['%s - %s' % (p,h) for p,h in notable_players_found])
@@ -338,7 +343,8 @@ def searchForNotablePlayers(targetdotaid, pages=4):
                     try:
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
-                        playerhero = 'Unknown/unselected hero'
+                        playerhero = 'picking'
+                        #TODO: cancel the auto blurb check and redo it in a minute or something if no player, or something
 
                     if long(steamToDota(player['steamId'])) != long(targetdotaid):
                         notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
@@ -366,22 +372,24 @@ def searchForNotablePlayers(targetdotaid, pages=4):
 def getNotableCheckReady(channel):
     lastcheck = settings.trygetset('%s_notable_last_check' % channel, time.time())
     message_limit = settings.trygetset('%s_notable_message_limit' % channel, 50)
+    notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 900.0)
 
-    if time.time() - lastcheck > 900.0:
+    if time.time() - lastcheck > notable_check_timeout:
         mes_count = settings.trygetset('%s_notable_message_count' % channel, 1)
         if mes_count <= message_limit:
             return False
         settings.setdata('%s_notable_last_check' % channel, time.time(), announce=False)
         return True
     else:
-        # print 600.0 - (time.time() - lastcheck)
+        # print notable_check_timeout - (time.time() - lastcheck)
         return False
 
 # TODO:
 #    Stop further searches if no players are found
 #    Store results for use in end game blurb
+#    Determine player positions
 #    Fine tune usage frequency
-def notablePlayerBlurb(channel, pages=30):
+def notablePlayerBlurb(channel, pages=28):
     userstatus = node.get_user_status(dotaToSteam(settings.getdata('%s_dota_id' % channel)))
     if userstatus:
         # print 'Dota status for %s: %s' % (channel, userstatus)
@@ -398,7 +406,8 @@ def notablePlayerBlurb(channel, pages=30):
                     else:
                         pass
         else:
-            settings.setdata('%s_notable_last_check' % channel, time.time() - 720.0, announce=False)
+            notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 900.0)
+            settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 180.0, announce=False)
 
 
 def update_verified_notable_players():
@@ -439,7 +448,7 @@ def update_verified_notable_players():
 
     tn = 0
     for p in dict(parser.player_datas):
-        o = old_players[p]
+        o = old_players.get(p, 'none')
         n = dict(parser.player_datas)[p]
         if o != n:
             print '[Dota-Notable] Updated player: %s -> %s' % (o, n)
@@ -451,7 +460,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
     last_rss_check = settings.trygetset('%s_last_dota_rss_check' % channel, time.time())
 
     if time.time() - last_rss_check < 30.0:
-        return 
+        return
 
     settings.setdata('%s_last_dota_rss_check' % channel, time.time(), announce=False)
 
