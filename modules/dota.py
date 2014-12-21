@@ -43,19 +43,21 @@ def alert(event):
             except Exception, e:
                 print '[Dota-Error] Match blurb failure: %s' % e
 
+        if event.etype == 'timer':
             try:
                 rss_update = check_for_steam_dota_rss_update(event.channel)
                 if rss_update:
+                    print '[Dota] RSS update found: ' + rss_update
                     event.bot.botsay(rss_update)
             except Exception, e:
                 print '[Dota-Error] RSS check failure: %s' % e
 
-        try:
-            nblurb = notablePlayerBlurb(event.channel)
-            if nblurb:
-                event.bot.botsay(nblurb)
-        except Exception, e:
-            print '[Dota-Error] Notable player blurb failure: %s' % e
+            try:
+                nblurb = notablePlayerBlurb(event.channel)
+                if nblurb:
+                    event.bot.botsay(nblurb)
+            except Exception, e:
+                print '[Dota-Error] Notable player blurb failure: %s' % e
 
 
 def blurb(channel, bot, override=False):
@@ -219,19 +221,19 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
     else:
         matchskipstr = ''
 
-    matchoutput = "%s has %s a game%s.  http://www.dotabuff.com/matches/%s " % (
+    matchoutput = "%s has %s a game%s.  http://www.dotabuff.com/matches/%s" % (
         enabled_channels[channel][0], 'won' if d_victory == 'Victory' else 'lost', matchskipstr, latestmatch['match_id'])
 
-    extramatchdata = "| Level {} {} {} - KDA: {}/{}/{} - CS: {}/{} - GPM: {} - XPM: {} ".format(
+    extramatchdata = "Level {} {} {} - KDA: {}/{}/{} - CS: {}/{} - GPM: {} - XPM: {}".format(
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
 
 
-    finaloutput = matchoutput + (getMMRData(channel, dotaid) if getmmr else '') + extramatchdata + (notableplayerdata if notableplayerdata else '')
+    finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + getmatchMMRstring(channel, dotaid) if getmmr else '') + (notableplayerdata if notableplayerdata else '')
 
     return finaloutput
 
 
-def getMMRData(channel, dotaid):
+def getmatchMMRstring(channel, dotaid):
     outputstring = "Updated MMR: Solo: %s | Party: %s "
 
     print "[Dota-MMR] Updating mmr"
@@ -318,6 +320,30 @@ def determineSteamid(steamthing):
     return maybesteamid
 
 
+def getSourceTVLiveGameForPlayer(targetdotaid):
+    totalgames = node.get_source_tv_games()['numTotalGames']
+
+    for pagenum in range(0, int(round(float(totalgames)/6))):
+        games = node.get_source_tv_games(pagenum)['games']
+
+        for game in games:
+            try:
+                game['goodPlayers']
+            except Exception, e:
+                print 'wat'
+                raise e
+
+            players = []
+            players.extend(game['goodPlayers'])
+            players.extend(game['badPlayers'])
+            notable_players_found = []
+            target_found = False
+
+            for player in players:
+                if steamToDota(player['steamId']) == long(targetdotaid):
+                    return game
+
+
 def searchForNotablePlayers(targetdotaid, pages=4):
     # Needs check for if in a game (maybe need a status indicator for richPresence)
     t0 = time.time()
@@ -330,6 +356,13 @@ def searchForNotablePlayers(targetdotaid, pages=4):
         # print 'received game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
         for game in games:
+
+            try:
+                game['goodPlayers']
+            except Exception, e:
+                print 'wat'
+                raise e
+            
             players = []
             players.extend(game['goodPlayers'])
             players.extend(game['badPlayers'])
@@ -464,19 +497,48 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
 
     settings.setdata('%s_last_dota_rss_check' % channel, time.time(), announce=False)
 
-    t_0 = time.time()
     rs = node.get_steam_rss()
-    t_1 = time.time()
+    last_feed_url = settings.trygetset('%s_dota_last_steam_rss_update_url' % channel, 'derp')
 
-    last_feed_url = settings.trygetset('%s_dota_last_rss_update_url' % channel, 'derp')
     for item in rs:
         if item['author'] == 'Valve' and 'Dota 2 Update' in item['title']:
             if item['guid'] != last_feed_url:
-                print "[Dota-RSS] Got rss feed in %4.4fs, update found"% ((t_1-t_0)*1000)
-                settings.setdata('%s_dota_last_rss_update_url' % channel, str(item['guid']))
+                try:
+                    bpn_old = int([x for x in last_feed_url.split('/') if x])
+                    bpn_new = int([x for x in item['guid'].split('/') if x])
 
-                return str("Steam RSS News Feed: %s - %s" % (item['title'], item['id']))
+                    if bpn_old >= bpn_new:
+                        break
+                except:
+                    # print "Ok what the fuck is up with the steam rss"
+                    break
 
+                settings.setdata('%s_dota_last_steam_rss_update_url' % channel, str(item['guid']))
+
+                return str("Steam News Feed: %s - %s" % (item['title'], item['guid']))
+            else:
+                break
+
+    rs = node.get_dota_rss()
+    last_feed_url = settings.trygetset('%s_dota_last_dota2_rss_update_url' % channel, 'derp')
+
+    for item in rs:
+        if item['guid'] != last_feed_url:
+            try:
+                bpn_old = int(last_feed_url.split('=')[-1])
+                bpn_new = int(item['guid'].split('=')[-1])
+                
+                if bpn_old >= bpn_new:
+                    break
+            except:
+                # print "Ok what the fuck is up with the dota rss"
+                break
+
+            settings.setdata('%s_dota_last_dota2_rss_update_url' % channel, str(item['guid']))
+
+            return str("Dota 2 Blog Post: %s - %s" % (item['title'], item['link']))
+        else:
+            break
 
 def get_latest_steam_dota_rss_update():
     rs = node.get_steam_rss()

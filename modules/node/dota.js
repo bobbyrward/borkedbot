@@ -12,6 +12,7 @@ var steam = require("steam"),
     pendingenables = {},
     dotauserstatus = {},
 
+    steam_rss_datas = [],
     dota_rss_datas = [];
 
 
@@ -662,7 +663,7 @@ var zrpcserver = new zerorpc.Server({
         RSS stuff
     */
 
-    
+
 
 
     /*
@@ -717,13 +718,13 @@ process.on('error', function(err) {
 });
 
 
-// 
+//
 // RSS stuff
-// 
+//
 
 var request = require('request'),
     FeedParser = require('feedparser');
-    
+
 
 function done(err) {
     if (err) {
@@ -734,6 +735,47 @@ function done(err) {
 
 function get_steam_news_rss(entries) {
     entries = typeof entries == 'number' ? entries : 1;
+
+    util.log('Grabbing steam rss');
+
+    var feedparser = new FeedParser();
+    steam_rss_datas = [];
+
+    feedparser.on('error', done);
+    feedparser.on('end', done);
+
+    feedparser.on('readable', function() {
+        // console.log('ready to read');
+        setTimeout(function(e){
+            for (var i = 0; i < e; i++) {
+                var rsss = feedparser.read();
+                steam_rss_datas[i] = rsss;
+            };
+        }, 500, entries);
+    });
+
+
+    req = request('http://store.steampowered.com/feeds/news.xml', {
+        timeout: 10000,
+        pool: false
+    });
+
+    req.setMaxListeners(50);
+
+    // Define our handlers
+    req.on('error', done);
+    req.on('response', function(res) {
+        // console.log('HONK');
+        if (res.statusCode != 200) return this.emit('error', new Error('Bad status code'));
+        // And boom goes the dynamite
+        res.pipe(feedparser);
+    });
+}
+
+function get_dota_rss(entries) {
+    entries = typeof entries == 'number' ? entries : 1;
+
+    util.log('Grabbing dota rss');
 
     var feedparser = new FeedParser();
     dota_rss_datas = [];
@@ -752,9 +794,9 @@ function get_steam_news_rss(entries) {
     });
 
 
-    req = request('http://store.steampowered.com/feeds/news.xml', {
+    req = request('http://blog.dota2.com/feed/', {
         timeout: 10000,
-        pool: false 
+        pool: false
     });
 
     req.setMaxListeners(50);
@@ -771,10 +813,9 @@ function get_steam_news_rss(entries) {
 
 
 var rssEvent = setInterval(function() {
-    util.log('Grabbing rss');
-
     try {
         get_steam_news_rss(10);
+        get_dota_rss(10);
     } catch (ex) {
         util.log(ex);
     }
@@ -782,9 +823,9 @@ var rssEvent = setInterval(function() {
 rssEvent.unref();
 
 
-// 
-// 
-// 
+//
+//
+//
 
 /*
 
@@ -885,5 +926,3 @@ var DOTA_RP_STATUSES = {
                  'Dubai',
                  'Chile',
                  'Peru'];
-
-// Dota2.findSourceTVGames({start:gameoffset}, function(resp) { console.log(resp); });

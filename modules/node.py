@@ -173,10 +173,19 @@ def get_user_status(steamid):
     return zrpc.evaljs("dotauserstatus['%s']" % steamid)
 
 def get_steam_rss(entries=0):
-    return zrpc.evaljs('dota_rss_datas')
+    return zrpc.evaljs('steam_rss_datas')
     
     if entries:
         zrpc.evaljs('get_steam_news_rss(%s)' % int(entries))
+        return zrpc.evaljs('steam_rss_datas')
+    else:
+        return zrpc.evaljs('steam_rss_datas')
+
+def get_dota_rss(entries=0):
+    return zrpc.evaljs('dota_rss_datas')
+    
+    if entries:
+        zrpc.evaljs('get_dota_news_rss(%s)' % int(entries))
         return zrpc.evaljs('dota_rss_datas')
     else:
         return zrpc.evaljs('dota_rss_datas')
