@@ -916,7 +916,7 @@ def generate_message_commands(bot):
             bot.botsay('.timeout bluepowervan 10')
             return "You know that doesn't work for you, stop trying."
 
-        if user not in bot.oplist:
+        if user not in bot.oplist and user != 'imayhaveborkedit':
             return
 
         if args:
@@ -1429,7 +1429,7 @@ def generate_message_commands(bot):
                     settings.setdata('dota_notable_players', player_datas, announce=False)
                     return "%s registered as a notable player." % new_player_name
 
-            if args[0] == 'remove' and len(args) == 2:
+            elif args[0] == 'remove' and len(args) == 2:
                 try:
                     player_id = int(args[1])
                 except:
@@ -1443,7 +1443,7 @@ def generate_message_commands(bot):
                     else:
                         return "That id is not in the list."
 
-            if args[0] == 'rename':
+            elif args[0] == 'rename':
                 try:
                     player_id = int(args[1])
                     new_name = ' '.join(args[2:])
@@ -1458,9 +1458,13 @@ def generate_message_commands(bot):
                     else:
                         return "That id is not in the list."
 
-            if args[0] == 'update':
+            elif args[0] == 'update':
                 changed = dota.update_verified_notable_players()
                 return "Updated list, %s entries changed." % changed
+
+            elif args[0] == 'reset':
+                settings.setdata('%s_notable_last_check' % channel, 0.0)
+                settings.setdata('%s_notable_message_count' % channel, 10000)
 
     coms.append(command.Command('!notable', f, bot, groups=me_only_group))
 

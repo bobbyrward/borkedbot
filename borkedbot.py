@@ -151,7 +151,7 @@ class MyBot(irc.IRCClient):
                         self.channelsubs.add(tag_user)
                         return
 
-                    elif tag_data in ['admin', 'staff']:
+                    elif tag_data in ['admin', 'staff', 'global_mod']:
                         self.opsinchan.add(tag_user)
                         print "Whoop whoop twitch police in the house (%s)" % tag_user
                         return
