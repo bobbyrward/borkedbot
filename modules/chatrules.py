@@ -761,7 +761,7 @@ def generate_message_commands(bot):
                     # return 'blah blah help'
 
                 if user == 'imayhaveborkedit':
-                    verified = args[1]
+                    verified = dota.determineSteamid(args[1])
                 else:
                     verified = node.verify_code(channel, args[1].lower())
 
@@ -1059,7 +1059,7 @@ def generate_message_commands(bot):
         import dota
         return dota.latestBlurb(channel, True)
 
-    coms.append(command.Command(['!lastmatch', '!lastgame'], f, bot, channels=['monkeys_forever'], repeatdelay=30))
+    coms.append(command.Command(['!lastmatch', '!lastgame'], f, bot, repeatdelay=30))
 
 
     # coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
