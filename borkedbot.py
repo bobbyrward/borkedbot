@@ -101,9 +101,7 @@ class MyBot(irc.IRCClient):
 
         if self.opsinchan - self.oplist and self.gotops:
             # This might be only for new mods now, need to check
-            self.log("WE HAVE A MOD DISCREPANCY HERE:")
-            print self.opsinchan - self.oplist
-            print
+            self.log("WE HAVE A MOD DISCREPANCY: %s" % (self.opsinchan - self.oplist))
             self.update_mods()
 
 
