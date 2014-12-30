@@ -39,9 +39,9 @@ def alert(event):
             settings.setdata('%s_notable_message_count' % event.channel, mes_count + 1, announce=False)
 
             try:
-                blurb(event.channel, event.bot)
+               blurb(event.channel, event.bot)
             except Exception, e:
-                print '[Dota-Error] Match blurb failure: %s' % e
+               print '[Dota-Error] Match blurb failure: %s' % e
 
         if event.etype == 'timer':
             try:
@@ -150,7 +150,7 @@ def checktimeout(channel):
     return time.time() - int(getmatchtimeout) > float(lastmatchfetch)
 
 
-def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getmmr=False, notableplayers=True):
+def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getmmr=False, notableplayers=True, splitlongnotable=True):
     if latestmatch is None:
         latestmatch = steamapi.getlastdotamatch(dotaid)
 
@@ -165,6 +165,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
             break
 
     notableplayerdata = None
+    separate_notable_message = False
 
     if notableplayers:
         # print "notable player lookup requested"
@@ -184,7 +185,9 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
                     notable_players_found.append((notable_players[p['account_id']], playerhero))
 
         if notable_players_found:
-            notableplayerdata = "| Notable players found: %s" % ', '.join(['%s - %s' % (p,h) for p,h in notable_players_found])
+            separate_notable_message = len(notable_players_found) > 3
+
+            notableplayerdata = "Notable players found: %s" % ', '.join(['%s - %s' % (p,h) for p,h in notable_players_found])
             print "[Dota-Notable] notable player data: " + notableplayerdata
         else:
             print '[Dota-Notable] No notable players found'
@@ -228,7 +231,10 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
 
 
-    finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + getmatchMMRstring(channel, dotaid) if getmmr else '') + (notableplayerdata if notableplayerdata else '')
+    finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + getmatchMMRstring(channel, dotaid) if getmmr else '') + ('-- ' + notableplayerdata if notableplayerdata else '')
+
+    if splitlongnotable:
+        pass
 
     return finaloutput
 
@@ -330,7 +336,7 @@ def getSourceTVLiveGameForPlayer(targetdotaid):
             try:
                 game['goodPlayers']
             except Exception, e:
-                print 'wat'
+                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT"
                 raise e
 
             players = []
@@ -360,9 +366,9 @@ def searchForNotablePlayers(targetdotaid, pages=4):
             try:
                 game['goodPlayers']
             except Exception, e:
-                print 'wat'
+                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT"
                 raise e
-            
+
             players = []
             players.extend(game['goodPlayers'])
             players.extend(game['badPlayers'])
@@ -377,6 +383,12 @@ def searchForNotablePlayers(targetdotaid, pages=4):
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
                         playerhero = 'picking'
+                        try:
+                            print 'found notable player %s' % notable_players[steamToDota(player['steamId'])]
+                            print players.index(player)
+                            print 'I think their color is %s' % POSITION_COLORS[players.index(player)]
+                        except Exception, e:
+                            print 'you borked something idiot', e
                         #TODO: cancel the auto blurb check and redo it in a minute or something if no player, or something
 
                     if long(steamToDota(player['steamId'])) != long(targetdotaid):
@@ -527,7 +539,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
             try:
                 bpn_old = int(last_feed_url.split('=')[-1])
                 bpn_new = int(item['guid'].split('=')[-1])
-                
+
                 if bpn_old >= bpn_new:
                     break
             except:
