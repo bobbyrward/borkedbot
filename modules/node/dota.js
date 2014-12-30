@@ -7,6 +7,8 @@ var steam = require("steam"),
     Dota2 = new dota2.Dota2Client(bot, true),
     zerorpc = require("zerorpc"),
 
+    clienthellos = 0,
+
     adminids = ['76561198030495011'],
     chatkeymap = {},
     pendingenables = {},
@@ -25,6 +27,15 @@ var onSteamLogOn = function onSteamLogOn(){
 
         Dota2.on("ready", function() {
             util.log("Node-dota2 ready.");
+        });
+
+        Dota2.on("hello", function() {
+            clienthellos += 1;
+            if (clienthellos > 4) {
+                util.log("Too many hellos, restarting doto");
+                Dota2.exit();
+                Dota2.launch();
+            }
         });
 
         Dota2.on("unready", function onUnready(){
