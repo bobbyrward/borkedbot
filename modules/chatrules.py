@@ -695,9 +695,17 @@ def generate_message_commands(bot):
         else:
             dotadata = dota.getUserDotaData(channel)
 
-            mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
-            mmrp = dotadata['gameAccountClient']['competitiveRank']
+            try:
+                mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
+                mmrp = dotadata['gameAccountClient']['competitiveRank']
+            except:
+                print '[Dota-MMR] Error getting mmr fields for %s, might be first time setup' % channel
+                wentok = dota.updateMMR(channel)
+                dotadata = dota.getUserDotaData(channel)
 
+                mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
+                mmrp = dotadata['gameAccountClient']['competitiveRank']
+                
             # ???
             return outputstring % (mmr,mmrp)
 
@@ -913,7 +921,7 @@ def generate_message_commands(bot):
             return
 
         if user == 'bluepowervan':
-            bot.botsay('.timeout bluepowervan 10')
+            bot.botsay('.timeout bluepowervan 30')
             return "You know that doesn't work for you, stop trying."
 
         if user not in bot.oplist and user != 'imayhaveborkedit':
