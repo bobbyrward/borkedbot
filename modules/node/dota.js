@@ -35,6 +35,7 @@ var onSteamLogOn = function onSteamLogOn(){
                 util.log("Too many hellos, restarting doto");
                 Dota2.exit();
                 Dota2.launch();
+                clienthellos = 0;
             }
         });
 
@@ -747,8 +748,6 @@ function done(err) {
 function get_steam_news_rss(entries) {
     entries = typeof entries == 'number' ? entries : 1;
 
-    util.log('Grabbing steam rss');
-
     var feedparser = new FeedParser();
     steam_rss_datas = [];
 
@@ -785,8 +784,6 @@ function get_steam_news_rss(entries) {
 
 function get_dota_rss(entries) {
     entries = typeof entries == 'number' ? entries : 1;
-
-    util.log('Grabbing dota rss');
 
     var feedparser = new FeedParser();
     dota_rss_datas = [];
@@ -825,6 +822,7 @@ function get_dota_rss(entries) {
 
 var rssEvent = setInterval(function() {
     try {
+        util.log('Grabbing RSS data');
         get_steam_news_rss(10);
         get_dota_rss(10);
     } catch (ex) {
