@@ -11,6 +11,8 @@ LOAD_ORDER = 35
 
 enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
+rss_channels = {}
+
 STEAM_TO_DOTA_CONSTANT = 76561197960265728
 
 POSITION_COLORS = ['Blue', 'Teal', 'Purple' 'Yellow', 'Orange', 'Pink' , 'Gray', 'Light Blue', 'Green', 'Brown']
@@ -28,6 +30,24 @@ def update_channels():
     # print "[Dota] Updating enabled channels"
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
     # os.system('touch %s' % os.path.abspath(__file__))
+
+
+def enable_channel(channel, dotaid):
+    en_chans = settings.getdata('dota_enabled_channels')
+
+    settings.setdata('dota_enabled_channels', en_chans + [channel])
+    settings.trygetset('%s_common_name' % channel, channel)
+    settings.setdata('%s_mmr_enabled' % channel, False)
+
+    settings.setdata('%s' % channel, dotaToSteam(dotaid), domain='steamids')
+    settings.setdata('%s_dota_id' % channel, dotaid)
+
+    update_channels()
+
+
+def disable_channel():
+    pass
+
 
 def setup(bot):
     return
@@ -48,7 +68,7 @@ def alert(event):
                 rss_update = check_for_steam_dota_rss_update(event.channel)
                 if rss_update:
                     print '[Dota] RSS update found: ' + rss_update
-                    event.bot.botsay(rss_update)
+                    # event.bot.botsay(rss_update)
             except Exception, e:
                 print '[Dota-Error] RSS check failure: %s' % e
 
@@ -231,7 +251,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
 
 
-    finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + getmatchMMRstring(channel, dotaid) if getmmr else '') + ('-- ' + notableplayerdata if notableplayerdata else '')
+    finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + getmatchMMRstring(channel, dotaid) if getmmr else '') + (' -- ' + notableplayerdata if notableplayerdata else '')
 
     if splitlongnotable:
         pass
@@ -382,13 +402,13 @@ def searchForNotablePlayers(targetdotaid, pages=4):
                     try:
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
-                        playerhero = 'picking'
-                        try:
-                            print 'found notable player %s' % notable_players[steamToDota(player['steamId'])]
-                            print players.index(player)
-                            print 'I think their color is %s' % POSITION_COLORS[players.index(player)]
-                        except Exception, e:
-                            print 'you borked something idiot', e
+                        playerhero = POSITION_COLORS[players.index(player)]
+                        # try:
+                            # print 'found notable player %s' % notable_players[steamToDota(player['steamId'])]
+                            # print players.index(player)
+                            # print 'I think their color is %s' % POSITION_COLORS[players.index(player)]
+                        # except Exception, e:
+                            # print 'you borked something idiot', e
                         #TODO: cancel the auto blurb check and redo it in a minute or something if no player, or something
 
                     if long(steamToDota(player['steamId'])) != long(targetdotaid):
