@@ -15,7 +15,7 @@ rss_channels = {}
 
 STEAM_TO_DOTA_CONSTANT = 76561197960265728
 
-POSITION_COLORS = ['Blue', 'Teal', 'Purple' 'Yellow', 'Orange', 'Pink' , 'Gray', 'Light Blue', 'Green', 'Brown']
+POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange', 'Pink' , 'Gray', 'Light Blue', 'Green', 'Brown']
 
 
 def dotaToSteam(dotaid):
@@ -68,7 +68,7 @@ def alert(event):
                 rss_update = check_for_steam_dota_rss_update(event.channel)
                 if rss_update:
                     print '[Dota] RSS update found: ' + rss_update
-                    # event.bot.botsay(rss_update)
+                    event.bot.botsay(rss_update)
             except Exception, e:
                 print '[Dota-Error] RSS check failure: %s' % e
 
@@ -132,7 +132,7 @@ def latestBlurb(channel, override=False):
             update_channels()
             notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 900.0)
 
-            settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 180.0, announce=False)
+            settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 60.0, announce=False)
             settings.setdata('%s_notable_message_count' % channel, settings.trygetset('%s_notable_message_limit' % channel, 50), announce=False)
 
             print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previoussavedmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
@@ -207,7 +207,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
         if notable_players_found:
             separate_notable_message = len(notable_players_found) > 3
 
-            notableplayerdata = "Notable players found: %s" % ', '.join(['%s - %s' % (p,h) for p,h in notable_players_found])
+            notableplayerdata = "Notable players: %s" % ', '.join(['%s - %s' % (p,h) for p,h in notable_players_found])
             print "[Dota-Notable] notable player data: " + notableplayerdata
         else:
             print '[Dota-Notable] No notable players found'
@@ -355,9 +355,10 @@ def getSourceTVLiveGameForPlayer(targetdotaid):
         for game in games:
             try:
                 game['goodPlayers']
+                game['badPlayers']
             except Exception, e:
-                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT"
-                raise e
+                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT (Radiant: %s, Dire: %s)" % (len(game.get('goodPlayers', [])), len(game.get('badPlayers', [])))
+                continue
 
             players = []
             players.extend(game['goodPlayers'])
@@ -368,6 +369,17 @@ def getSourceTVLiveGameForPlayer(targetdotaid):
             for player in players:
                 if steamToDota(player['steamId']) == long(targetdotaid):
                     return game
+
+def dec2ip(addr):
+    binnum = '{0:b}'.format(int(addr)).zfill(32)
+    pall = [binnum[i:i+8] for i in xrange(0, len(binnum), 8)]
+    return '.'.join([str(int(p,2)) for p in pall])
+
+def get_console_connect_code(dotaid):
+    ddata = getSourceTVLiveGameForPlayer(dotaid)
+    return 'connect_hltv ' + dec2ip(ddata['sourceTvPublicAddr']) + ':' + str(ddata['sourceTvPort'])
+
+    #TODO: Figure out how the console command and "Watch game" (NotifyClientSignon0/1/2) are different
 
 
 def searchForNotablePlayers(targetdotaid, pages=4):
@@ -382,12 +394,12 @@ def searchForNotablePlayers(targetdotaid, pages=4):
         # print 'received game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
         for game in games:
-
             try:
                 game['goodPlayers']
+                game['badPlayers']
             except Exception, e:
-                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT"
-                raise e
+                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT (Radiant: %s, Dire: %s)" % (len(game.get('goodPlayers', [])), len(game.get('badPlayers', [])))
+                continue
 
             players = []
             players.extend(game['goodPlayers'])
@@ -402,14 +414,14 @@ def searchForNotablePlayers(targetdotaid, pages=4):
                     try:
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
-                        playerhero = POSITION_COLORS[players.index(player)]
                         # try:
-                            # print 'found notable player %s' % notable_players[steamToDota(player['steamId'])]
+                            # print 'found notable player picking hero %s, position ' % notable_players[steamToDota(player['steamId'])], 
                             # print players.index(player)
                             # print 'I think their color is %s' % POSITION_COLORS[players.index(player)]
                         # except Exception, e:
                             # print 'you borked something idiot', e
-                        #TODO: cancel the auto blurb check and redo it in a minute or something if no player, or something
+
+                        playerhero = POSITION_COLORS[players.index(player)]
 
                     if long(steamToDota(player['steamId'])) != long(targetdotaid):
                         notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
@@ -452,9 +464,8 @@ def getNotableCheckReady(channel):
 # TODO:
 #    Stop further searches if no players are found
 #    Store results for use in end game blurb
-#    Determine player positions
 #    Fine tune usage frequency
-def notablePlayerBlurb(channel, pages=28):
+def notablePlayerBlurb(channel, pages=33):
     userstatus = node.get_user_status(dotaToSteam(settings.getdata('%s_dota_id' % channel)))
     if userstatus:
         # print 'Dota status for %s: %s' % (channel, userstatus)
@@ -462,17 +473,15 @@ def notablePlayerBlurb(channel, pages=28):
         if userstatus.replace('#','') in ["DOTA_RP_HERO_SELECTION", "DOTA_RP_PRE_GAME", "DOTA_RP_GAME_IN_PROGRESS", "DOTA_RP_PLAYING_AS"]:
             if getNotableCheckReady(channel):
                 if twitchapi.is_streaming(channel):
-                    # print "doing search for notable players"
+                    print "[Dota-Notable] Doing search for notable players"
                     players = searchForNotablePlayers(settings.getdata('%s_dota_id' % channel), pages)
                     settings.setdata('%s_notable_message_count' % channel, 0, announce=False)
 
                     if players:
                         return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
-                    else:
-                        pass
         else:
             notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 900.0)
-            settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 180.0, announce=False)
+            settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 60.0, announce=False)
 
 
 def update_verified_notable_players():
