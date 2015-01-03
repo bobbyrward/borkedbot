@@ -263,6 +263,8 @@ def generate_message_commands(bot):
                 return "Restarting steam bot, this should only take a few seconds."
 
             if args[0].lower() == 'matchmaking':
+                return "This breaks the bot.  Fix it first idiot."
+                
                 import difflib, time
                 mmdata = node.get_mm_stats()
 
@@ -930,7 +932,7 @@ def generate_message_commands(bot):
         if args:
             pages = int(args[0])
         else:
-            pages = 8
+            pages = 16
 
         players = dota.searchForNotablePlayers(dota.settings.getdata('%s_dota_id' % channel), pages)
 
@@ -1078,7 +1080,7 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('!songrequest', 'This aint no nightbot stream', bot, channels=['monkeys_forever'], repeatdelay=10))
 
     coms.append(command.SimpleCommand(['!song', '!currentsong', '!songname'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
-        channels=['monkeys_forever'], repeatdelay=15, targeted=True))
+        channels=['monkeys_forever'], repeatdelay=15, targeted=False))
 
     coms.append(command.SimpleCommand('!background',
         "It's a bug with the TI2 animated background.  Launch option: \"-dashboard international_2012\" "+
@@ -1493,6 +1495,16 @@ def generate_message_commands(bot):
         return songname + ' -- ' + artistname
 
     coms.append(command.Command('!songtext', f, bot, groups=me_only_group))
+
+    def f(channel, user, message, args, data, bot):
+        import dota, settings
+        try:
+            ccom = dota.get_console_connect_code(settings.getdata('%s_dota_id' % channel))
+        except:
+            return "Game not found (or some other error)"
+        return 'Console command (Might result in a Bad relay password error, working on that): ' + ccom
+
+    coms.append(command.Command('!watchgame', f, bot, groups=me_only_group))
 
     ######################################################################
 
