@@ -33,6 +33,7 @@ def update_channels():
 
 
 def enable_channel(channel, dotaid):
+    dotaid = steamToDota(determineSteamid(dotaid))
     en_chans = settings.getdata('dota_enabled_channels')
 
     settings.setdata('dota_enabled_channels', en_chans + [channel])

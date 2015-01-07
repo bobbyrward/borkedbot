@@ -986,7 +986,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         if user not in bot.channelsubs:
-            print user, user in bot.channelsubs
+            # print user, user in bot.channelsubs
             if user != 'imayhaveborkedit' or user not in bot.oplist:
                 return
 
@@ -997,7 +997,7 @@ def generate_message_commands(bot):
         if args:
 
             if args[0].lower() == 'help':
-                return 'halp not done yet'
+                return 'Usage: !guildinvite steamid/profilename'
 
             import settings
 
@@ -1032,6 +1032,7 @@ def generate_message_commands(bot):
                     invite_result = node.invite_to_guild(channelguildid, steamid)
 
                 else: # ID already on record
+                    print "need to kick %s" % previousinviteid
                     kick_result = node.kick_from_guild(channelguildid, previousinviteid)
                     print 'Kick result: %s' % kick_result
 
@@ -1063,7 +1064,7 @@ def generate_message_commands(bot):
         else:
             return "%s: You need to give me a steam id or profile link (see http://i.imgur.com/7Yepc8i.png )" % user
 
-    coms.append(command.Command('!guildinvite', f, bot, channels=['monkeys_forever']))
+    coms.append(command.Command('!guildinvite', f, bot, channels=['monkeys_forever', 'kizzmett']))
 
     def f(channel, user, message, args, data, bot):
         import dota

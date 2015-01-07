@@ -289,8 +289,8 @@ var zrpcserver = new zerorpc.Server({
         Dota2.once("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
             var mmdata = {};
 
-            for (var i = waitTimesByGroup.length - 1; i >= 0; i--) {
-                mmdata[mmregions[i]] = [waitTimesByGroup[i], searchingPlayersByGroup[i]];
+            for (var i = searchingPlayersByGroup.length - 1; i >= 0; i--) {
+                mmdata[mmregions[i]] = searchingPlayersByGroup[i];
             };
             reply(null, mmdata);
         });
@@ -582,7 +582,7 @@ var zrpcserver = new zerorpc.Server({
         targetid = typeof targetid !== 'function' ? targetid : undefined;
         targetrole = typeof targetrole !== 'function' ? targetrole : undefined;
 
-        if (!(guildid && targetid && targetrole)) {
+        if (!(guildid && targetid && typeof targetrole != undefined)) {
             reply('Bad arguments');
             return;
         }

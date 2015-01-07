@@ -12,8 +12,6 @@ disabled_modules = []
 
 modules_mtime = {}
 
-user_blacklist = {}
-
 IS_SETUP = False
 DEBUG_OUTPUT = False
 INFO_OUTPUT = True
@@ -82,56 +80,61 @@ def _manage_modules():
 
         for fi in fresh_imports:
             if getattr(fi, 'DISABLE_MODULE', False):
-                _info("%s has been disabled and will be disregarded." % fi.__name__)
+                _debug("%s has been disabled and will be disregarded." % fi.__name__)
                 fresh_imports.remove(fi)
 
-        new_imports = list(set(fresh_imports) - set(imported_modules))
-        removed_imports = list(set(imported_modules) - set(fresh_imports))
-
         if_issue = False
-        for ni in new_imports:
-            if not (type(getattr(ni, 'setup', False)) is FunctionType and type(getattr(ni, 'alert', False)) is FunctionType):
+        for fi in fresh_imports:
+            if not (type(getattr(fi, 'setup', False)) is FunctionType and type(getattr(fi, 'alert', False)) is FunctionType):
 
-                if getattr(ni, 'LOAD_ORDER', None) is None:
-                    ni.LOAD_ORDER = 1000
-                    setattr(ni, 'LOAD_ORDER', 1000)
+                if getattr(fi, 'LOAD_ORDER', None) is None:
+                    fi.LOAD_ORDER = 1000
+                    setattr(fi, 'LOAD_ORDER', 1000)
                     # Does this actually work?
 
-                _info("%s is not a useable module and will not be imported." % ni.__name__)
+                _debug("%s is not a useable module and will not be imported." % fi.__name__)
                 if_issue = True
-                new_imports.remove(ni)
+                fresh_imports.remove(fi)
 
-            elif getattr(ni, 'DO_NOT_IMPORT', False): # Maybe I need `if` instead of `elif`?
-                # _info("%s has been disabled and will not be imported." % ni.__name__)
-                if_issue = True
-                new_imports.remove(ni)
+            if getattr(fi, 'DO_NOT_ALERT', False): # Maybe I need `if` instead of `elif`?
+                _debug("%s has been disabled and will not be imported." % fi.__name__)
+                # if_issue = True
+                fresh_imports.remove(fi)
+
+                # TODO: For some reason, if it finds this, it doesn't change when its removed, might need to check the init file
 
         if if_issue: print
 
+        new_imports = list(set(fresh_imports) - set(imported_modules))
+        removed_imports = list(set(imported_modules) - set(fresh_imports))
+        # These shouldn't even be mentioned, just removed from the import list and ignored
+
         imported_modules.extend(new_imports)
-        imported_modules = list(set(imported_modules))
+        imported_modules = list(set(imported_modules) - set(removed_imports))
+
+        # print 'Imported modules : %s' % [nnn.__name__ for nnn in imported_modules]; print
 
         imported_modules.sort(key=lambda x: x.LOAD_ORDER)
         new_imports.sort(key=lambda x: x.LOAD_ORDER)
 
         if len(new_imports):
             _info("Importing %s new modules:" % len(new_imports))
-            [_info('- %s'%m.__name__) for m in new_imports]
-            print
+            [_info('- %s' % m.__name__) for m in new_imports]
 
             for mm in imported_modules:
                 modules_mtime[mm] = os.path.getmtime(mm.__file__)
 
         if len(removed_imports):
             _info("Removing %s modules:" % len(removed_imports))
-            [_info('- %s'%m.__name__) for m in removed_imports]
-            print
+            [_info('- %s' % m.__name__) for m in removed_imports]
 
             for mm in removed_imports:
-                try:
-                    del modules_mtime[mm]
-                except:
-                    _info("Error removing mtime for %s" % mm)
+                if mm in imported_modules:
+                    try:
+                        del modules_mtime[mm]
+                    except:
+                        _info("Error removing module %s" % mm)
+
 
 
 # This gets called after modules are imported to activate them

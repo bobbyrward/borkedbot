@@ -5,6 +5,8 @@ sys.dont_write_bytecode = True
 import time, subprocess, random
 
 LOAD_ORDER = 70
+# DO_NOT_ALERT = True
+
 
 class OK(): pass                    # Everything is ok
 class DELAY_LOCKED(): pass          # Not enough time has passed to use this command again
