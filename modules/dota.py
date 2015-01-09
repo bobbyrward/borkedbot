@@ -307,11 +307,13 @@ def updateMMR(channel):
 def determineSteamid(steamthing):
     # print '[Dota] Determining steamid for input: %s' % steamthing
 
+    steamthing = str(steamthing)
+
     if steamthing.startswith('STEAM_'):
         sx,sy,sz = steamthing.split('_')[1].split(':')
         maybesteamid = (int(sz)*2+int(sy)) + STEAM_TO_DOTA_CONSTANT
 
-    elif'steamcommunity.com/profiles/' in steamthing:
+    elif 'steamcommunity.com/profiles/' in steamthing:
         maybesteamid = [x for x in steamthing.split('/') if x][-1] # oh I hope this works
 
     elif 'steamcommunity.com/id/' in steamthing:
@@ -416,7 +418,7 @@ def searchForNotablePlayers(targetdotaid, pages=4):
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
                         # try:
-                            # print 'found notable player picking hero %s, position ' % notable_players[steamToDota(player['steamId'])], 
+                            # print 'found notable player picking hero %s, position ' % notable_players[steamToDota(player['steamId'])],
                             # print players.index(player)
                             # print 'I think their color is %s' % POSITION_COLORS[players.index(player)]
                         # except Exception, e:
@@ -539,19 +541,24 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
 
     settings.setdata('%s_last_dota_rss_check' % channel, time.time(), announce=False)
 
+
     rs = node.get_steam_rss()
-    last_feed_url = settings.trygetset('%s_dota_last_steam_rss_update_url' % channel, 'derp')
+    last_feed_url = settings.trygetset('%s_dota_last_steam_rss_update_url' % channel, '0')
 
     for item in rs:
         if item['author'] == 'Valve' and 'Dota 2 Update' in item['title']:
             if item['guid'] != last_feed_url:
+                print '[Dota-RSS] Found steam blog update'
+                if last_feed_url == 'derp': last_feed_url = '0'
+
                 try:
-                    bpn_old = int([x for x in last_feed_url.split('/') if x])
-                    bpn_new = int([x for x in item['guid'].split('/') if x])
+                    bpn_old = int([x for x in last_feed_url.split('/') if x][-1])
+                    bpn_new = int([x for x in item['guid'].split('/') if x][-1])
 
                     if bpn_old >= bpn_new:
                         break
-                except:
+                except Exception as e:
+                    print '[Dota-RSS] Error checking steam rss:', e
                     # print "Ok what the fuck is up with the steam rss"
                     break
 
@@ -561,18 +568,23 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
             else:
                 break
 
+
     rs = node.get_dota_rss()
-    last_feed_url = settings.trygetset('%s_dota_last_dota2_rss_update_url' % channel, 'derp')
+    last_feed_url = settings.trygetset('%s_dota_last_dota2_rss_update_url' % channel, '0')
 
     for item in rs:
         if item['guid'] != last_feed_url:
+            print '[Dota-RSS] Found dota blog update'
+            if last_feed_url == 'derp': last_feed_url = '0'
+
             try:
                 bpn_old = int(last_feed_url.split('=')[-1])
                 bpn_new = int(item['guid'].split('=')[-1])
 
                 if bpn_old >= bpn_new:
                     break
-            except:
+            except Exception as e:
+                print '[Dota-RSS] Error checking dota rss:', e
                 # print "Ok what the fuck is up with the dota rss"
                 break
 
