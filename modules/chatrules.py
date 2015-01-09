@@ -264,7 +264,7 @@ def generate_message_commands(bot):
 
             if args[0].lower() == 'matchmaking':
                 return "This breaks the bot.  Fix it first idiot."
-                
+
                 import difflib, time
                 mmdata = node.get_mm_stats()
 
@@ -707,7 +707,7 @@ def generate_message_commands(bot):
 
                 mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
                 mmrp = dotadata['gameAccountClient']['competitiveRank']
-                
+
             # ???
             return outputstring % (mmr,mmrp)
 
@@ -766,7 +766,7 @@ def generate_message_commands(bot):
                     args[1]
                 except:
                     return "I need the code from the steam message."
-                
+
                 # if args[1].lower() == 'help':
                     # return 'blah blah help'
 
@@ -1506,6 +1506,34 @@ def generate_message_commands(bot):
         return 'Console command (Might result in a Bad relay password error, working on that): ' + ccom
 
     coms.append(command.Command('!watchgame', f, bot, groups=me_only_group))
+
+    def f(channel, user, message, args, data, bot):
+        if args:
+            if args[0] == 'steam':
+                return settings.getdata('%s_dota_last_steam_rss_update_url' % channel)
+
+            if args[0] == 'dota':
+                return settings.getdata('%s_dota_last_dota2_rss_update_url' % channel)
+
+    coms.append(command.Command('!blog', f, bot, groups=me_only_group))
+
+
+    def f(channel, user, message, args, data, bot):
+        import requests, re
+
+        r = requests.get('http://neodota.com/rank/nel/ladder.php').text.replace(' ','')
+
+        try:
+            datas = str(re.findall('.*<br\/>(<spanclass="rank">\d+</span><spanclass="player">monkeys-forever.+?<br/>?)', r)[0])
+            rank, name, rating, score, streak = re.findall('>([^<]+?)<', datas)
+        except Exception as e:
+            print e
+            return "Error: something went horribly wrong"
+
+        return "%s is rank %s with %s points, %s W/L and %s streak. See http://neodota.com/nel/ for more info." % (name, rank, rating.replace('(','').replace(')',''), score, streak)
+
+    coms.append(command.Command('!nel', f, bot, channels=['monkeys_forever'], repeatdelay=35))
+
 
     ######################################################################
 
