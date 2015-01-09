@@ -761,12 +761,13 @@ function get_steam_news_rss(entries) {
                 var rsss = feedparser.read();
                 steam_rss_datas[i] = rsss;
             };
+            feedparser.end()
         }, 500, entries);
     });
 
 
     req = request('http://store.steampowered.com/feeds/news.xml', {
-        timeout: 10000,
+        timeout: 5000,
         pool: false
     });
 
@@ -798,12 +799,13 @@ function get_dota_rss(entries) {
                 var rsss = feedparser.read();
                 dota_rss_datas[i] = rsss;
             };
+            feedparser.end()
         }, 500, entries);
     });
 
 
     req = request('http://blog.dota2.com/feed/', {
-        timeout: 10000,
+        timeout: 5000,
         pool: false
     });
 
@@ -820,7 +822,7 @@ function get_dota_rss(entries) {
 }
 
 
-var rssEvent = setInterval(function() {
+function do_rss_updates() {
     try {
         util.log('Grabbing RSS data');
         get_steam_news_rss(10);
@@ -828,7 +830,10 @@ var rssEvent = setInterval(function() {
     } catch (ex) {
         util.log(ex);
     }
-}, 120000);
+};
+do_rss_updates();
+
+var rssEvent = setInterval(do_rss_updates, 120000);
 rssEvent.unref();
 
 
