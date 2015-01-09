@@ -103,7 +103,7 @@ class Command(object):
             return OP_RESTRICTED
 
         if not self._checkdelay() and user not in self.bot.oplist:
-            print "%s: Time requested: %s Last use: %s Difference: %s " % (self, time.time(), self.lastuse, time.time()-self.lastuse)
+            print "%s: Time Difference: %s, Delay: %s" % (self, time.time()-self.lastuse, self.repeatdelay)
             return DELAY_LOCKED
 
         return OK

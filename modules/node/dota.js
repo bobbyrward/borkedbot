@@ -8,6 +8,7 @@ var steam = require("steam"),
     zerorpc = require("zerorpc"),
 
     clienthellos = 0,
+    clienthellolimit = 10,
 
     adminids = ['76561198030495011'],
     chatkeymap = {},
@@ -31,7 +32,7 @@ var onSteamLogOn = function onSteamLogOn(){
 
         Dota2.on("hello", function() {
             clienthellos += 1;
-            if (clienthellos > 4) {
+            if (clienthellos > clienthellolimit) {
                 util.log("Too many hellos, restarting doto");
                 Dota2.exit();
                 Dota2.launch();
