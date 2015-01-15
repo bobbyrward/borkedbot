@@ -546,6 +546,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
     last_feed_url = settings.trygetset('%s_dota_last_steam_rss_update_url' % channel, '0')
 
     for item in rs:
+        if not item: continue
         if item['author'] == 'Valve' and 'Dota 2 Update' in item['title']:
             if item['guid'] != last_feed_url:
                 print '[Dota-RSS] Found steam blog update'
@@ -573,6 +574,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
     last_feed_url = settings.trygetset('%s_dota_last_dota2_rss_update_url' % channel, '0')
 
     for item in rs:
+        if not item: continue
         if item['guid'] != last_feed_url:
             print '[Dota-RSS] Found dota blog update'
             if last_feed_url == 'derp': last_feed_url = '0'
