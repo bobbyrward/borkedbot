@@ -31,13 +31,13 @@ var onSteamLogOn = function onSteamLogOn(){
         });
 
         Dota2.on("hello", function() {
-            clienthellos += 1;
-            if (clienthellos > clienthellolimit) {
-                util.log("Too many hellos, restarting doto");
-                Dota2.exit();
-                Dota2.launch();
-                clienthellos = 0;
-            }
+            // clienthellos += 1;
+            // if (clienthellos > clienthellolimit) {
+            //     util.log("Too many hellos, restarting doto");
+            //     Dota2.exit();
+            //     Dota2.launch();
+            //     clienthellos = 0;
+            // }
         });
 
         Dota2.on("unready", function onUnready(){
@@ -59,7 +59,16 @@ var onSteamLogOn = function onSteamLogOn(){
         });
 
         Dota2.on("practiceLobbyCreateResponse", function(lobbyresponse, id) {
-            if (id == '76561198153108180') return;
+            if (id == '76561198153108180') {
+                clienthellos += 1;
+                if (clienthellos > clienthellolimit) {
+                    util.log("Too many lobbies, restarting doto");
+                    Dota2.exit();
+                    Dota2.launch();
+                    clienthellos = 0;
+                }
+                return;
+            };
 
             util.log("Lobby something'd ");
             console.log("id: ", id);
@@ -762,7 +771,8 @@ function get_steam_news_rss(entries) {
                 var rsss = feedparser.read();
                 steam_rss_datas[i] = rsss;
             };
-            feedparser.end()
+            while (item = feedparser.read()){}
+            // feedparser.end()
         }, 500, entries);
     });
 
@@ -800,7 +810,8 @@ function get_dota_rss(entries) {
                 var rsss = feedparser.read();
                 dota_rss_datas[i] = rsss;
             };
-            feedparser.end()
+            while (item = feedparser.read()){}
+            // feedparser.end()
         }, 500, entries);
     });
 
