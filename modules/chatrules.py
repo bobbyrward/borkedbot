@@ -1100,9 +1100,6 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand(['!fountainhooks', '!pudgefail', '!pudgefails'], 'rip root http://www.youtube.com/watch?v=7ba9nCot71w&hd=1',
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
-    coms.append(command.SimpleCommand('!rtzslayer', 'http://i.imgur.com/5MCwBds.png Eat your heart out RTZ',
-        bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
-
     # Superjoe ######################################################
 
     coms.append(command.SimpleCommand('!youtube', 'Subscribe to Superjoe on youtube!  https://www.youtube.com/user/WatchSuperjoe',

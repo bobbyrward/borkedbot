@@ -60,7 +60,7 @@ def alert(event):
             settings.setdata('%s_notable_message_count' % event.channel, mes_count + 1, announce=False)
 
             try:
-               blurb(event.channel, event.bot)
+                blurb(event.channel, event.bot)
             except Exception, e:
                print '[Dota-Error] Match blurb failure: %s' % e
 
@@ -125,7 +125,10 @@ def latestBlurb(channel, override=False):
 
                 # TODO: Fix -1 issues for lastmatch
                 # For some reason, a failed match (early abandon) was never saved as the lastest match
-                skippedmatches = matchlist.index(previoussavedmatch['match_id']) - 1
+                try:
+                    skippedmatches = matchlist.index(previoussavedmatch['match_id']) - 1
+                except:
+                    skippedmatches = 0
                 print '[Dota] Skipped %s matches MAYBE PROBABLY I HOPE SO' % skippedmatches
             else:
                 skippedmatches = 0
