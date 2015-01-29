@@ -579,7 +579,6 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
     for item in rs:
         if not item: continue
         if item['guid'] != last_feed_url:
-            print '[Dota-RSS] Found dota blog update'
             if last_feed_url == 'derp': last_feed_url = '0'
 
             try:
@@ -595,6 +594,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
 
             settings.setdata('%s_dota_last_dota2_rss_update_url' % channel, str(item['guid']))
 
+            # print '[Dota-RSS] Found dota blog update'
             return str("Dota 2 Blog Post: %s - %s" % (item['title'], item['link']))
         else:
             break

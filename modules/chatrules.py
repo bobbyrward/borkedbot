@@ -598,7 +598,7 @@ def generate_message_commands(bot):
        if message.endswith('?'):
            return "%s, %s"%(user, random.choice(data))
 
-    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'cosmowright'], data=magic8ball, repeatdelay=15))
+    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever'], data=magic8ball, repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
         import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi, settings
@@ -1527,10 +1527,14 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import requests, re
 
+        channelmap = { 'monkeys_forever': 'monkeys-forever', 'f4ldota': 'F4L' }
+
+        if channel not in channelmap: return
+
         r = requests.get('http://neodota.com/rank/nel/ladder.php').text.replace(' ','')
 
         try:
-            datas = str(re.findall('.*<br\/>(<spanclass="rank">\d+</span><spanclass="player">monkeys-forever.+?<br/>?)', r)[0])
+            datas = str(re.findall('.*<br\/>(<spanclass="rank">\d+</span><spanclass="player">'+ channelmap[channel] +'.+?<br/>?)', r)[0])
             rank, name, rating, score, streak = re.findall('>([^<]+?)<', datas)
         except Exception as e:
             print e
@@ -1538,7 +1542,7 @@ def generate_message_commands(bot):
 
         return "%s is rank %s with %s points, %s W/L and %s streak. See http://neodota.com/nel/ for more info." % (name, rank, rating.replace('(','').replace(')',''), score, streak)
 
-    coms.append(command.Command('!nel', f, bot, channels=['monkeys_forever'], repeatdelay=35))
+    coms.append(command.Command('!nel', f, bot, repeatdelay=35))
 
 
     ######################################################################
