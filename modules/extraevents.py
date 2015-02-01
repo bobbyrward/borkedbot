@@ -37,22 +37,17 @@ def alert(event):
                 ids = re.findall('watch\?v=(\S{11})', event.data) + re.findall('youtu.be/(.{11})', event.data)
                 print '[ExtraEvents] Found ids: %s' % ids
 
-                titles = re.findall('&title=(.*?)&', ''.join([requests.get('http://youtube.com/get_video_info?video_id=%s' % i).text for i in ids]))
-                print '[ExtraEvents] Found titles: %s' % titles
+                ytdata = {}
 
-                parser = HTMLParser()
+                for i in ids:
+                    ytdata[i] = get_youtube_title(i)
+                    print '[ExtraEvents] Found title for %s: %s' % (i, ytdata[i])
 
-                titles = [t.replace('+', ' ') for t in titles]
-                titles = [urllib2.unquote(t) for t in titles]
-                titles = [parser.unescape(t) for t in titles]
-
-                if len(titles) == 1:
-                    event.bot.botsay('Video title for ID %s: %s' % (ids[0], titles[0]))
-                else:
-                    print 'FAIL: %s' % titles
+                for ytid in ytdata:
+                    if ytid:
+                        event.bot.botsay('Video title for ID %s: %s' % (ytid, ytdata[ytid]))
 
 
-                # must watch: https://www.youtube.com/watch?v=aMfT_i0RK-4
 
     # strawpoll.me/api/v2/polls/{id} is json
 
@@ -62,5 +57,18 @@ def alert(event):
                 # event.bot.botsay("(▀̿̿Ĺ̯̿̿▀̿ ̿) No touching.")
 
 
-def get_youtube_title(vid):
-    pass
+def get_youtube_title(v_id):
+    title = re.findall('&title=(.*?)&', requests.get('http://youtube.com/get_video_info?video_id=%s' % v_id).text)
+
+    if not title:
+        ytd = requests.get('https://www.youtube.com/watch?v=%s' % v_id).text
+        title = ytd[ytd.index('<title>')+7:ytd.index('</title>')-10]
+    else:
+        title = title.replace('+', ' ')
+
+    parser = HTMLParser()
+
+    title = urllib2.unquote(title)
+    title = parser.unescape(title)
+
+    return title
