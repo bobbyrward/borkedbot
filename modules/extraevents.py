@@ -58,7 +58,7 @@ def alert(event):
 
 
 def get_youtube_title(v_id):
-    title = re.findall('&title=(.*?)&', requests.get('http://youtube.com/get_video_info?video_id=%s' % v_id).text)
+    title = re.findall('&title=(.*?)&', requests.get('http://youtube.com/get_video_info?video_id=%s' % v_id).text)[0]
 
     if not title:
         ytd = requests.get('https://www.youtube.com/watch?v=%s' % v_id).text

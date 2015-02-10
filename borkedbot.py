@@ -152,6 +152,7 @@ class MyBot(irc.IRCClient):
                     elif tag_data in ['admin', 'staff', 'global_mod']:
                         self.opsinchan.add(tag_user)
                         print "Whoop whoop twitch police in the house (%s)" % tag_user
+                        self.oplist.add(tag_user)
                         return
 
                     self.log('Unknown SPECIALUSER: %s' % tag_data)

@@ -240,16 +240,19 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
     print "[Dota] Skipped %s matches" % skippedmatches
 
     if skippedmatches == -1:
-        matchskipstr = ' (Previous match)'
+        matchskipstr = '(Previous match) '
     elif skippedmatches < -1:
-        matchskipstr = ' (%s games ago)' % skippedmatches * -1
+        matchskipstr = '(%s games ago) ' % skippedmatches * -1
     elif skippedmatches > 1:
-        matchskipstr = ' (%s skipped)' % skippedmatches
+        matchskipstr = '(%s skipped) ' % skippedmatches
     else:
         matchskipstr = ''
 
-    matchoutput = "%s has %s a game%s.  http://www.dotabuff.com/matches/%s" % (
-        enabled_channels[channel][0], 'won' if d_victory == 'Victory' else 'lost', matchskipstr, latestmatch['match_id'])
+    matchoutput = "%s%s has %s a game.  http://www.dotabuff.com/matches/%s" % (
+        matchskipstr,
+        enabled_channels[channel][0],
+        'won' if d_victory == 'Victory' else 'lost',
+        latestmatch['match_id'])
 
     extramatchdata = "Level {} {} {} - KDA: {}/{}/{} - CS: {}/{} - GPM: {} - XPM: {}".format(
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
@@ -552,7 +555,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
         if not item: continue
         if item['author'] == 'Valve' and 'Dota 2 Update' in item['title']:
             if item['guid'] != last_feed_url:
-                print '[Dota-RSS] Found steam blog update'
+                # print '[Dota-RSS] Found steam blog update'
                 if last_feed_url == 'derp': last_feed_url = '0'
 
                 try:
