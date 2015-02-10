@@ -103,7 +103,7 @@ salem_neutrals = {
         'Control someone each night. You can only control targetable actions such as detection and killing. You can force people to target themselves. '+
         'Your victim will know they are being controlled. You are immune to roleblocking. You win if you live to see the town lose.'),
     'werewolf' : ('Werewolf', 'Neutral Killing',
-        'Every Full Moon, transform into a werewolf.  You can target a player\'s home, killing the occupant and anyone who visits, '+ 
+        'Every Full Moon, transform into a werewolf.  You can target a player\'s home, killing the occupant and anyone who visits, '+
         'or you can stay at home and kill anyone who visits you. Your attack ignores Night Immunity. Mechanically, you function almost identically to '+
         'the Serial Killer. You cannot attack yourself.')
 
@@ -849,7 +849,7 @@ def generate_message_commands(bot):
 
         return '%s: http://www.dotabuff.com/players/%s' % (user, dotaid)
 
-    coms.append(command.Command('!dotabuff', f, bot, repeatdelay=10))
+    coms.append(command.Command('!dotabuff', f, bot, repeatdelay=20))
 
     def f(channel, user, message, args, data, bot):
         '''
@@ -929,7 +929,7 @@ def generate_message_commands(bot):
             return
 
         if user == 'bluepowervan':
-            bot.botsay('.timeout bluepowervan 30')
+            bot.botsay('.timeout bluepowervan 120')
             return "You know that doesn't work for you, stop trying."
 
         if user not in bot.oplist and user != 'imayhaveborkedit':
@@ -1038,7 +1038,7 @@ def generate_message_commands(bot):
                     invite_result = node.invite_to_guild(channelguildid, steamid)
 
                 else: # ID already on record
-                    print "need to kick %s" % previousinviteid
+                    print "Attempting to kick %s" % previousinviteid
                     kick_result = node.kick_from_guild(channelguildid, previousinviteid)
                     print 'Kick result: %s' % kick_result
 
@@ -1087,7 +1087,7 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('!songrequest', 'This aint no nightbot stream', bot, channels=['monkeys_forever'], repeatdelay=10))
 
     coms.append(command.SimpleCommand(['!song', '!currentsong', '!songname'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
-        channels=['monkeys_forever'], repeatdelay=15, targeted=False))
+        channels=['monkeys_forever'], repeatdelay=25, targeted=False))
 
     coms.append(command.SimpleCommand('!background',
         "It's a bug with the TI2 animated background.  Launch option: \"-dashboard international_2012\" "+
@@ -1534,7 +1534,7 @@ def generate_message_commands(bot):
         r = requests.get('http://neodota.com/rank/nel/ladder.php').text.replace(' ','')
 
         try:
-            datas = str(re.findall('.*<br\/>(<spanclass="rank">\d+</span><spanclass="player">'+ channelmap[channel] +'.+?<br/>?)', r)[0])
+            datas = str(re.search('.*<br\/>(<spanclass="rank">\d+</span><spanclass="player">'+ channelmap[channel] +'.+?<br/>?)', r).groups()[0])
             rank, name, rating, score, streak = re.findall('>([^<]+?)<', datas)
         except Exception as e:
             print e
