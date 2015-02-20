@@ -8,7 +8,8 @@ LOAD_ORDER = 80
 root = 'https://api.twitch.tv/kraken/'
 
 
-def _apiget(path):
+def _apiget(path, root=root):
+    # print root+path
     r = requests.get(root+path, timeout=4)
     r.raise_for_status()
 
@@ -31,6 +32,18 @@ def get_chatters(channel):
     r.raise_for_status()
     return r.json()
 
+def get_steam_id_from_twitch(name):
+    try:
+        return _apiget('channels/%s' % name, root='https://api.twitch.tv/api/')['steam_id']
+    except:
+        return None
+
+def get_twitch_from_steam_id(steamid):
+    #might need to resolve steamid
+    try:
+        return _apiget('steam/%s' % steamid, root='https://api.twitch.tv/api/')['name']
+    except:
+        return None
 
 def setup(bot):
     return

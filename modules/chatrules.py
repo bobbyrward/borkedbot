@@ -717,7 +717,7 @@ def generate_message_commands(bot):
             # ???
             return outputstring % (mmr,mmrp)
 
-    coms.append(command.Command('!mmr', f, bot, repeatdelay=15))
+    coms.append(command.Command('!mmr', f, bot, repeatdelay=20))
 
     def f(channel, user, message, args, data, bot):
         import dota, node, settings
@@ -952,6 +952,26 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!notableplayers', f, bot, repeatdelay=10))
 
+    def f(channel, user, message, args, data, bot):
+        import requests, re
+
+        channelmap = { 'monkeys_forever': 'monkeys-forever', 'f4ldota': 'F4L' }
+
+        if channel not in channelmap: return
+
+        r = requests.get('http://neodota.com/rank/nel/ladder.php').text.replace(' ','')
+
+        try:
+            datas = str(re.search('.*<br\/>(<spanclass="rank">\d+</span><spanclass="player">'+ channelmap[channel] +'.+?<br/>?)', r).groups()[0])
+            rank, name, rating, score, streak = re.findall('>([^<]+?)<', datas)
+        except Exception as e:
+            print e
+            return "Error: something went horribly wrong"
+
+        return "%s is rank %s with %s points, %s W/L and %s streak. See http://neodota.com/nel/ for more info." % (name, rank, rating.replace('(','').replace(')',''), score, streak)
+
+    coms.append(command.Command(['!nel','#nel'], f, bot, repeatdelay=50))
+
 
     coms.append(command.SimpleCommand('!mumble', 'doc.asdfxyz.de (default port) 100 slot open server, on 24/7.  Try not to be awful, or bork will ban you.',
         bot, channels=['superjoe', 'monkeys_forever'], repeatdelay=15, targeted=True))
@@ -991,6 +1011,7 @@ def generate_message_commands(bot):
     coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
+        import twitchapi
         if user not in bot.channelsubs:
             # print user, user in bot.channelsubs
             if user != 'imayhaveborkedit' or user not in bot.oplist:
@@ -1000,8 +1021,14 @@ def generate_message_commands(bot):
         # Monkeys sub guild id: "228630"
 
         # Do check to see if "Is your name this thing I pulled from steam?"
-        if args:
 
+        if not args:
+            linked_id = twitchapi.get_steam_id_from_twitch(user)
+            if linked_id:
+                args.append(linked_id)
+                print 'Found twitch linked id'
+
+        if args:
             if args[0].lower() == 'help':
                 return 'Usage: !guildinvite steamid/profilename'
 
@@ -1078,16 +1105,33 @@ def generate_message_commands(bot):
 
     coms.append(command.Command(['!lastmatch', '!lastgame'], f, bot, repeatdelay=30))
 
+    def f(channel, user, message, args, data, bot):
+        import requests
 
-    # coms.append(command.SimpleCommand('!dotabuff', 'http://www.dotabuff.com/players/86811043 There you go.', bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
+        try:
+            r = requests.get('http://last.fm/user/monkeys-forever/now')
+
+            r_nameindex = r.text.index('class="track-name')
+            nameindex = r_nameindex + r.text[r_nameindex:].index('>') + 1
+            songname = r.text[nameindex:].split('<')[0]
+
+            artistname = r.text[r.text.index('<div class="artist-name">'):].split('>')[2].strip().split('\n')[0]
+
+            # THIS IS SO AWFUL I KNOW I'M GOING TO REDO IT SOMETIME
+
+            return 'Now Playing: ' + songname + ' -- ' + artistname
+        except:
+            return 'Something borked, just direct your eyeholes to the top left of the stream.'
+
+    coms.append(command.Command(['!song', '!currentsong', '!songname'], f, bot, channels=['monkeys_forever'], repeatdelay=40))
+
+    #coms.append(command.SimpleCommand(['!song', '!currentsong', '!songname'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
+    #    channels=['monkeys_forever'], repeatdelay=25, targeted=False))
 
     coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'],
         "Monkeys' playlist can be found here: http://grooveshark.com/playlist/Stream/81341599", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand('!songrequest', 'This aint no nightbot stream', bot, channels=['monkeys_forever'], repeatdelay=10))
-
-    coms.append(command.SimpleCommand(['!song', '!currentsong', '!songname'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
-        channels=['monkeys_forever'], repeatdelay=25, targeted=False))
 
     coms.append(command.SimpleCommand('!background',
         "It's a bug with the TI2 animated background.  Launch option: \"-dashboard international_2012\" "+
@@ -1485,24 +1529,6 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!notable', f, bot, groups=me_only_group))
 
-
-    def f(channel, user, message, args, data, bot):
-        import requests
-
-        r = requests.get('http://last.fm/user/totalbiscuit/now')
-
-        r_nameindex = r.text.index('class="track-name')
-        nameindex = r_nameindex + r.text[r_nameindex:].index('>') + 1
-        songname = r.text[nameindex:].split('<')[0]
-
-        artistname = r.text[r.text.index('<div class="artist-name">'):].split('>')[2].strip().split('\n')[0]
-
-        # THIS IS SO AWFUL I KNOW I'M GOING TO REDO IT SOMETIME
-
-        return songname + ' -- ' + artistname
-
-    coms.append(command.Command('!songtext', f, bot, groups=me_only_group))
-
     def f(channel, user, message, args, data, bot):
         import dota, settings
         try:
@@ -1525,24 +1551,22 @@ def generate_message_commands(bot):
 
 
     def f(channel, user, message, args, data, bot):
-        import requests, re
+        import twitchapi
+        if args:
+            sid = twitchapi.get_steam_id_from_twitch(args[0])
+            sid = 'http://steamcommunity.com/profiles/' + sid if sid else 'No steam account linked to %s.' % args[0]
+            return sid
+        
+    coms.append(command.Command('!twitch2steam', f, bot, groups=me_only_group))
 
-        channelmap = { 'monkeys_forever': 'monkeys-forever', 'f4ldota': 'F4L' }
-
-        if channel not in channelmap: return
-
-        r = requests.get('http://neodota.com/rank/nel/ladder.php').text.replace(' ','')
-
-        try:
-            datas = str(re.search('.*<br\/>(<spanclass="rank">\d+</span><spanclass="player">'+ channelmap[channel] +'.+?<br/>?)', r).groups()[0])
-            rank, name, rating, score, streak = re.findall('>([^<]+?)<', datas)
-        except Exception as e:
-            print e
-            return "Error: something went horribly wrong"
-
-        return "%s is rank %s with %s points, %s W/L and %s streak. See http://neodota.com/nel/ for more info." % (name, rank, rating.replace('(','').replace(')',''), score, streak)
-
-    coms.append(command.Command('!nel', f, bot, repeatdelay=35))
+    def f(channel, user, message, args, data, bot):
+        import twitchapi
+        if args:
+            twitchname = twitchapi.get_twitch_from_steam_id(args[0])
+            twitchname = twitchname if twitchname else 'No twitch account linked to this id.'
+            return twitchname
+        
+    coms.append(command.Command('!steam2twitch', f, bot, groups=me_only_group))
 
 
     ######################################################################

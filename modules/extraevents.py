@@ -21,7 +21,7 @@ def alert(event):
             if 'just subscribed!' in event.data:
                 extra = ''
                 if event.channel in ['monkeys_forever', 'kizzmett']:
-                    extra = ' | If you want an invite to the sub guild use !guildinvite steamid'
+                    extra = ' | If you want an invite to the sub guild use !guildinvite'
 
                 event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s%s' % (event.data.split()[0].upper(), extra))
 
