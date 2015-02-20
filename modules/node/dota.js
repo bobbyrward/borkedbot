@@ -9,6 +9,8 @@ var steam = require("steam"),
 
     clienthellos = 0,
     clienthellolimit = 10,
+    relogs = 0,
+    reloglimit = 10,
 
     adminids = ['76561198030495011'],
     chatkeymap = {},
@@ -66,6 +68,10 @@ var onSteamLogOn = function onSteamLogOn(){
                     Dota2.exit();
                     Dota2.launch();
                     clienthellos = 0;
+                    relogs += 1;
+                    if (relogs > reloglimit) {
+                        process.exit();
+                    }
                 }
                 return;
             };
@@ -200,6 +206,7 @@ var onSteamLogOn = function onSteamLogOn(){
         util.log("steam is derp and logged off");
         console.log(arguments);
         Dota2.exit();
+        relogs = 0;
 
         setTimeout(bot.logOn(logOnDetails), 5000);
     };
@@ -751,7 +758,8 @@ var request = require('request'),
 function done(err) {
     if (err) {
         console.log('WE HAVE ERROR');
-        console.log(err, err.stack);
+        // console.log(err, err.stack);
+        console.log(JSON.stringify(err));
     }
 }
 
@@ -845,7 +853,7 @@ function do_rss_updates() {
 };
 do_rss_updates();
 
-var rssEvent = setInterval(do_rss_updates, 120000);
+var rssEvent = setInterval(do_rss_updates, 60000);
 rssEvent.unref();
 
 
