@@ -1,3 +1,5 @@
+# LARGELY OUTDATED, WILL UPDATE EVENTUALLY
+
 # borkedbot
 
 Custom, extensible, work in progress chatbot for twitch.
