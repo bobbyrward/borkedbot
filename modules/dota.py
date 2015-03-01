@@ -32,13 +32,13 @@ def update_channels():
     # os.system('touch %s' % os.path.abspath(__file__))
 
 
-def enable_channel(channel, dotaid):
+def enable_channel(channel, dotaid, mmr=False):
     dotaid = steamToDota(determineSteamid(dotaid))
     en_chans = settings.getdata('dota_enabled_channels')
 
-    settings.setdata('dota_enabled_channels', en_chans + [channel])
+    settings.setdata('dota_enabled_channels', list(set(en_chans + [channel])))
     settings.trygetset('%s_common_name' % channel, channel)
-    settings.setdata('%s_mmr_enabled' % channel, False)
+    settings.setdata('%s_mmr_enabled' % channel, mmr)
 
     settings.setdata('%s' % channel, dotaToSteam(dotaid), domain='steamids')
     settings.setdata('%s_dota_id' % channel, dotaid)
@@ -46,8 +46,10 @@ def enable_channel(channel, dotaid):
     update_channels()
 
 
-def disable_channel():
-    pass
+def disable_channel(channel, mmr=False):
+    en_chans = settings.getdata('dota_enabled_channels')
+    settings.setdata('dota_enabled_channels', list(set(en_chans) - set([channel])))
+    settings.setdata('%s_mmr_enabled' % channel, not mmr)
 
 
 def setup(bot):
@@ -388,7 +390,7 @@ def get_console_connect_code(dotaid):
     ddata = getSourceTVLiveGameForPlayer(dotaid)
     return 'connect_hltv ' + dec2ip(ddata['sourceTvPublicAddr']) + ':' + str(ddata['sourceTvPort'])
 
-    #TODO: Figure out how the console command and "Watch game" (NotifyClientSignon0/1/2) are different
+    #TODO: Figure out how the console command and "Watch game" (NotifyClientSignon 0/1/2) are different
 
 
 def searchForNotablePlayers(targetdotaid, pages=4):
@@ -418,7 +420,7 @@ def searchForNotablePlayers(targetdotaid, pages=4):
 
             for player in players:
                 if steamToDota(player['steamId']) in notable_players:
-                    print '[Dota-Notable] found notable player %s (%s)' % (player['name'], notable_players[steamToDota(player['steamId'])])
+                    print '[Dota-Notable] %s (%s)' % (player['name'], notable_players[steamToDota(player['steamId'])])
 
                     try:
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
@@ -520,7 +522,7 @@ def update_verified_notable_players():
 
     parser = DotabuffParser()
 
-    r = requests.get('http://www.dotabuff.com/players/verified')
+    r = requests.get('http://www.dotabuff.com/players', headers = {'User-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:34.0) Gecko/20100101 Firefox/34.0.1'})
     htmldata = unicode(r.text).encode('utf8')
     parser.feed(htmldata)
 
