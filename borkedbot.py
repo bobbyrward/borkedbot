@@ -18,7 +18,7 @@ class MyBot(irc.IRCClient):
     gotops = False
 
     channelsubs = set()
-    userlist = [] # RIP TWITCHCLENT 1
+    userlist = []
     usertags = {}
 
     timertask = None
@@ -81,7 +81,7 @@ class MyBot(irc.IRCClient):
         self.update_mods()
 
     def receivedMOTD(self, motd):
-        print '\n'.join(['\n### MOTD ###', '\n'.join(motd), '############\n'])
+        print '\n'.join(['\n### MOTD ###', '# \n'.join(motd), '############\n'])
 
     def modeChanged(self, user, channel, sett, modes, args):
         # user channel           set  modes args
@@ -169,6 +169,24 @@ class MyBot(irc.IRCClient):
             # def event(channel, user, etype, data, bot, isop):
             self.send_event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
 
+    def botsay(self, msg):
+        try:
+            self.say(self.factory.channel, str(msg))
+        except:
+            print '[Borkedbot] Blarg how do I do this shit: %s' % msg
+            self.say(self.factory.channel, str(unicode(msg, errors='ignore')))
+
+        self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.nickname in self.oplist)
+
+    def ban(self, user, message=None):
+        self.botsay('.ban %s' % user)
+        if message: self.botsay(message)
+
+    def timeout(self, user, duration=600, message=None):
+        self.botsay('.timeout %s %s' % (user, duration))
+        if message: self.botsay(message)
+
+
     def chan(self, ch=None):
         c = ch or self.channel
         return c.replace('#','')
@@ -190,10 +208,6 @@ class MyBot(irc.IRCClient):
         self.userlist = list(set(self.userlist))
         self.send_event(self.chan(channel), None, 'part', user, self, user in self.oplist)
 
-    def botsay(self, msg):
-        self.say(self.factory.channel, str(msg))
-        self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.nickname in self.oplist)
-
     def quirkyMessage(self, s):
         print "\nSomething odd has happened:"
         print s
@@ -202,6 +216,9 @@ class MyBot(irc.IRCClient):
         print "\nSomething bad has happened:"
         print line, excType, excValue
 
+    # def lineReceived(self, line):
+        # print line
+        # irc.IRCClient.lineReceived(self, line)
 
 class MyBotFactory(protocol.ClientFactory):
     protocol = MyBot
@@ -221,6 +238,16 @@ class MyBotFactory(protocol.ClientFactory):
         connector.connect()
 
 
+# def temp_get_channel_chat_server(channel, port80=False):
+#     import requests, random
+#     r = requests.get('https://api.twitch.tv/api/channels/%s/chat_properties' % channel.replace('#','')).json()
+#     servers = r['chat_servers']
+#     if port80:
+#         return str(random.choice([server for server in servers if server.endswith(':80')]))
+#     else:
+#         return str(random.choice(servers))
+
+
 if __name__ == "__main__":
     if len(sys.argv) is not 2:
         print "Usage: python borkedbot.py [channel]"
@@ -228,10 +255,15 @@ if __name__ == "__main__":
         starttime = time.time()
 
         server = 'irc.twitch.tv'
+        port = 6667
         chan = sys.argv[1] if sys.argv[1].startswith('#') else '#%s' % sys.argv[1]
         mbf = MyBotFactory(chan, 'borkedbot')
 
-        reactor.connectTCP(server, 6667, mbf)
+        # server, port = temp_get_channel_chat_server(chan).split(':')
+
+        print 'Connecting to %s on port %s' % (server, port)
+
+        reactor.connectTCP(server, int(port), mbf)
         reactor.run()
 
         print "\nTotal run time: %s" % (time.time() - starttime)
