@@ -644,7 +644,7 @@ def generate_message_commands(bot):
 
         return textstr.format(user, channel)
 
-    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
+    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda', 'natalie'], repeatdelay=15))
 
 
     ######################################################################
@@ -657,7 +657,12 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import json, os, time, settings, dota
 
+        if channel == 'barnyyy':
+            if user == 'nabe_gewell': return 'nabe_gewell: Fuck off'
+            return '%s: 4k' % user
+
         if channel not in dota.enabled_channels.keys():
+            print 'Channel not enabled for dota'
             return
 
         if channel in dota.enabled_channels.keys() and not dota.enabled_channels[channel][1]:
@@ -853,7 +858,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         '''
-        setname <name>
+        setname/rename <name>
         deletekey (special)
         enable <dota | mmr>
         disable <dota | mmr>
@@ -868,7 +873,7 @@ def generate_message_commands(bot):
                 return "MMR is %s." % ('enabled' if dota.enabled_channels[channel][1] else 'disabled')
 
 
-            if args[0].lower() == 'setname' and len(args) >= 2:
+            if args[0].lower() in ['setname', 'rename'] and len(args) >= 2:
                 newname = ' '.join(args[1:])
 
                 try:
@@ -908,7 +913,7 @@ def generate_message_commands(bot):
                         return "Channel not enabled"
 
                     dec.remove(channel)
-                    settings.getdata('dota_enabled_channels', dec)
+                    settings.setdata('dota_enabled_channels', dec)
                     dota.update_channels()
 
                 elif args[1] == 'mmr':
@@ -928,8 +933,8 @@ def generate_message_commands(bot):
         if channel not in dota.enabled_channels:
             return
 
-        if user == 'bluepowervan':
-            bot.botsay('.timeout bluepowervan 120')
+        if user == 'bluepowervan' and user not in bot.oplist:
+            bot.botsay('.timeout bluepowervan 480')
             return "You know that doesn't work for you, stop trying."
 
         if user not in bot.oplist and user != 'imayhaveborkedit':
@@ -975,6 +980,17 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!mumble', 'doc.asdfxyz.de (default port) 100 slot open server, on 24/7.  Try not to be awful, or bork will ban you.',
         bot, channels=['superjoe', 'monkeys_forever'], repeatdelay=15, targeted=True))
+
+    def f(channel, user, message, args, data, bot):
+        if args:
+            if args[0] == 'steam':
+                return settings.getdata('%s_dota_last_steam_rss_update_url' % channel)
+
+            if args[0] == 'dota':
+                return settings.getdata('%s_dota_last_dota2_rss_update_url' % channel)
+
+    coms.append(command.Command('!blog', f, bot, repeatdelay=30))
+
 
     # Monkeys_forever ######################################################
 
@@ -1027,10 +1043,12 @@ def generate_message_commands(bot):
             if linked_id:
                 args.append(linked_id)
                 print 'Found twitch linked id'
+            else:
+                return "No linked steam account, you need to give me a steam id ( http://i.imgur.com/7Yepc8i.png )"
 
         if args:
             if args[0].lower() == 'help':
-                return 'Usage: !guildinvite steamid/profilename'
+                return 'Usage: !guildinvite [steamid/profilename (needed if no linked steam account is found)]'
 
             import settings
 
@@ -1103,9 +1121,12 @@ def generate_message_commands(bot):
         import dota
         return dota.latestBlurb(channel, True)
 
-    coms.append(command.Command(['!lastmatch', '!lastgame'], f, bot, repeatdelay=30))
+    coms.append(command.Command(['!lastmatch', '!lastgame'], f, bot, repeatdelay=60))
 
     def f(channel, user, message, args, data, bot):
+
+        return "%s: The system I use inexplicably updates slowly as of late, so just check http://last.fm/user/monkeys-forever/now" % user
+
         import requests
 
         try:
@@ -1415,7 +1436,7 @@ def generate_message_commands(bot):
 
     # Tom ##############
 
-    coms.append(command.SimpleCommand('!plugs', 'Facebook: http://www.facebook.com/unsanitylive | Twitter: http://twitter.com/unsanitylive | ' +
+    coms.append(command.SimpleCommand('!plugs', 'Links! http://www.facebook.com/unsanitylive | http://twitter.com/unsanitylive | ' +
         'Like/Follow/Subscribe/whatever you want, that\'s where you can find Tom!',
         bot, channels=['unsanitylive'], prependuser=False, repeatdelay=10))
 
@@ -1457,6 +1478,8 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import twitchapi
 
+        if args: channel = args[0]
+
         chatters = twitchapi.get_chatters(channel)
         num_chatters = chatters['chatter_count']
 
@@ -1480,7 +1503,7 @@ def generate_message_commands(bot):
             if args[0] == 'add':
                 try:
                     new_player_id = int(args[1])
-                    new_player_name = ''.join(args[2:])
+                    new_player_name = ' '.join(args[2:])
                 except:
                     return 'Usage: !notable add steamid playername'
                 else:
@@ -1538,16 +1561,6 @@ def generate_message_commands(bot):
         return 'Console command (Might result in a Bad relay password error, working on that): ' + ccom
 
     coms.append(command.Command('!watchgame', f, bot, groups=me_only_group))
-
-    def f(channel, user, message, args, data, bot):
-        if args:
-            if args[0] == 'steam':
-                return settings.getdata('%s_dota_last_steam_rss_update_url' % channel)
-
-            if args[0] == 'dota':
-                return settings.getdata('%s_dota_last_dota2_rss_update_url' % channel)
-
-    coms.append(command.Command('!blog', f, bot, groups=me_only_group))
 
 
     def f(channel, user, message, args, data, bot):

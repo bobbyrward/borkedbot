@@ -98,12 +98,12 @@ def _manage_modules():
 
             if getattr(fi, 'DO_NOT_ALERT', False): # Maybe I need `if` instead of `elif`?
                 _debug("%s has been disabled and will not be imported." % fi.__name__)
-                # if_issue = True
+                if_issue = False
                 fresh_imports.remove(fi)
 
                 # TODO: For some reason, if it finds this, it doesn't change when its removed, might need to check the init file
 
-        if if_issue: print
+        if if_issue: _debug('')
 
         new_imports = list(set(fresh_imports) - set(imported_modules))
         removed_imports = list(set(imported_modules) - set(fresh_imports))

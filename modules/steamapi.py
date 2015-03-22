@@ -1,7 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 
-import requests, json
+import requests, json, traceback
 
 LOAD_ORDER = 90
 
@@ -76,7 +76,11 @@ def _get_call(apipath, **args):
     
     if requestdata.status_code != 200:
         print '[SteamAPI] API call failure:', requestdata, requestdata.reason, apipath.split('/')[-3:-2]
-        requestdata.raise_for_status()
+        try:
+            requestdata.raise_for_status()
+        except:
+            # print traceback.format_exc()
+            pass
     
     return requestdata.json() if not raw_request else requestdata
 
