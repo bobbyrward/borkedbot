@@ -17,7 +17,7 @@ def setup(bot):
 def alert(event):
     # Sub alert
     if event.etype == 'twitchnotify':
-        if event.channel in ['unsanitylive', 'monkeys_forever', 'superjoe', 'kizzmett']:
+        if event.channel in ['monkeys_forever', 'superjoe', 'kizzmett', 'unsanitylive']:
             if 'just subscribed!' in event.data:
                 extra = ''
                 if event.channel in ['monkeys_forever', 'kizzmett']:
@@ -25,16 +25,20 @@ def alert(event):
 
                 event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s%s' % (event.data.split()[0].upper(), extra))
 
+            if 'subscribed for ' in event.data:
+                event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ RE-SUB HYPE! PRAISE %s' % event.data.split()[0].upper())
+
 
     # watch?v=n4D-N6aWIV4
     # http://youtube.com/get_video_info?video_id=n4D-N6aWIV4
 
     if event.etype in ['msg', 'action']:
-        if event.channel in ['monkeys_forever']:
+        if event.channel in ['monkeys_forever', 'unsanitylive', 'pelmaleon', 'mynameisamanda', 'imayhaveborkedit', 'barnyyy']:
             if 'watch?v=' in event.data or 'youtu.be/' in event.data:
                 print '[ExtraEvents] Found youtube link, looking up title'
 
                 ids = re.findall('watch\?v=(\S{11})', event.data) + re.findall('youtu.be/(.{11})', event.data)
+                ids = list(set(ids))
                 print '[ExtraEvents] Found ids: %s' % ids
 
                 ytdata = {}
@@ -58,7 +62,11 @@ def alert(event):
 
 
 def get_youtube_title(v_id):
-    title = re.findall('&title=(.*?)&', requests.get('http://youtube.com/get_video_info?video_id=%s' % v_id).text)[0]
+    try:
+        title = re.findall('&title=(.*?)&', requests.get('http://youtube.com/get_video_info?video_id=%s' % v_id).text)[0]
+    except:
+        print '[ExtraEvents] Youtube lookup failed, using backup method'
+        title = None
 
     if not title:
         ytd = requests.get('https://www.youtube.com/watch?v=%s' % v_id).text
