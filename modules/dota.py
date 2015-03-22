@@ -3,7 +3,7 @@ sys.dont_write_bytecode = True
 
 from HTMLParser import HTMLParser
 import os, time, json, subprocess, shlex, requests, feedparser
-import steamapi, twitchapi, settings, node
+import steamapi, twitchapi, settings, node, timer
 
 
 LOAD_ORDER = 35
@@ -57,6 +57,8 @@ def setup(bot):
 
 def alert(event):
     if event.channel in enabled_channels:
+        msgtimer = timer.Timer('Dota message Timer')
+        msgtimer.start()
         if event.etype == 'msg': # Meh
             mes_count = settings.trygetset('%s_notable_message_count' % event.channel, 1)
             settings.setdata('%s_notable_message_count' % event.channel, mes_count + 1, announce=False)
@@ -65,6 +67,8 @@ def alert(event):
                 blurb(event.channel, event.bot)
             except Exception, e:
                print '[Dota-Error] Match blurb failure: %s' % e
+            msgtimer.stop()
+            # print msgtimer
 
         if event.etype == 'timer':
             try:
@@ -73,7 +77,8 @@ def alert(event):
                     print '[Dota] RSS update found: ' + rss_update
                     event.bot.botsay(rss_update)
             except Exception, e:
-                print '[Dota-Error] RSS check failure: %s' % e
+                print '[Dota-Error] RSS check failure: %s (%s)' % (e,type(e))
+
 
             try:
                 nblurb = notablePlayerBlurb(event.channel)
@@ -357,11 +362,11 @@ def determineSteamid(steamthing):
     return maybesteamid
 
 
-def getSourceTVLiveGameForPlayer(targetdotaid):
-    totalgames = node.get_source_tv_games()['numTotalGames']
+def getSourceTVLiveGameForPlayer(targetdotaid, heroid=None):
+    totalgames = node.get_source_tv_games(heroid=heroid)['numTotalGames']
 
     for pagenum in range(0, int(round(float(totalgames)/6))):
-        games = node.get_source_tv_games(pagenum)['games']
+        games = node.get_source_tv_games(pagenum, heroid)['games']
 
         for game in games:
             try:
@@ -393,7 +398,7 @@ def get_console_connect_code(dotaid):
     #TODO: Figure out how the console command and "Watch game" (NotifyClientSignon 0/1/2) are different
 
 
-def searchForNotablePlayers(targetdotaid, pages=4):
+def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
     # Needs check for if in a game (maybe need a status indicator for richPresence)
     t0 = time.time()
     herodata = steamapi.GetHeroes()
@@ -401,7 +406,7 @@ def searchForNotablePlayers(targetdotaid, pages=4):
 
     for pagenum in range(0, pages):
         # print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
-        games = node.get_source_tv_games(pagenum)['games']
+        games = node.get_source_tv_games(pagenum, heroid)['games']
         # print 'received game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
         for game in games:
@@ -495,6 +500,28 @@ def notablePlayerBlurb(channel, pages=33):
             settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 60.0, announce=False)
 
 
+def dump_players_in_game_for_player(dotaid, heroid=None):
+    game = getSourceTVLiveGameForPlayer(dotaid, heroid)
+    if game:
+        print 'Player info for %s\'s game:' % dotaid
+        print 'Radiant: '
+
+        for player in game['goodPlayers']:
+            print ' - %s' % player['name']
+            print '   - http://steamcommunity.com/profiles/%s' % player['steamId']
+            print '   - http://www.dotabuff.com/players/%s' % steamToDota(long(player['steamId']))
+
+        print '\nDire: '
+
+        for player in game['badPlayers']:
+            print ' - %s' % player['name']
+            print '   - http://steamcommunity.com/profiles/%s' % player['steamId']
+            print '   - http://www.dotabuff.com/players/%s' % steamToDota(long(player['steamId']))
+        print
+    else:
+        print 'Game not found.'
+
+# TODO: SPlit into func that returns id:pairs and one that sets them and prints changes
 def update_verified_notable_players():
     class DotabuffParser(HTMLParser):
         table_active = False
@@ -523,6 +550,9 @@ def update_verified_notable_players():
     parser = DotabuffParser()
 
     r = requests.get('http://www.dotabuff.com/players', headers = {'User-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:34.0) Gecko/20100101 Firefox/34.0.1'})
+    if r.status_code == 429:
+        return 429
+
     htmldata = unicode(r.text).encode('utf8')
     parser.feed(htmldata)
 
@@ -550,7 +580,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
     settings.setdata('%s_last_dota_rss_check' % channel, time.time(), announce=False)
 
 
-    rs = node.get_steam_rss()
+    rs = [li for li in node.get_steam_rss() if li]
     last_feed_url = settings.trygetset('%s_dota_last_steam_rss_update_url' % channel, '0')
 
     for item in rs:
@@ -578,7 +608,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
                 break
 
 
-    rs = node.get_dota_rss()
+    rs = [li for li in node.get_dota_rss() if li]
     last_feed_url = settings.trygetset('%s_dota_last_dota2_rss_update_url' % channel, '0')
 
     for item in rs:
