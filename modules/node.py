@@ -43,6 +43,12 @@ def get_enum(name=None):
 def get_mm_stats():
     return zrpc.getmmstats()
 
+def get_match_details(matchid):
+    return zrpc.getmatchdetails(matchid)
+
+def download_replay(channel, matchid, matchdetails):
+    return zrpc.downloadreplay(channel, matchid, matchdetails)
+
 ########
 
 def updateMMR(channel, chid, autolaunch=True):

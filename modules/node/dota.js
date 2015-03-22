@@ -1,6 +1,7 @@
 var steam = require("steam"),
     util = require("util"),
     fs = require("fs"),
+    http = require('http'),
     repl = require("repl"),
     dota2 = require("dota2"),
     bot = new steam.SteamClient(),
@@ -312,6 +313,56 @@ var zrpcserver = new zerorpc.Server({
             reply(null, mmdata);
         });
     },
+    getmatchdetails: function(matchid, reply) {
+        reply = arguments[arguments.length - 1];
+        matchid = typeof matchid !== 'function' ? matchid : undefined;
+
+        if (matchid === undefined) {
+            reply("No match id.");
+        }
+
+        if (!Dota2._gcReady) {
+            reply("GC unready")
+        }
+
+        Dota2.matchDetailsRequest(matchid, function(err, response){
+            console.log(err);
+            console.log(response);
+            reply(null, response);
+        });
+    },
+    downloadreplay: function(channel, matchid, matchdetails, reply) {
+        reply = arguments[arguments.length - 1];
+        channel = typeof channel !== 'function' ? channel : undefined;
+        matchid = typeof matchid !== 'function' ? matchid : undefined;
+        matchdetails = typeof matchdetails !== 'function' ? matchdetails : undefined;
+
+        console.log(matchdetails);
+
+        fs.mkdir(util.format("/var/www/twitch/%s/replays/", channel), function(err){
+            if (err) {
+                if (err.code != 'EEXIST') console.log(err);
+            }
+        });
+
+        fs.writeFile(util.format("/var/www/twitch/%s/replays/%s.json", channel, matchid), JSON.stringify(matchdetails, null, 4), function (err) {
+            if (err) console.log(err);
+            console.log(util.format('Wrote %s.json for %s', matchid, channel));
+        });
+
+
+        // http://replay<cluster>.valve.net/570/<match_id>_<replay_salt>.dem.bz2
+        var replayfile = fs.createWriteStream(util.format("/var/www/twitch/%s/replays/%s.dem", channel, matchid));
+        var request = http.get(util.format("http://replay%s.valve.net/570/%s_%s.dem.bz2", matchdetails['match']['cluster'], matchid, matchdetails['match']['replaySalt']), function(response) {
+            reply(null, parseInt(response['headers']['content-length']));
+            console.log(util.format("Saving %s.dem, %s bytes", matchid, response['headers']['content-length']));
+            response.pipe(replayfile);
+            response.once('end', function(){
+                console.log('Download done.');
+            })
+        });
+    },
+
 
     /*
         MMR functions
