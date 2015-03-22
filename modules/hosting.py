@@ -46,8 +46,15 @@ def nowhosting(event):
         print '[Hosting] WE ARE NOW HOSTING %s' % HOSTED_CHANNEL
 
         if streamdata:
+            if event.data.split()[2] == '-':
+                return
+            try:
+                viewers = str(int(event.data.split()[2]))
+            except:
+                viewers = event.data.split()[2].split('=')[1].split(')')[0]
+
             event.bot.botsay("Now hosting %s, playing %s.  All %s of you, go check it out! %s" %
-                (HOSTED_CHANNEL, str(streamdata['game']), event.data.split()[2],'http://twitch.tv/%s' % HOSTED_CHANNEL))
+                (HOSTED_CHANNEL, str(streamdata['game']), viewers, 'http://twitch.tv/%s' % HOSTED_CHANNEL))
         else:
             print "[Hosting] %s is not streaming." % HOSTED_CHANNEL
     elif event.data.startswith('HOSTTARGET') and event.data.split()[1] == '-':
