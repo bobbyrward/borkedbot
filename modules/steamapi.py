@@ -52,14 +52,14 @@ DOTA_MATCH_TYPES = {
 }
 
 
-def _apiget(path):
-    rrr = requests.get(root+path, timeout=4)
-    rrr.raise_for_status()
-    return rrr
+# def _apiget(path):
+#     rrr = requests.get(root+path, timeout=4)
+#     rrr.raise_for_status()
+#     return rrr
 
-def get(path='', key=None):
-    print 'WHY IS THIS BEING USED'
-    return _apiget(path) if not key else _apiget(path)[key]
+# def get(path='', key=None):
+#     print 'WHY IS THIS BEING USED'
+#     return _apiget(path) if not key else _apiget(path)[key]
 
 def _get_call(apipath, **args):
     apicall = apipath + '?key=%s' % apikey
