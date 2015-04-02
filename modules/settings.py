@@ -11,7 +11,12 @@ defaultdomain = 'settings-global'
 
 
 def getdata(key, domain=defaultdomain, coerceto=None):
-    result = dill.loads(redisdb.hget(domain, key))
+    kdata = redisdb.hget(domain, key)
+
+    if kdata is None:
+        raise NameError('Key does not exist')
+
+    result = dill.loads(kdata)
 
     if coerceto:
         return coerceto(result)
