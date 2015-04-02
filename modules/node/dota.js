@@ -326,8 +326,12 @@ var zrpcserver = new zerorpc.Server({
         }
 
         Dota2.matchDetailsRequest(matchid, function(err, response){
-            console.log(err);
-            console.log(response);
+            if (err){
+                console.log(err);
+                reply("You probably ran out of requests, see console.")
+                return;
+            }
+            util.log("Got data for match " + matchid);
             reply(null, response);
         });
     },
@@ -337,7 +341,7 @@ var zrpcserver = new zerorpc.Server({
         matchid = typeof matchid !== 'function' ? matchid : undefined;
         matchdetails = typeof matchdetails !== 'function' ? matchdetails : undefined;
 
-        console.log(matchdetails);
+        // console.log(matchdetails);
 
         fs.mkdir(util.format("/var/www/twitch/%s/replays/", channel), function(err){
             if (err) {
@@ -347,19 +351,34 @@ var zrpcserver = new zerorpc.Server({
 
         fs.writeFile(util.format("/var/www/twitch/%s/replays/%s.json", channel, matchid), JSON.stringify(matchdetails, null, 4), function (err) {
             if (err) console.log(err);
-            console.log(util.format('Wrote %s.json for %s', matchid, channel));
+            util.log(util.format('Wrote %s.json for %s', matchid, channel));
         });
 
 
         // http://replay<cluster>.valve.net/570/<match_id>_<replay_salt>.dem.bz2
         var replayfile = fs.createWriteStream(util.format("/var/www/twitch/%s/replays/%s.dem", channel, matchid));
         var request = http.get(util.format("http://replay%s.valve.net/570/%s_%s.dem.bz2", matchdetails['match']['cluster'], matchid, matchdetails['match']['replaySalt']), function(response) {
-            reply(null, parseInt(response['headers']['content-length']));
-            console.log(util.format("Saving %s.dem, %s bytes", matchid, response['headers']['content-length']));
-            response.pipe(replayfile);
-            response.once('end', function(){
-                console.log('Download done.');
-            })
+            if (response.statusCode == 404) {
+                try {
+                    reply("Replay " + matchid + " expired (404).");
+                } catch (replyerror) {
+                    console.log("Match reply error, you probably ran out of requests.");
+                    console.log(replyerror);
+                }
+            } else {
+                try { 
+                    reply(null, parseInt(response['headers']['content-length']));
+                } catch (replyerror) {
+                    console.log("Match reply error, you probably ran out of requests.");
+                    console.log(replyerror);
+                }
+
+                util.log(util.format("Writing %s.dem, %s bytes", matchid, response['headers']['content-length']));
+                response.pipe(replayfile);
+                response.once('end', function(){
+                    util.log('Download complete for ' + matchid);
+                });
+            }
         });
     },
 
@@ -788,13 +807,13 @@ var zrpcserver = new zerorpc.Server({
 });
 
 zrpcserver.on("error", function(err) {
-    console.error("RPC server error:", err);
+    console.error("RPC server error: ", err);
 });
 
 zrpcserver.bind("tcp://0.0.0.0:29390");
 
 process.on('error', function(err) {
-    console.error("Help something borked ", err);
+    console.error("Help something borked: ", err);
 });
 
 

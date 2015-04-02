@@ -6,6 +6,8 @@ import settings
 
 LOAD_ORDER = 36
 
+Error = zerorpc.RemoteError
+
 zrpc = zerorpc.Client()
 zrpc.connect('tcp://127.0.0.1:29390')
 
@@ -48,6 +50,9 @@ def get_match_details(matchid):
 
 def download_replay(channel, matchid, matchdetails):
     return zrpc.downloadreplay(channel, matchid, matchdetails)
+
+def get_replay_dir(channel):
+    return '/var/www/twitch/%s/replays' % channel.lower()
 
 ########
 
