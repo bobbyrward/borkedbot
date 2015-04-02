@@ -107,12 +107,6 @@ def latestBlurb(channel, override=False):
             print "[Dota] No ID on record for %s.  I should probably sort this out." % channel
             return
 
-
-        # try:
-            # latestmatch = steamapi.getlastdotamatch(dotaid)
-        # except Exception as e:
-            # print "[Dota] API error:", e
-            # return
         try:
             matches = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=25)['result']['matches']
         except:
@@ -151,18 +145,21 @@ def latestBlurb(channel, override=False):
 
 
 def checktimeout(channel):
-    twitchchecktimeout = settings.trygetset('twitch_online_check_timeout', 15)
-    lastonlinecheck = settings.trygetset('twitch_online_last_check', time.time())
+    twitchchecktimeout = settings.trygetset('%s_twitch_online_check_timeout' % channel, 15)
+    lastonlinecheck = settings.trygetset('%s_twitch_online_last_check' % channel, time.time())
 
     try:
-        is_streaming = twitchapi.is_streaming(channel)
+        if time.time() - int(lastonlinecheck) > twitchchecktimeout:
+            is_streaming = twitchapi.is_streaming(channel)
+        else:
+            return False
     except Exception as e:
         print '[Dota] twitch api check error:',e
         return False
 
     if is_streaming:
         if time.time() - int(twitchchecktimeout) > float(lastonlinecheck):
-            settings.setdata('twitch_online_last_check', time.time(), announce=False)
+            settings.setdata('%s_twitch_online_last_check' % channel, time.time(), announce=False)
         else:
             return True
     else:
@@ -500,7 +497,7 @@ def notablePlayerBlurb(channel, pages=33):
             settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 60.0, announce=False)
 
 
-def dump_players_in_game_for_player(dotaid, heroid=None):
+def dump_players_in_game_for_player(dotaid, heroid=None, checktwitch=False):
     game = getSourceTVLiveGameForPlayer(dotaid, heroid)
     if game:
         print 'Player info for %s\'s game:' % dotaid
@@ -510,16 +507,57 @@ def dump_players_in_game_for_player(dotaid, heroid=None):
             print ' - %s' % player['name']
             print '   - http://steamcommunity.com/profiles/%s' % player['steamId']
             print '   - http://www.dotabuff.com/players/%s' % steamToDota(long(player['steamId']))
+            if checktwitch:
+                tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
+                if tname:
+                    print '   - http://twitch.tv/%s' % tname
+            print
 
-        print '\nDire: '
+        print 'Dire: '
 
         for player in game['badPlayers']:
             print ' - %s' % player['name']
             print '   - http://steamcommunity.com/profiles/%s' % player['steamId']
             print '   - http://www.dotabuff.com/players/%s' % steamToDota(long(player['steamId']))
-        print
+            if checktwitch:
+                tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
+                if tname:
+                    print '   - http://twitch.tv/%s' % tname
+            print
     else:
         print 'Game not found.'
+
+def get_players_in_game_for_player(dotaid, heroid=None, checktwitch=False):
+    game = getSourceTVLiveGameForPlayer(dotaid, heroid)
+    if game:
+        data = ''
+        data += 'Radiant: \n'
+
+        for player in game['goodPlayers']:
+            data += ' - %s\n' % player['name']
+            data += '   - http://steamcommunity.com/profiles/%s\n' % player['steamId']
+            data += '   - http://www.dotabuff.com/players/%s\n' % steamToDota(long(player['steamId']))
+            if checktwitch:
+                tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
+                if tname:
+                    data += '   - http://twitch.tv/%s\n' % tname
+            data += '\n'
+
+        data += 'Dire: \n'
+
+        for player in game['badPlayers']:
+            data += ' - %s\n' % player['name']
+            data += '   - http://steamcommunity.com/profiles/%s\n' % player['steamId']
+            data += '   - http://www.dotabuff.com/players/%s\n' % steamToDota(long(player['steamId']))
+            if checktwitch:
+                tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
+                if tname:
+                    data += '   - http://twitch.tv/%s\n' % tname
+            data += '\n'
+
+        return data
+
+
 
 # TODO: SPlit into func that returns id:pairs and one that sets them and prints changes
 def update_verified_notable_players():
@@ -640,6 +678,46 @@ def get_latest_steam_dota_rss_update():
     for item in rs:
         if item['author'] == 'Valve' and 'Dota 2 Update' in item['title']:
             return str("Steam RSS News Feed: %s - %s" % (item['title'], item['guid']))
+
+
+def download_all_available_replays(channel, dotaid=None, games=500):
+    if not dotaid:
+        dotaid = settings.getdata('%s_dota_id' % channel)
+
+    if not os.path.isdir(node.get_replay_dir(channel)):
+        os.mkdir(node.get_replay_dir(channel))
+
+    predownloadedgames = sorted([int(f.split('.')[0]) for f in os.listdir(node.get_replay_dir(channel)) if f.endswith('.dem')])
+    matchids = collect_match_ids(dotaid, games)
+    gamestodownload = list(set(matchids) - set(predownloadedgames))
+    gamestodownload.sort(reverse=True)
+
+    for game in gamestodownload:
+        #TODO: Add check for existing json file and check replay "freshness"
+
+        mdetails = node.get_match_details(game)
+        print 'Got %s info: %s' % (game, mdetails['match']['replayState']),
+
+        try:
+            replaysize = node.download_replay(channel, game, mdetails)
+            print '- %s bytes' % replaysize
+        except node.Error, e:
+            print '- Ded'
+
+
+
+def collect_match_ids(dotaid, games):
+    if games > 500: raise ValueError('Cannot request more than 500 games')
+
+    gamesdata = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=games)
+    matchids = sorted([m['match_id'] for m in gamesdata['result']['matches']])
+
+    while len(matchids) != games:
+        gamesdata = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=games-len(matchids), start_at_match_id=matchids[0])
+        matchids += [m['match_id'] for m in gamesdata['result']['matches']]
+        matchids.sort(reverse=True)
+
+    return matchids
 
 
 
