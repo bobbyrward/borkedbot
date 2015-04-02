@@ -136,7 +136,7 @@ def alert(event):
             if output[1] is command.OK:
                 # print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
                 print "[Chatrules] '%s': %4.4fms, Total time: %4.4fms" % (comm.trigger, (t2-t1)*1000, (t2-tstart)*1000)
-                event.bot.botsay(str(output[0]))
+                event.bot.botsay(output[0])
 
     #if event.etype in ['join', 'part']:
     #    # not quite yet, maybe not for a while
@@ -598,7 +598,7 @@ def generate_message_commands(bot):
        if message.endswith('?'):
            return "%s, %s"%(user, random.choice(data))
 
-    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever'], data=magic8ball, repeatdelay=15))
+    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'barnyyy'], data=magic8ball, repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
         import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi, settings
@@ -659,7 +659,7 @@ def generate_message_commands(bot):
 
         if channel == 'barnyyy':
             if user == 'nabe_gewell': return 'nabe_gewell: Fuck off'
-            return '%s: 4k' % user
+            return '%s: 5k' % user
 
         if channel not in dota.enabled_channels.keys():
             print 'Channel not enabled for dota'
@@ -1044,7 +1044,7 @@ def generate_message_commands(bot):
                 args.append(linked_id)
                 print 'Found twitch linked id'
             else:
-                return "No linked steam account, you need to give me a steam id ( http://i.imgur.com/7Yepc8i.png )"
+                return "%s: No linked steam account, you need to give me a steam id (see: http://i.imgur.com/7Yepc8i.png )" % user
 
         if args:
             if args[0].lower() == 'help':
@@ -1125,7 +1125,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
 
-        return "%s: The system I use inexplicably updates slowly as of late, so just check http://last.fm/user/monkeys-forever/now" % user
+        return "%s: Grooveshark is dumb sometimes, just check http://last.fm/user/monkeys-forever/now ALSO TOP LEFT OF STREAM" % user
 
         import requests
 
@@ -1505,7 +1505,7 @@ def generate_message_commands(bot):
                     new_player_id = int(args[1])
                     new_player_name = ' '.join(args[2:])
                 except:
-                    return 'Usage: !notable add steamid playername'
+                    return 'Usage: !notable add dotaid playername'
                 else:
                     if player_datas.get(int(args[1])):
                         return "This id belongs to %s, use the 'rename' option to change it." % player_datas.get(new_player_id)
@@ -1569,7 +1569,7 @@ def generate_message_commands(bot):
             sid = twitchapi.get_steam_id_from_twitch(args[0])
             sid = 'http://steamcommunity.com/profiles/' + sid if sid else 'No steam account linked to %s.' % args[0]
             return sid
-        
+
     coms.append(command.Command('!twitch2steam', f, bot, groups=me_only_group))
 
     def f(channel, user, message, args, data, bot):
@@ -1578,9 +1578,21 @@ def generate_message_commands(bot):
             twitchname = twitchapi.get_twitch_from_steam_id(args[0])
             twitchname = twitchname if twitchname else 'No twitch account linked to this id.'
             return twitchname
-        
+
     coms.append(command.Command('!steam2twitch', f, bot, groups=me_only_group))
 
+
+    def f(channel, user, message, args, data, bot):
+        import dota, settings, gist
+
+        pdata = dota.get_players_in_game_for_player(settings.getdata('%s_dota_id' % channel), checktwitch=True)
+        if pdata is None:
+            return 'Cannot find match.'
+
+        addr = gist.create_dota_playerinfo(channel, pdata)
+        return "Player info for this game is available here: %s" % addr
+
+    coms.append(command.Command('!playerinfo', f, bot, repeatdelay=30, groups=me_and_broadcaster))
 
     ######################################################################
 
