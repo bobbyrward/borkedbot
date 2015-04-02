@@ -15,6 +15,7 @@ class MyBot(irc.IRCClient):
 
     opsinchan = set()
     oplist = set()
+    extrapos = set()
     gotops = False
 
     channelsubs = set()
@@ -36,6 +37,10 @@ class MyBot(irc.IRCClient):
     @property
     def channel(self):
         return self.factory.channel
+
+    @property
+    def ops(self):
+        return self.oplist | self.extrapos
 
     @property
     def usercolors(self):
@@ -102,7 +107,9 @@ class MyBot(irc.IRCClient):
         if self.opsinchan - self.oplist and self.gotops:
             # This might be only for new mods now, need to check
             self.log("WE HAVE A MOD DISCREPANCY: %s" % list(self.opsinchan - self.oplist))
+            self.extrapos = self.extrapos | (self.opsinchan - self.oplist)
             self.update_mods()
+
 
 
     def action(self, user, channel, data):
@@ -174,7 +181,16 @@ class MyBot(irc.IRCClient):
             self.say(self.factory.channel, str(msg))
         except:
             print '[Borkedbot] Blarg how do I do this shit: %s' % msg
-            self.say(self.factory.channel, str(unicode(msg, errors='ignore')))
+
+            try:
+                self.say(self.factory.channel, msg)
+            except Exception, e:
+                print 'Ok that didn\'t work, lets try this:'
+
+                try:
+                    self.say(self.factory.channel, unicode(msg).decode("utf-8"))
+                except Exception, e:
+                    print 'No that didn\'t work either, wtf how retarded is twisted'
 
         self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.nickname in self.oplist)
 
