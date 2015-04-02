@@ -97,6 +97,7 @@ $RECYCLE.BIN/
 # My stuff 
 passwd
 apikey
+github_gist
 settings.data
 testfile
 joinpartbot.py
