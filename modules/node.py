@@ -183,6 +183,9 @@ def get_source_tv_games(page=0, heroid=None): # max page is 33
 def get_user_status(steamid):
     return zrpc.evaljs("dotauserstatus['%s']" % steamid)
 
+def get_user_playing_as(steamid):
+    return zrpc.evaljs("dotauserplayingas['%s']" % steamid)
+
 def get_steam_rss(entries=0):
     return zrpc.evaljs('steam_rss_datas')
     

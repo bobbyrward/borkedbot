@@ -16,7 +16,9 @@ var steam = require("steam"),
     adminids = ['76561198030495011'],
     chatkeymap = {},
     pendingenables = {},
+
     dotauserstatus = {},
+    dotauserplayingas = {},
 
     steam_rss_datas = [],
     dota_rss_datas = [];
@@ -180,7 +182,7 @@ var onSteamLogOn = function onSteamLogOn(){
         }
         // send message to verify or whatever?
     },
-    onRichPresence = function onRichPresence(steamid, userstate) {
+    onRichPresence = function onRichPresence(steamid, userstate, herolevel, heroname) {
         userstate = typeof userstate == 'string' ? userstate : '#closing';
 
         userstatusstring = DOTA_RP_STATUSES[userstate.slice(1)];
@@ -191,6 +193,9 @@ var onSteamLogOn = function onSteamLogOn(){
         // util.log('Dota status: ' + steamid + ' - ' + userstatusstring + ' - ' + JSON.stringify(otherargs));
         if (userstate !== '#DOTA_RP_PLAYING_AS') {
             util.log('Dota status: ' + steamid + ' - ' + userstatusstring);
+            delete dotauserplayingas[steamid];
+        } else {
+            dotauserplayingas[steamid] = [heroname.replace('#',''), herolevel];
         }
 
         dotauserstatus[steamid] = userstate;
@@ -366,7 +371,7 @@ var zrpcserver = new zerorpc.Server({
                     console.log(replyerror);
                 }
             } else {
-                try { 
+                try {
                     reply(null, parseInt(response['headers']['content-length']));
                 } catch (replyerror) {
                     console.log("Match reply error, you probably ran out of requests.");

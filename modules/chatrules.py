@@ -269,7 +269,7 @@ def generate_message_commands(bot):
                 return "Restarting steam bot, this should only take a few seconds."
 
             if args[0].lower() == 'matchmaking':
-                return "This breaks the bot.  Fix it first idiot."
+                # return "This breaks the bot.  Fix it first idiot."
 
                 import difflib, time
                 mmdata = node.get_mm_stats()
@@ -287,10 +287,9 @@ def generate_message_commands(bot):
                 except:
                     return "No match for %s" % args[1]
 
-                waittimes, searchers = mmdata[region]
+                searchers = mmdata[region]
 
-                return  "Matchmaking data for region %s: Average queue time: %s, In queue: %s" % (
-                    region, time.strftime("%M:%S", time.gmtime(waittimes)), searchers)
+                return  "Matchmaking data for region %s: Players in queue: %s" % (region, searchers)
 
 
     coms.append(command.Command('#!node', f, bot, groups=me_only_group))
@@ -592,7 +591,7 @@ def generate_message_commands(bot):
         else:
             return thing
 
-    coms.append(command.Command('!saysomething', f, bot, repeatdelay=30))
+    coms.append(command.Command('!saysomething', f, bot, True, repeatdelay=30))
 
     def f(channel, user, message, args, data, bot):
        if message.endswith('?'):
@@ -928,13 +927,13 @@ def generate_message_commands(bot):
     coms.append(command.Command('!dotaconfig', f, bot, groups=me_and_broadcaster, repeatdelay=5))
 
     def f(channel, user, message, args, data, bot):
-        import dota, settings
+        import dota, settings, node
 
         if channel not in dota.enabled_channels:
             return
 
         if user == 'bluepowervan' and user not in bot.oplist:
-            bot.botsay('.timeout bluepowervan 480')
+            bot.botsay('.timeout bluepowervan 960')
             return "You know that doesn't work for you, stop trying."
 
         if user not in bot.oplist and user != 'imayhaveborkedit':
@@ -943,9 +942,17 @@ def generate_message_commands(bot):
         if args:
             pages = int(args[0])
         else:
-            pages = 16
+            pages = 33
 
-        players = dota.searchForNotablePlayers(dota.settings.getdata('%s_dota_id' % channel), pages)
+        playerid = settings.getdata('%s_dota_id' % channel)
+
+        if node.get_user_status(dota.dotaToSteam(playerid)) == '#DOTA_RP_PLAYING_AS':
+            playerheroid = dota.getHeroIddict(False)[node.get_user_playing_as(dota.dotaToSteam(playerid))[0]]
+        else:
+            playerheroid = None
+
+        if pages > 17 and playerheroid: pages = 17
+        players = dota.searchForNotablePlayers(playerid, pages, playerheroid)
 
         if players is None:
             return "Game not found in %s pages." % pages
@@ -1044,7 +1051,7 @@ def generate_message_commands(bot):
                 args.append(linked_id)
                 print 'Found twitch linked id'
             else:
-                return "%s: No linked steam account, you need to give me a steam id (see: http://i.imgur.com/7Yepc8i.png )" % user
+                return "%s: No linked steam account, you need to give me a steam id after the command, see: http://i.imgur.com/y7Fi4CA.png" % user
 
         if args:
             if args[0].lower() == 'help':
@@ -1068,6 +1075,8 @@ def generate_message_commands(bot):
 
             try:
                 steamid = dota.determineSteamid(targetsteamid)
+                if steamid == 76561198153108180:
+                    return "%s: No, you're supposed to use your own steam account.  I'm already in the guild." % user
             except Exception as e:
                 print e
                 return "Something went wrong, it might be an issue with the steam api"
@@ -1111,9 +1120,9 @@ def generate_message_commands(bot):
             elif steamid is False:
                 return "Steam api down, cannot resolve vanity name"
 
-            return "Bad id or something, I can't figure out who you are.  Try one of these: http://i.imgur.com/7Yepc8i.png"
+            return "Bad id or something, I can't figure out who you are.  Try one of these: http://i.imgur.com/y7Fi4CA.png"
         else:
-            return "%s: You need to give me a steam id or profile link (see http://i.imgur.com/7Yepc8i.png )" % user
+            return "%s: You need to give me a steam id or profile link, see http://i.imgur.com/y7Fi4CA.png" % user
 
     coms.append(command.Command('!guildinvite', f, bot, channels=['monkeys_forever', 'kizzmett']))
 
@@ -1583,13 +1592,15 @@ def generate_message_commands(bot):
 
 
     def f(channel, user, message, args, data, bot):
-        import dota, settings, gist
+        import dota, settings, makegist
 
-        pdata = dota.get_players_in_game_for_player(settings.getdata('%s_dota_id' % channel), checktwitch=True)
+        pdata = dota.get_players_in_game_for_player(settings.getdata('%s_dota_id' % channel), checktwitch=True, markdown=True)
+        # print 'Got match data, gistifying'
+
         if pdata is None:
             return 'Cannot find match.'
 
-        addr = gist.create_dota_playerinfo(channel, pdata)
+        addr = makegist.create_dota_playerinfo(channel, pdata)
         return "Player info for this game is available here: %s" % addr
 
     coms.append(command.Command('!playerinfo', f, bot, repeatdelay=30, groups=me_and_broadcaster))

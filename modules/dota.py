@@ -9,20 +9,18 @@ import steamapi, twitchapi, settings, node, timer
 LOAD_ORDER = 35
 
 
-enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
-
-rss_channels = {}
-
 STEAM_TO_DOTA_CONSTANT = 76561197960265728
-
 POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange', 'Pink' , 'Gray', 'Light Blue', 'Green', 'Brown']
+
+enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
+herodata = None
 
 
 def dotaToSteam(dotaid):
-    return long(dotaid) + STEAM_TO_DOTA_CONSTANT
+    return int(dotaid) + STEAM_TO_DOTA_CONSTANT
 
 def steamToDota(steamid):
-    return long(steamid) - STEAM_TO_DOTA_CONSTANT
+    return int(steamid) - STEAM_TO_DOTA_CONSTANT
 
 
 def update_channels():
@@ -50,6 +48,21 @@ def disable_channel(channel, mmr=False):
     en_chans = settings.getdata('dota_enabled_channels')
     settings.setdata('dota_enabled_channels', list(set(en_chans) - set([channel])))
     settings.setdata('%s_mmr_enabled' % channel, not mmr)
+
+    # update_channels() # ?
+
+
+def getHeroes():
+    global herodata
+    if not herodata:
+        herodata = steamapi.GetHeroes()
+    return herodata
+
+def getHeroIddict(localname=True):
+    return {str(h['localized_name' if localname else 'name']):h['id'] for h in getHeroes()['result']['heroes']}
+
+def getHeroNamedict(localname=True):
+    return {h['id']:str(h['localized_name' if localname else 'name']) for h in getHeroes()['result']['heroes']}
 
 
 def setup(bot):
@@ -147,12 +160,14 @@ def latestBlurb(channel, override=False):
 def checktimeout(channel):
     twitchchecktimeout = settings.trygetset('%s_twitch_online_check_timeout' % channel, 15)
     lastonlinecheck = settings.trygetset('%s_twitch_online_last_check' % channel, time.time())
+    laststreamingstate = settings.trygetset('%s_last_twitch_streaming_state' % channel, False)
 
     try:
         if time.time() - int(lastonlinecheck) > twitchchecktimeout:
             is_streaming = twitchapi.is_streaming(channel)
+            settings.setdata('%s_last_twitch_streaming_state' % channel, is_streaming, announce=False)
         else:
-            return False
+            return laststreamingstate
     except Exception as e:
         print '[Dota] twitch api check error:',e
         return False
@@ -185,7 +200,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
     settings.setdata('%s_last_match' % channel, latestmatch, announce=False)
 
     matchdata = steamapi.GetMatchDetails(latestmatch['match_id'])
-    herodata = steamapi.GetHeroes()
+    herodata = getHeroes()
 
     for p in matchdata['result']['players']:
         if str(p['account_id']) == str(dotaid):
@@ -356,7 +371,7 @@ def determineSteamid(steamthing):
                 maybesteamid = None
 
     print '[Dota] Determined that steamid for %s is %s' % (steamthing, maybesteamid)
-    return maybesteamid
+    return int(maybesteamid)
 
 
 def getSourceTVLiveGameForPlayer(targetdotaid, heroid=None):
@@ -398,8 +413,15 @@ def get_console_connect_code(dotaid):
 def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
     # Needs check for if in a game (maybe need a status indicator for richPresence)
     t0 = time.time()
-    herodata = steamapi.GetHeroes()
+    herodata = getHeroes()
     notable_players = settings.getdata('dota_notable_players')
+
+
+    if heroid:
+        if pages > 17: pages = 17
+
+        print '[Dota-Notable] Searching using heroid %s' % heroid
+
 
     for pagenum in range(0, pages):
         # print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
@@ -479,15 +501,22 @@ def getNotableCheckReady(channel):
 #    Store results for use in end game blurb
 #    Fine tune usage frequency
 def notablePlayerBlurb(channel, pages=33):
-    userstatus = node.get_user_status(dotaToSteam(settings.getdata('%s_dota_id' % channel)))
+    playerid = settings.getdata('%s_dota_id' % channel)
+    userstatus = node.get_user_status(dotaToSteam(playerid))
     if userstatus:
         # print 'Dota status for %s: %s' % (channel, userstatus)
 
-        if userstatus.replace('#','') in ["DOTA_RP_HERO_SELECTION", "DOTA_RP_PRE_GAME", "DOTA_RP_GAME_IN_PROGRESS", "DOTA_RP_PLAYING_AS"]:
+        if userstatus in ["#DOTA_RP_HERO_SELECTION", "#DOTA_RP_PRE_GAME", "#DOTA_RP_GAME_IN_PROGRESS", "#DOTA_RP_PLAYING_AS"]:
             if getNotableCheckReady(channel):
                 if twitchapi.is_streaming(channel):
-                    print "[Dota-Notable] Doing search for notable players"
-                    players = searchForNotablePlayers(settings.getdata('%s_dota_id' % channel), pages)
+                    if userstatus == '#DOTA_RP_PLAYING_AS':
+                        playerheroid = node.get_user_playing_as(dotaToSteam(playerid))
+                        playerheroid = getHeroIddict(False)[playerheroid[0]]
+                    else: 
+                        playerheroid = None
+
+                    print "[Dota-Notable] Doing search for notable players%s" % (' using hero id' if playerheroid else '')
+                    players = searchForNotablePlayers(playerid, pages, playerheroid)
                     settings.setdata('%s_notable_message_count' % channel, 0, announce=False)
 
                     if players:
@@ -497,66 +526,53 @@ def notablePlayerBlurb(channel, pages=33):
             settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 60.0, announce=False)
 
 
-def dump_players_in_game_for_player(dotaid, heroid=None, checktwitch=False):
+def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
+    herodata = getHeroes()
+    # herodict = {h['id']:str(h['localized_name']) for h in herodata['result']['heroes']}
+    herodict = getHeroNamedict()
+    herodict[0] = "Unknown hero"
+
+    userstatus = node.get_user_status(dotaToSteam(dotaid))
+    if userstatus == '#DOTA_RP_PLAYING_AS':
+        heroid = node.get_user_playing_as(dotaToSteam(dotaid))
+        heroid = getHeroIddict(False)[heroid[0]]
+    else: heroid = None
+
+    notable_players = settings.getdata('dota_notable_players')
     game = getSourceTVLiveGameForPlayer(dotaid, heroid)
-    if game:
-        print 'Player info for %s\'s game:' % dotaid
-        print 'Radiant: '
 
-        for player in game['goodPlayers']:
-            print ' - %s' % player['name']
-            print '   - http://steamcommunity.com/profiles/%s' % player['steamId']
-            print '   - http://www.dotabuff.com/players/%s' % steamToDota(long(player['steamId']))
-            if checktwitch:
-                tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
-                if tname:
-                    print '   - http://twitch.tv/%s' % tname
-            print
+    teamformat = '%s%s: \n'                  # ('## ' if markdown else '', team)
+    playerformat = '%s%s: %s\n'              # ('#### ' if markdown else '  ', hero, name)
+    notableformat = '%sNotable player: %s\n' # ('###### ' if markdown else '   - ', name)
+    linkformat = '   - %s%s\n'               # (linktype, linkdata)
+    linktypes = {
+        'steam': 'http://steamcommunity.com/profiles/',
+        'dotabuff': 'http://www.dotabuff.com/players/',
+        'twitch': 'http://twitch.tv/'
+    }
 
-        print 'Dire: '
-
-        for player in game['badPlayers']:
-            print ' - %s' % player['name']
-            print '   - http://steamcommunity.com/profiles/%s' % player['steamId']
-            print '   - http://www.dotabuff.com/players/%s' % steamToDota(long(player['steamId']))
-            if checktwitch:
-                tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
-                if tname:
-                    print '   - http://twitch.tv/%s' % tname
-            print
-    else:
-        print 'Game not found.'
-
-def get_players_in_game_for_player(dotaid, heroid=None, checktwitch=False):
-    game = getSourceTVLiveGameForPlayer(dotaid, heroid)
     if game:
         data = ''
-        data += 'Radiant: \n'
 
-        for player in game['goodPlayers']:
-            data += ' - %s\n' % player['name']
-            data += '   - http://steamcommunity.com/profiles/%s\n' % player['steamId']
-            data += '   - http://www.dotabuff.com/players/%s\n' % steamToDota(long(player['steamId']))
-            if checktwitch:
-                tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
-                if tname:
-                    data += '   - http://twitch.tv/%s\n' % tname
-            data += '\n'
+        for team in ['Radiant', 'Dire']:
 
-        data += 'Dire: \n'
+            data += teamformat % ('## ' if markdown else '', team)
 
-        for player in game['badPlayers']:
-            data += ' - %s\n' % player['name']
-            data += '   - http://steamcommunity.com/profiles/%s\n' % player['steamId']
-            data += '   - http://www.dotabuff.com/players/%s\n' % steamToDota(long(player['steamId']))
-            if checktwitch:
-                tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
-                if tname:
-                    data += '   - http://twitch.tv/%s\n' % tname
-            data += '\n'
+            for player in game['goodPlayers' if team=='Radiant' else 'badPlayers']:
+                data += playerformat % ('#### ' if markdown else '  ', herodict[player['heroId']], player['name'].decode('utf8'))
+
+                if steamToDota(player['steamId']) in notable_players:
+                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[steamToDota(player['steamId'])])
+
+                data += linkformat % (linktypes['steam'],  player['steamId'])
+                data += linkformat % (linktypes['dotabuff'], steamToDota(long(player['steamId'])))
+                if checktwitch:
+                    tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
+                    if tname:
+                        data += linkformat % (linktypes['twitch'], tname)
+                data += '\n'
 
         return data
-
 
 
 # TODO: SPlit into func that returns id:pairs and one that sets them and prints changes
@@ -718,6 +734,15 @@ def collect_match_ids(dotaid, games):
         matchids.sort(reverse=True)
 
     return matchids
+
+
+# For matching games:
+#   Delete:
+#     numSpectators
+#     towerState
+#     tvBroadcastTime
+#
+# The rest should be matchable
 
 
 
