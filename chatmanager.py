@@ -4,6 +4,7 @@ sys.dont_write_bytecode = True
 import os, os.path
 import time, Queue, traceback
 from types import FunctionType
+from twisted.internet import reactor, threads
 
 #########################
 
@@ -204,7 +205,8 @@ def _process_event(event):
     for m in imported_modules:
         try:
             _debug("Alerting %s" % m.__name__)
-            m.alert(event)
+            # m.alert(event)
+            threads.deferToThread(m.alert, event)
         except Exception as e:
             print "[ChatManager] Alert error for %s: " % m.__name__
             print traceback.format_exc()
