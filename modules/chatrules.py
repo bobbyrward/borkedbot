@@ -175,7 +175,7 @@ def generate_message_commands(bot):
         print "Executing: %s" % message[7:]
         try:
             exec message[7:] in globals(), locals()
-        except BaseException as e:
+        except Exception as e:
             print "Something fucked up: %s" % e
             return "You borked something: %s" % e
     coms.append(command.Command('#!exec', f, bot, groups=me_only_group))
@@ -193,7 +193,7 @@ def generate_message_commands(bot):
                 return "Output is too long!  See console."
             else:
                 return mout
-        except BaseException as e:
+        except Exception as e:
             print "Something fucked up: %s" % e
             return "You borked something: %s" % e
     coms.append(command.Command('#!eval', f, bot, groups=me_only_group))
@@ -246,6 +246,63 @@ def generate_message_commands(bot):
     coms.append(command.Command('#!settings', f, bot, groups=me_only_group))
 
     coms.append(command.SimpleCommand('!battlestation', 'HONK http://i.imgur.com/MRuOzd2.jpg', bot, True, groups=me_only_group))
+
+    def f(channel, user, message, args, data, bot):
+        import settings, dota
+        if args:
+            player_datas = settings.getdata('dota_notable_players')
+
+            if args[0] == 'add':
+                try:
+                    new_player_id = int(args[1])
+                    new_player_name = ' '.join(args[2:])
+                except:
+                    return 'Usage: !notable add dotaid playername'
+                else:
+                    if player_datas.get(int(args[1])):
+                        return "This id belongs to %s, use the 'rename' option to change it." % player_datas.get(new_player_id)
+                    player_datas[new_player_id] = new_player_name
+                    settings.setdata('dota_notable_players', player_datas, announce=False)
+                    return "%s registered as a notable player." % new_player_name
+
+            elif args[0] == 'remove' and len(args) == 2:
+                try:
+                    player_id = int(args[1])
+                except:
+                    return "Bad player id"
+                else:
+                    if player_id in player_datas:
+                        rip = player_datas[player_id]
+                        del player_datas[player_id]
+                        settings.setdata('dota_notable_players', player_datas, announce=False)
+                        return "Removed %s from notable player list." % rip
+                    else:
+                        return "That id is not in the list."
+
+            elif args[0] == 'rename':
+                try:
+                    player_id = int(args[1])
+                    new_name = ' '.join(args[2:])
+                except:
+                    return "Bad player id"
+                else:
+                    if player_id in player_datas:
+                        old_name = player_datas[player_id]
+                        player_datas[player_id] = new_name
+                        settings.setdata('dota_notable_players', player_datas, announce=False)
+                        return "Player name changed: %s -> %s" % (old_name, new_name)
+                    else:
+                        return "That id is not in the list."
+
+            elif args[0] == 'update':
+                changed = dota.update_verified_notable_players()
+                return "Updated list, %s entries changed." % changed
+
+            elif args[0] == 'reset':
+                settings.setdata('%s_notable_last_check' % channel, 0.0)
+                settings.setdata('%s_notable_message_count' % channel, 10000)
+
+    coms.append(command.Command('!notable', f, bot, groups=me_only_group))
 
 
     ## Node related message_commands ##
@@ -306,6 +363,8 @@ def generate_message_commands(bot):
         return str(reldelta).replace('relativedelta','').replace('+','').replace('(','').replace(')','')
 
     coms.append(command.Command('#!accountage', f, bot, groups=me_only_group))
+
+
 
     ######################################################################
     # Broadcaster/me message_commands
@@ -503,6 +562,25 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!recurring', f, bot, groups=me_and_broadcaster))
 
+
+    def f(channel, user, message, args, data, bot):
+        import twitchapi
+        if args:
+            sid = twitchapi.get_steam_id_from_twitch(args[0])
+            sid = 'http://steamcommunity.com/profiles/' + sid if sid else 'No steam account linked to %s.' % args[0]
+            return sid
+
+    coms.append(command.Command('!twitch2steam', f, bot, groups=me_and_broadcaster))
+
+    def f(channel, user, message, args, data, bot):
+        import twitchapi
+        if args:
+            twitchname = twitchapi.get_twitch_from_steam_id(args[0])
+            twitchname = twitchname if twitchname else 'No twitch account linked to this id.'
+            return twitchname
+
+    coms.append(command.Command('!steam2twitch', f, bot, groups=me_and_broadcaster))
+
     ######################################################################
     # Mod message_commands
     #
@@ -575,6 +653,26 @@ def generate_message_commands(bot):
             return "Use the command properly, idiot."
 
     coms.append(command.Command('!usercolor', f, bot, True, repeatdelay=8))
+
+    def f(channel, user, message, args, data, bot):
+        import twitchapi
+
+        if args: channel = args[0]
+
+        chatters = twitchapi.get_chatters(channel)
+        num_chatters = chatters['chatter_count']
+
+        try:
+            num_viewers = twitchapi.get('streams/%s' % channel)['stream']['viewers']
+        except:
+            num_viewers = 0
+
+        return 'Viewers: %s, Chatters: %s, Mods: %s%s%s' % (
+            num_viewers, num_chatters, len(chatters['chatters']['moderators']),
+            ', Admin: %s' % len(chatters['chatters']['admins']) if len(chatters['chatters']['admins']) else '',
+            ', Staff: %s' % len(chatters['chatters']['staff']) if len(chatters['chatters']['staff']) else '')
+
+    coms.append(command.Command('!chatters', f, bot, True, repeatdelay=15))
 
     ######################################################################
     #
@@ -1485,83 +1583,7 @@ def generate_message_commands(bot):
     #
 
     def f(channel, user, message, args, data, bot):
-        import twitchapi
-
-        if args: channel = args[0]
-
-        chatters = twitchapi.get_chatters(channel)
-        num_chatters = chatters['chatter_count']
-
-        try:
-            num_viewers = twitchapi.get('streams/%s' % channel)['stream']['viewers']
-        except:
-            num_viewers = 0
-
-        return 'Viewers: %s, Chatters: %s, Mods: %s%s%s' % (
-            num_viewers, num_chatters, len(chatters['chatters']['moderators']),
-            ', Admin: %s' % len(chatters['chatters']['admins']) if len(chatters['chatters']['admins']) else '',
-            ', Staff: %s' % len(chatters['chatters']['staff']) if len(chatters['chatters']['staff']) else '')
-
-    coms.append(command.Command('!chatters', f, bot, groups=me_only_group))
-
-    def f(channel, user, message, args, data, bot):
-        import settings, dota
-        if args:
-            player_datas = settings.getdata('dota_notable_players')
-
-            if args[0] == 'add':
-                try:
-                    new_player_id = int(args[1])
-                    new_player_name = ' '.join(args[2:])
-                except:
-                    return 'Usage: !notable add dotaid playername'
-                else:
-                    if player_datas.get(int(args[1])):
-                        return "This id belongs to %s, use the 'rename' option to change it." % player_datas.get(new_player_id)
-                    player_datas[new_player_id] = new_player_name
-                    settings.setdata('dota_notable_players', player_datas, announce=False)
-                    return "%s registered as a notable player." % new_player_name
-
-            elif args[0] == 'remove' and len(args) == 2:
-                try:
-                    player_id = int(args[1])
-                except:
-                    return "Bad player id"
-                else:
-                    if player_id in player_datas:
-                        rip = player_datas[player_id]
-                        del player_datas[player_id]
-                        settings.setdata('dota_notable_players', player_datas, announce=False)
-                        return "Removed %s from notable player list." % rip
-                    else:
-                        return "That id is not in the list."
-
-            elif args[0] == 'rename':
-                try:
-                    player_id = int(args[1])
-                    new_name = ' '.join(args[2:])
-                except:
-                    return "Bad player id"
-                else:
-                    if player_id in player_datas:
-                        old_name = player_datas[player_id]
-                        player_datas[player_id] = new_name
-                        settings.setdata('dota_notable_players', player_datas, announce=False)
-                        return "Player name changed: %s -> %s" % (old_name, new_name)
-                    else:
-                        return "That id is not in the list."
-
-            elif args[0] == 'update':
-                changed = dota.update_verified_notable_players()
-                return "Updated list, %s entries changed." % changed
-
-            elif args[0] == 'reset':
-                settings.setdata('%s_notable_last_check' % channel, 0.0)
-                settings.setdata('%s_notable_message_count' % channel, 10000)
-
-    coms.append(command.Command('!notable', f, bot, groups=me_only_group))
-
-    def f(channel, user, message, args, data, bot):
+        return "I don't think this command actually works, figure out how to do it properly."
         import dota, settings
         try:
             ccom = dota.get_console_connect_code(settings.getdata('%s_dota_id' % channel))
@@ -1571,31 +1593,10 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!watchgame', f, bot, groups=me_only_group))
 
-
-    def f(channel, user, message, args, data, bot):
-        import twitchapi
-        if args:
-            sid = twitchapi.get_steam_id_from_twitch(args[0])
-            sid = 'http://steamcommunity.com/profiles/' + sid if sid else 'No steam account linked to %s.' % args[0]
-            return sid
-
-    coms.append(command.Command('!twitch2steam', f, bot, groups=me_only_group))
-
-    def f(channel, user, message, args, data, bot):
-        import twitchapi
-        if args:
-            twitchname = twitchapi.get_twitch_from_steam_id(args[0])
-            twitchname = twitchname if twitchname else 'No twitch account linked to this id.'
-            return twitchname
-
-    coms.append(command.Command('!steam2twitch', f, bot, groups=me_only_group))
-
-
     def f(channel, user, message, args, data, bot):
         import dota, settings, makegist
 
         pdata = dota.get_players_in_game_for_player(settings.getdata('%s_dota_id' % channel), checktwitch=True, markdown=True)
-        # print 'Got match data, gistifying'
 
         if pdata is None:
             return 'Cannot find match.'
@@ -1604,6 +1605,7 @@ def generate_message_commands(bot):
         return "Player info for this game is available here: %s" % addr
 
     coms.append(command.Command('!playerinfo', f, bot, repeatdelay=30, groups=me_and_broadcaster))
+
 
     ######################################################################
 
