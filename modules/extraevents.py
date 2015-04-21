@@ -34,10 +34,10 @@ def alert(event):
 
     if event.etype in ['msg', 'action']:
         if event.channel in ['monkeys_forever', 'unsanitylive', 'pelmaleon', 'mynameisamanda', 'imayhaveborkedit', 'barnyyy']:
-            if 'watch?v=' in event.data or 'youtu.be/' in event.data:
+            if 'watch?v=' in event.data or 'youtu.be/' in event.data and not event.data.startswith('!songrequest'):
                 print '[ExtraEvents] Found youtube link, looking up title'
 
-                ids = re.findall('watch\?v=(\S{11})', event.data) + re.findall('youtu.be/(.{11})', event.data)
+                ids = re.findall('watch\?.*?v=(\S{11})', event.data) + re.findall('youtu.be/(.{11})', event.data)
                 ids = list(set(ids))
                 print '[ExtraEvents] Found ids: %s' % ids
 
@@ -50,7 +50,6 @@ def alert(event):
                 for ytid in ytdata:
                     if ytid:
                         event.bot.botsay('Video title for ID %s: %s' % (ytid, ytdata[ytid]))
-
 
 
     # strawpoll.me/api/v2/polls/{id} is json

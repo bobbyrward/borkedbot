@@ -13,20 +13,11 @@ Error = zerorpc.RemoteError
 
 
 def setup(bot):
-    # zrpc.connect('tcp://127.0.0.1:29390')
     pass
 
 def alert(event):
     return
 
-# def connect():
-    # global zrpc
-    # zrpc = zerorpc.Client()
-    # zrpc.connect('tcp://127.0.0.1:29390')
-
-# def disconnect():
-    # zrpc.close()
-    # del zrpc
 
 class ZRPC(object):
     def __init__(self):
@@ -49,10 +40,6 @@ class ZRPC(object):
         self.zrpc.close()
         # print 'returning'
 
-
-def contexttest():
-    with ZRPC() as zrpc:
-        return zrpc.status()
 
 # #####################
 

@@ -55,6 +55,7 @@ class Command(object):
         return hasattr(item, '__iter__')
 
     def _checkdelay(self):
+        # TODO: fix float/int comparison imprecision
         if self.lastuse is None: return True
         return int(self._htime() - self.lastuse) > self.repeatdelay
 

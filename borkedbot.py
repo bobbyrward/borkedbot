@@ -1,16 +1,14 @@
 import sys
 sys.dont_write_bytecode = True
 
-import cPickle, base64, time
-
-from twisted.internet import reactor, task, protocol#, stdio
-#from twisted.protocols import basic
-from twisted.words.protocols import irc
-
 import chatmanager
+import cPickle, base64, time
+from twisted.internet import reactor, task, protocol#, stdio
+from twisted.words.protocols import irc
+#from twisted.protocols import basic
 
 
-class MyBot(irc.IRCClient):
+class Borkedbot(irc.IRCClient):
     lineRate = 2
 
     opsinchan = set()
@@ -49,6 +47,9 @@ class MyBot(irc.IRCClient):
     def usercolor(self, user):
         return self.usertags.get(user.lower(), {'USERCOLOR':None}).get('USERCOLOR', None)
 
+    def isop(self, user):
+        return user in self.oplist | self.extrapos
+
     def timer(self):
         self.send_event(self.chan(), None, 'timer', time.time(), self, None)
 
@@ -86,7 +87,7 @@ class MyBot(irc.IRCClient):
         self.update_mods()
 
     def receivedMOTD(self, motd):
-        print '\n'.join(['\n### MOTD ###', '# \n'.join(motd), '############\n'])
+        print '\n'.join(['\n### MOTD ###', '# '.join(motd), '############\n'])
 
     def modeChanged(self, user, channel, sett, modes, args):
         # user channel           set  modes args
@@ -111,7 +112,6 @@ class MyBot(irc.IRCClient):
             self.update_mods()
 
 
-
     def action(self, user, channel, data):
         user = user.split("!")[0]
         self.send_event(self.chan(channel), user, 'action', data, self, user in self.oplist)
@@ -129,6 +129,8 @@ class MyBot(irc.IRCClient):
                 return
 
             if user == 'jtv':
+
+                # TODO: remove mod on CLEARCHAT
 
                 if msg.split()[0] in ['EMOTESET', 'USERCOLOR', 'SPECIALUSER']:
                     tag_user = msg.split()[1]
@@ -176,6 +178,7 @@ class MyBot(irc.IRCClient):
             # def event(channel, user, etype, data, bot, isop):
             self.send_event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
 
+
     def botsay(self, msg):
         try:
             self.say(self.factory.channel, str(msg))
@@ -194,6 +197,7 @@ class MyBot(irc.IRCClient):
                     return
 
         self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.nickname in self.oplist)
+
 
     def ban(self, user, message=None):
         self.botsay('.ban %s' % user)
@@ -218,6 +222,9 @@ class MyBot(irc.IRCClient):
         self.send_event(self.chan(channel), None, 'join', user, self, user in self.oplist)
 
     def userLeft(self, user, channel):
+        self.sendLine('TWITCHCLIENT 3')
+        return
+
         try:
             self.userlist.remove(user)
         except:
@@ -237,8 +244,8 @@ class MyBot(irc.IRCClient):
         # print line
         # irc.IRCClient.lineReceived(self, line)
 
-class MyBotFactory(protocol.ClientFactory):
-    protocol = MyBot
+class BotFactory(protocol.ClientFactory):
+    protocol = Borkedbot
 
     def __init__(self, channel, nickname):
         self.channel = channel
@@ -267,20 +274,21 @@ class MyBotFactory(protocol.ClientFactory):
 
 if __name__ == "__main__":
     if len(sys.argv) is not 2:
-        print "Usage: python borkedbot.py [channel]"
+        print "Usage: python borkedbot.py [twitch_channel]"
     else:
         starttime = time.time()
 
         server = 'irc.twitch.tv'
         port = 6667
         chan = sys.argv[1] if sys.argv[1].startswith('#') else '#%s' % sys.argv[1]
-        mbf = MyBotFactory(chan, 'borkedbot')
+        mbf = BotFactory(chan, 'borkedbot')
 
         # server, port = temp_get_channel_chat_server(chan).split(':')
 
         print 'Connecting to %s on port %s' % (server, port)
 
         reactor.connectTCP(server, int(port), mbf)
+        reactor.suggestThreadPoolSize(20)
         reactor.run()
 
         print "\nTotal run time: %s" % (time.time() - starttime)
