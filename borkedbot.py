@@ -191,7 +191,7 @@ class Borkedbot(irc.IRCClient):
                 print 'Ok that didn\'t work, lets try this:'
 
                 try:
-                    self.say(self.factory.channel, msg.decode("utf-8"))
+                    self.say(self.factory.channel, msg.encode("utf-8"))
                 except Exception, e:
                     print 'No that didn\'t work either, wtf how retarded is twisted/unicode'
                     return
