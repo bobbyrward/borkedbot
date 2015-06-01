@@ -3,10 +3,10 @@ sys.dont_write_bytecode = True
 
 import chatmanager
 import cPickle, base64, time
+from datetime import timedelta
 from twisted.internet import reactor, task, protocol#, stdio
 from twisted.words.protocols import irc
 #from twisted.protocols import basic
-
 
 class Borkedbot(irc.IRCClient):
     lineRate = 2
@@ -252,12 +252,12 @@ class BotFactory(protocol.ClientFactory):
         self.nickname = nickname
 
     def clientConnectionLost(self, connector, reason):
-        print "Lost connection: %s" % reason
+        print "Lost connection at %s: %s" % (time.time(), reason)
         print "Attempting to reconnect..."
         connector.connect()
 
     def clientConnectionFailed(self, connector, reason):
-        print "Connection failure: %s" % reason
+        print "Connection failure at %s: %s" % (time.time(), reason)
         print "Could not connect, retrying..."
         connector.connect()
 
@@ -291,4 +291,5 @@ if __name__ == "__main__":
         reactor.suggestThreadPoolSize(20)
         reactor.run()
 
-        print "\nTotal run time: %s" % (time.time() - starttime)
+        print "\nTotal run time: %s (%s)" % (str(timedelta(seconds=int(time.time() - starttime))), time.time() - starttime)
+

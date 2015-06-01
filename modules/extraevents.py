@@ -33,8 +33,8 @@ def alert(event):
     # http://youtube.com/get_video_info?video_id=n4D-N6aWIV4
 
     if event.etype in ['msg', 'action']:
-        if event.channel in ['monkeys_forever', 'unsanitylive', 'pelmaleon', 'mynameisamanda', 'imayhaveborkedit', 'barnyyy']:
-            if 'watch?v=' in event.data or 'youtu.be/' in event.data and not event.data.startswith('!songrequest'):
+        if event.channel in ['monkeys_forever', 'unsanitylive', 'pelmaleon', 'mynameisamanda', 'imayhaveborkedit', 'barnyyy', 'moodota2', 'gixgaming', 'kazkarontwo', 'lamperkat','f4ldota']:
+            if ('watch?v=' in event.data or 'youtu.be/' in event.data) and not event.data.strip().startswith('!'):# and event.user != 'rime_':
                 print '[ExtraEvents] Found youtube link, looking up title'
 
                 ids = re.findall('watch\?.*?v=(\S{11})', event.data) + re.findall('youtu.be/(.{11})', event.data)
@@ -60,18 +60,18 @@ def alert(event):
                 # event.bot.botsay("(▀̿̿Ĺ̯̿̿▀̿ ̿) No touching.")
 
 
-def get_youtube_title(v_id):
-    try:
-        title = re.findall('&title=(.*?)&', requests.get('http://youtube.com/get_video_info?video_id=%s' % v_id).text)[0]
-    except:
-        print '[ExtraEvents] Youtube lookup failed, using backup method'
-        title = None
+def get_youtube_title(v_id, backup=False):
+    if not backup:
+        try:
+            title = re.findall('&title=(.*?)&', requests.get('http://youtube.com/get_video_info?video_id=%s' % v_id).text)[0]
+            title = title.replace('+', ' ')
+        except:
+            print '[ExtraEvents] Youtube lookup failed, using backup method'
+            return get_youtube_title(v_id, True)
 
-    if not title:
+    else:
         ytd = requests.get('https://www.youtube.com/watch?v=%s' % v_id).text
         title = ytd[ytd.index('<title>')+7:ytd.index('</title>')-10]
-    else:
-        title = title.replace('+', ' ')
 
     parser = HTMLParser()
 
@@ -79,3 +79,24 @@ def get_youtube_title(v_id):
     title = parser.unescape(title)
 
     return title
+
+
+def get_strawpoll(sid):
+    strawapi = 'http://strawpoll.me/api/v2/polls/%s'
+    data = requests.get(requests.get(strawapi % sid))
+
+    '''
+
+    {u'multi': False,
+     u'options': [
+      u'Hotline Miami 2 - The coolest drug trip ever',
+      u'Please, Don\u2019t Touch Anything - Where I will undoubtedly touch something',
+      u'The Long Dark - New map and content? Say whaaaat?',
+      u'Dead Rising 1 - For the fabillionth time',
+      u'GTA 5 - The hunt for every quest I can find'
+     ],
+     u'permissive': False,
+     u'title': u"Hey, whats a game you'd like to see on cast. Pick a good one.",
+     u'votes': [47, 85, 29, 64, 85]}
+
+    '''

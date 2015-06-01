@@ -2,7 +2,6 @@ var steam = require("steam"),
     util = require("util"),
     fs = require("fs"),
     http = require('http'),
-    repl = require("repl"),
     dota2 = require("dota2"),
     bot = new steam.SteamClient(),
     Dota2 = new dota2.Dota2Client(bot, true),
@@ -195,7 +194,7 @@ var onSteamLogOn = function onSteamLogOn(){
             util.log('Dota status: ' + steamid + ' - ' + userstatusstring);
             delete dotauserplayingas[steamid];
         } else {
-            dotauserplayingas[steamid] = [heroname.replace('#',''), herolevel];
+            dotauserplayingas[steamid] = [heroname.replace('#','').toLowerCase(), herolevel];
         }
 
         dotauserstatus[steamid] = userstate;
@@ -928,7 +927,7 @@ function do_rss_updates() {
 };
 do_rss_updates();
 
-var rssEvent = setInterval(do_rss_updates, 60000);
+var rssEvent = setInterval(do_rss_updates, 30000);
 rssEvent.unref();
 
 
