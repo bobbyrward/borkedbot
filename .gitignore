@@ -18,6 +18,10 @@ lib64/
 parts/
 sdist/
 var/
+share/
+local/
+include/
+pip-selfcheck.json
 *.egg-info/
 .installed.cfg
 *.egg
@@ -107,3 +111,4 @@ joinpartbot.py
 modules/moderation.py
 modules/test
 modules/node-test
+modules/skype/*
