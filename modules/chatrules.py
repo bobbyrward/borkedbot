@@ -114,7 +114,7 @@ salem_roles = dict(salem_townies.items() + salem_mafia.items() + salem_neutrals.
 message_commands = []
 joinpart_commands = []
 
-global_channel_blacklist = ['cosmowright']
+global_channel_blacklist = []
 
 def setup(bot):
     reload(command)
@@ -131,16 +131,15 @@ def alert(event):
         tstart = time.time()
         for comm in message_commands:
             t1 = time.time()
+
+            # TODO: Catch error and return that
+
             output = comm.process(event.channel, event.user, event.data, _getargs(event.data))
             t2 = time.time()
             if output[1] is command.OK:
                 # print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
                 print "[Chatrules] '%s': %4.4fms, Total time: %4.4fms" % (comm.trigger, (t2-t1)*1000, (t2-tstart)*1000)
                 event.bot.botsay(output[0])
-
-    #if event.etype in ['join', 'part']:
-    #    # not quite yet, maybe not for a while
-    #    pass
 
 
 def generate_message_commands(bot):
@@ -149,8 +148,6 @@ def generate_message_commands(bot):
     # generate_channel_commands()
     global message_commands
     coms = []
-
-    #print "Commands are being generated"
 
 
     #############################
@@ -162,12 +159,7 @@ def generate_message_commands(bot):
     me_only_group = ['special']
     me_and_broadcaster = ['special', 'broadcaster']
 
-    coms.append(command.SimpleCommand('#!dbsize', "We've got %s entries." % markov.redis_conn.dbsize(), bot, groups=me_only_group, prependuser=False))
-
-    # _opstr = str(bot.oplist).replace('[','').replace(']', '').replace('\'','')
-    # _ostr = "There are %s mods in chat: %s" % (len(bot.oplist), _opstr)
-    # coms.append(command.SimpleCommand('#!ops', _ostr, bot, groups=me_only_group, prependuser=False))
-    # coms.append(command.SimpleCommand('#!opnum', "There are %s mods in chat" % len(bot.oplist), bot, groups=me_only_group, prependuser=False))
+    coms.append(command.SimpleCommand('#!dbsize', "We've got %s word pairs." % markov.redis_conn.dbsize(), bot, groups=me_only_group, prependuser=False))
 
     # Exec #
 
@@ -362,7 +354,7 @@ def generate_message_commands(bot):
 
         return str(reldelta).replace('relativedelta','').replace('+','').replace('(','').replace(')','')
 
-    coms.append(command.Command('#!accountage', f, bot, groups=me_only_group))
+    coms.append(command.Command('!accountage', f, bot, groups=me_and_broadcaster))
 
 
 
@@ -739,9 +731,9 @@ def generate_message_commands(bot):
                 channel = hc
                 textstr += ' (hosted channel)'
 
-        return textstr.format(user, channel)
+        return textstr.format(user, channel) #+ " | Friendly reminder that BTTV has a /uptime command." if args else ''
 
-    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda', 'natalie'], repeatdelay=15))
+    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
 
 
     ######################################################################
@@ -755,7 +747,6 @@ def generate_message_commands(bot):
         import json, os, time, settings, dota
 
         if channel == 'barnyyy':
-            if user == 'nabe_gewell': return 'nabe_gewell: Fuck off'
             return '%s: 5k' % user
 
         if channel not in dota.enabled_channels.keys():
@@ -1080,7 +1071,48 @@ def generate_message_commands(bot):
 
         return "%s is rank %s with %s points, %s W/L and %s streak. See http://neodota.com/nel/ for more info." % (name, rank, rating.replace('(','').replace(')',''), score, streak)
 
-    coms.append(command.Command(['!nel','#nel'], f, bot, repeatdelay=50))
+    coms.append(command.Command('!nel', f, bot, repeatdelay=50))
+
+    def f(channel, user, message, args, data, bot):
+
+        if channel not in ['monkeys_forever', 'moodota2']: return
+
+        namemap = {
+            'monkeys_forever': 'monkeys-forever',
+            'moodota2': 'Moo',
+            'gixgaming': 'giX'
+        }
+
+        import json, requests, time, datetime, dateutil, dateutil.tz, dateutil.relativedelta
+        lburl = "http://www.dota2.com/webapi/ILeaderboard/GetDivisionLeaderboard/v0001?division=americas"
+        jdata = json.loads(requests.get(lburl).text)
+
+        rank, mmr = {i['name']:(i['rank'],i['solo_mmr']) for i in jdata['leaderboard']}[namemap[channel]]
+        ltime = time.localtime(int(jdata['time_posted']))
+
+        lastupdate = time.strftime('%b %d, %I:%M%p',ltime)
+        lt = datetime.datetime.fromtimestamp(time.mktime(ltime)).replace(tzinfo=dateutil.tz.tzutc())
+        t_now = datetime.datetime.now(dateutil.tz.tzutc())
+
+        reldelta = dateutil.relativedelta.relativedelta(t_now, lt)
+
+        daystr = ('{0} is rank {1} on the leaderboards, with {2} mmr. Last leaderboard update: '
+            '{3.days} days, {3.hours} hours, {3.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
+
+        hourstr = ('{0} is rank {1} on the leaderboards, with {2} mmr. Last leaderboard update: '
+            '{3.hours} hours, {3.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
+
+        minstr = ('{0} is rank {1} on the leaderboards, with {2} mmr. Last leaderboard update: '
+            '{3.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
+
+        if reldelta.days:
+            return daystr.format(channel, rank, mmr, reldelta)
+        elif reldelta.hours:
+            return hourstr.format(channel, rank, mmr, reldelta)
+        else:
+            return minstr.format(channel, rank, mmr, reldelta)
+
+    coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, repeatdelay=25))
 
 
     coms.append(command.SimpleCommand('!mumble', 'doc.asdfxyz.de (default port) 100 slot open server, on 24/7.  Try not to be awful, or bork will ban you.',
@@ -1098,38 +1130,6 @@ def generate_message_commands(bot):
 
 
     # Monkeys_forever ######################################################
-
-    def f(channel, user, message, args, data, bot):
-        import json, requests, time, datetime, dateutil, dateutil.tz, dateutil.relativedelta
-        lburl = "http://www.dota2.com/webapi/ILeaderboard/GetDivisionLeaderboard/v0001?division=americas"
-        jdata = json.loads(requests.get(lburl).text)
-
-        rank, mmr = {i['name']:(i['rank'],i['solo_mmr']) for i in jdata['leaderboard']}['monkeys-forever']
-        ltime = time.localtime(int(jdata['time_posted']))
-
-        lastupdate = time.strftime('%b %d, %I:%M%p',ltime)
-        lt = datetime.datetime.fromtimestamp(time.mktime(ltime)).replace(tzinfo=dateutil.tz.tzutc())
-        t_now = datetime.datetime.now(dateutil.tz.tzutc())
-
-        reldelta = dateutil.relativedelta.relativedelta(t_now, lt)
-
-        daystr = ('Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '
-            '{2.days} days, {2.hours} hours, {2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
-
-        hourstr = ('Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '
-            '{2.hours} hours, {2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
-
-        minstr = ('Monkeys is rank {0} on the leaderboards, with {1} mmr. Last leaderboard update: '
-            '{2.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
-
-        if reldelta.days:
-            return daystr.format(rank, mmr, reldelta)
-        elif reldelta.hours:
-            return hourstr.format(rank, mmr, reldelta)
-        else:
-            return minstr.format(rank, mmr, reldelta)
-
-    coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, channels=['monkeys_forever'], repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
         import twitchapi
@@ -1174,7 +1174,7 @@ def generate_message_commands(bot):
             try:
                 steamid = dota.determineSteamid(targetsteamid)
                 if steamid == 76561198153108180:
-                    return "%s: No, you're supposed to use your own steam account.  I'm already in the guild." % user
+                    return "%s: No, you're supposed to use your own account.  I'm already in the guild." % user
             except Exception as e:
                 print e
                 return "Something went wrong, it might be an issue with the steam api"
@@ -1190,9 +1190,10 @@ def generate_message_commands(bot):
                     invite_result = node.invite_to_guild(channelguildid, steamid)
 
                 else: # ID already on record
-                    print "Attempting to kick %s" % previousinviteid
-                    kick_result = node.kick_from_guild(channelguildid, previousinviteid)
-                    print 'Kick result: %s' % kick_result
+                    if previousinviteid != steamid:
+                        print "Attempting to kick %s" % previousinviteid
+                        kick_result = node.kick_from_guild(channelguildid, previousinviteid)
+                        print 'Kick result: %s' % kick_result
 
                     invite_result = node.invite_to_guild(channelguildid, steamid)
 
@@ -1232,7 +1233,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
 
-        return "%s: Grooveshark is dumb sometimes, just check http://last.fm/user/monkeys-forever/now ALSO TOP LEFT OF STREAM" % user
+        return "%s: rip grooveshark, see top left of stream" % user
 
         import requests
 
@@ -1256,8 +1257,8 @@ def generate_message_commands(bot):
     #coms.append(command.SimpleCommand(['!song', '!currentsong', '!songname'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
     #    channels=['monkeys_forever'], repeatdelay=25, targeted=False))
 
-    coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'],
-        "Monkeys' playlist can be found here: http://grooveshark.com/playlist/Stream/81341599", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
+    # coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'],
+        # "", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand('!songrequest', 'This aint no nightbot stream', bot, channels=['monkeys_forever'], repeatdelay=10))
 
@@ -1271,6 +1272,21 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand(['!fountainhooks', '!pudgefail', '!pudgefails'], 'rip root http://www.youtube.com/watch?v=7ba9nCot71w&hd=1',
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
+
+    # Barny #########################################################
+
+    coms.append(command.SimpleCommand('!announcer', 'Weeaboo anime boatgirl announcer > https://www.youtube.com/watch?v=AQXQkDFE-sk',
+        bot, channels=['barnyyy'], targeted=True, repeatdelay=15))
+
+    coms.append(command.SimpleCommand('!rightclick', 'dota_player_auto_repeat_right_mouse 1',
+        bot, channels=['barnyyy'], targeted=True, repeatdelay=15))
+
+    coms.append(command.SimpleCommand('!vectorpathing', 'dota_unit_allow_moveto_direction 1',
+        bot, channels=['barnyyy'], targeted=True, repeatdelay=15))
+
+    coms.append(command.SimpleCommand('!consolecommands', 'Right click mouse spam: dota_player_auto_repeat_right_mouse 1 -- No pathing movement: dota_unit_allow_moveto_direction 1',
+        bot, channels=['barnyyy'], targeted=True, repeatdelay=15))
+
 
     # Superjoe ######################################################
 
@@ -1548,35 +1564,6 @@ def generate_message_commands(bot):
         bot, channels=['unsanitylive'], prependuser=False, repeatdelay=10))
 
 
-    # Cosmo ##############
-
-    # def f(channel, user, message, args, data, bot):
-    #     return "This command is disabled.  Contact imayhaveborkedit to re-enable it."
-
-    #     if args:
-    #         import settings, cosmo_rng
-
-    #         if args[0].lower() == 'on':
-    #             settings.setdata('cosmo_rng_mode', True)
-    #             return "RNG godmode turned on."
-    #         elif args[0].lower() == 'off':
-    #             settings.setdata('cosmo_rng_mode', False)
-    #             return "RNG godmode turned off."
-    #         elif args[0].lower() == 'maxtimeout':
-    #             try:
-    #                 settings.setdata('cosmo_rng_maxto', int(args[1]))
-    #                 return "Max timeout duration set to %s seconds." % args[1]
-    #             except:
-    #                 return "That's not a number"
-    #         elif args[0].lower() == 'powerup':
-    #             settings.setdata('cosmo_rng_last_powerup', 0)
-    #         elif args[0].lower() == 'test':
-    #             return cosmo_rng.test()
-    #     else:
-    #         return "RNG mode is %s" % 'on' if settings.getdata('cosmo_rng_mode') else 'off'
-
-    # coms.append(command.Command('!RNGmode', f, bot, channels=['cosmowright'], groups=me_and_broadcaster))
-
     ######################################################################
     #
     # Test commands
@@ -1605,6 +1592,63 @@ def generate_message_commands(bot):
         return "Player info for this game is available here: %s" % addr
 
     coms.append(command.Command('!playerinfo', f, bot, repeatdelay=30, groups=me_and_broadcaster))
+
+
+    def f(channel, user, message, args, data, bot):
+        import time
+
+        if not args:
+            return "You know you're supposed to give me names to unban right?"
+
+        sleeptime = 0.4
+
+        bot.botsay("Unbanning %s names, will be completed in %s seconds." % (len(args), sleeptime*len(args)))
+
+        for name in args:
+            try:
+                bot.botsay('.unban ' + name.lower())
+            except:
+                bot.botsay("Bad name: " + name)
+                print "Bad name: " + name
+            time.sleep(sleeptime)
+
+    coms.append(command.Command('!massunban', f, bot, repeatdelay=30, groups=me_and_broadcaster))
+
+
+    def f(channel, user, message, args, data, bot):
+        import steamapi
+        data = steamapi.GetTournamentPrizePool(2733)
+
+        moneys = data['result']['prize_pool']
+
+        prizes = {
+             9000000: 'Wyvern Hatchling Courier',
+            10000000: 'Immortal Treasure III',
+            11000000: 'Desert Terrain',
+            12000000: 'Music Pack',
+            13000000: 'Bristleback Announcer Pack',
+            14000000: 'New Weather Effects',
+            15000000: 'Special Axe Immortal & Longform Comic'
+        }
+
+        remaining = None
+        for prize in sorted(prizes.keys()):
+            if moneys < prize:
+                nextprize = prizes[prize]
+                remaining = prize - moneys
+                break
+
+        if moneys == 1600000:
+            remaining = False
+            nextprize = 'Valve pls fix ur shit'
+
+        if remaining:
+            return 'Current TI5 prize pool: ${:,} -- {} in ${:,}'.format(moneys, nextprize, remaining)
+        else:
+            return 'Current TI5 prize pool: ${:,} -- {}'.format(moneys, nextprize)
+        
+
+    coms.append(command.Command('!prizepool', f, bot, True, repeatdelay=30))
 
 
     ######################################################################
