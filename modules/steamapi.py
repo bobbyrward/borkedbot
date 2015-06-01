@@ -148,13 +148,6 @@ def GetTeamInfoByTeamID(start_at_team_id = None, teams_requested = None, raw_req
     return _get_call(p, **args)
 
 
-def GetPlayerSummaries(raw_request = False):
-    args = {k:v for k,v in locals().items() if v is not None}
-    p = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/"
-
-    return _get_call(p, **args)
-
-
 def GetSchema(raw_request = False):
     args = {k:v for k,v in locals().items() if v is not None}
     p = "https://api.steampowered.com/IEconItems_570/GetSchema/v0001/"
@@ -175,6 +168,12 @@ def GetPlayerSummaries(steamids, raw_request = False):
 
     return _get_call(p, **args)
 
+
+def GetTournamentPrizePool(leagueid = None):
+    args = {k:v for k,v in locals().items() if v is not None}
+    p = "https://api.steampowered.com/IEconDOTA2_570/GetTournamentPrizePool/v1/"
+
+    return _get_call(p, **args)
 
 def setup(bot):
     return
