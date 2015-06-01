@@ -114,6 +114,7 @@ def blurb(channel, bot, override=False):
     return r is not None
 
 def latestBlurb(channel, override=False):
+    # if node.get_user_status(dota.dotaToSteam(settings.getdata('%s_dota_id' % channel))) is not None:
     if checktimeout(channel) or override:
         dotaid = settings.getdata('%s_dota_id' % channel)
         if dotaid is None:
@@ -299,6 +300,14 @@ def getmatchMMRstring(channel, dotaid):
 
     with open('/var/www/twitch/%s/data' % channel, 'r') as d:
         dotadata = json.loads(d.readline())
+
+    try:
+        dotadata['gameAccountClient']
+    except:
+        if dotadata['result'] == 15:
+            return '[MMR Error: Private profile?]'
+        if dotadata['result'] == 2:
+            return '[MMR Error]'
 
     old_mmr_s = str(olddotadata['gameAccountClient']['soloCompetitiveRank'])
     old_mmr_p = str(olddotadata['gameAccountClient']['competitiveRank'])
