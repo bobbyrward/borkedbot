@@ -101,6 +101,13 @@ def alert(event):
                 print '[Dota-Error] Notable player blurb failure: %s' % e
 
 
+            try:
+                prizepooldata = check_for_prizepool_update(event.channel)
+                if prizepooldata:
+                    event.bot.botsay(prizepooldata)
+            except Exception, e:
+                print '[Dota-Error] Prizepool check error (probably api): ', e
+
 def blurb(channel, bot, override=False):
     t1 = time.time()
     r = latestBlurb(channel, override)
@@ -521,7 +528,7 @@ def notablePlayerBlurb(channel, pages=33):
                     if userstatus == '#DOTA_RP_PLAYING_AS':
                         playerheroid = node.get_user_playing_as(dotaToSteam(playerid))
                         playerheroid = getHeroIddict(False)[playerheroid[0]]
-                    else: 
+                    else:
                         playerheroid = None
 
                     print "[Dota-Notable] Doing search for notable players%s" % (' using hero id' if playerheroid else '')
@@ -753,6 +760,43 @@ def collect_match_ids(dotaid, games):
 #
 # The rest should be matchable
 
+
+def check_for_prizepool_update(channel, override=False):
+    lasttier = settings.trygetset('%s_last_prizepool_tier' % channel, 'unset')
+    lastcheck = settings.trygetset('%s_last_prizepool_check' % channel, time.time())
+
+    prizes = {
+        10000000: 'Immortal Treasure III',
+        11000000: 'Desert Terrain',
+        12000000: 'Music Pack',
+        13000000: 'Bristleback Announcer Pack',
+        14000000: 'New Weather Effects',
+        15000000: 'Special Axe Immortal & Longform Comic'
+    }
+
+    if time.time() - lastcheck > 120 or override:
+        data = steamapi.GetTournamentPrizePool(2733)
+        moneys = data['result']['prize_pool']
+
+
+        for prizetier in sorted(prizes.keys()):
+            if moneys < prizetier:
+                nextprize = prizes[prizetier]
+                break
+            else:
+                currenttier = prizetier
+
+        # print 'last, current: ', lasttier, currenttier
+
+        settings.setdata('%s_last_prizepool_check' % channel, time.time(), announce=False)
+
+        if lasttier == 'unset':
+            settings.setdata('%s_last_prizepool_tier' % channel, currenttier, announce=False)
+            return
+
+        if currenttier > lasttier:
+            settings.setdata('%s_last_prizepool_tier' % channel, currenttier)
+            return 'Compendium Stretch Goal {} Unlocked at ${:,}'.format(prizes[currenttier], moneys)
 
 
 class Lobby(object):
