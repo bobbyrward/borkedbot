@@ -67,14 +67,16 @@ class Borkedbot(irc.IRCClient):
         self.say(self.factory.channel, '/mods')
 
     def signedOn(self):
-        self.sendLine('TWITCHCLIENT 3') # Oh boy here we go
+        self.send_event(None, None, 'serverjoin', None, self, None)
 
+        self.sendLine('TWITCHCLIENT 3')
+        self.sendLine('CAP REQ :twitch.tv/commands')
+
+        self.log("Signed on as %s.\n" % self.nickname)
         self.join(self.factory.channel)
         self.oplist.add(self.chan())
-        self.log("Signed on as %s.\n" % self.nickname)
 
         chatmanager.setup(self)
-        self.send_event(None, None, 'serverjoin', None, self, None)
 
 
     def joined(self, channel):
@@ -244,6 +246,8 @@ class Borkedbot(irc.IRCClient):
         # print line
         # irc.IRCClient.lineReceived(self, line)
 
+    # TODO: Add a stdin reading thread
+
 class BotFactory(protocol.ClientFactory):
     protocol = Borkedbot
 
@@ -292,4 +296,5 @@ if __name__ == "__main__":
         reactor.run()
 
         print "\nTotal run time: %s (%s)" % (str(timedelta(seconds=int(time.time() - starttime))), time.time() - starttime)
+
 

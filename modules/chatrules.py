@@ -297,52 +297,6 @@ def generate_message_commands(bot):
     coms.append(command.Command('!notable', f, bot, groups=me_only_group))
 
 
-    ## Node related message_commands ##
-
-
-    def f(channel, user, message, args, data, bot):
-        import node
-
-        if args:
-            if args[0].lower() == 'status':
-                con_steam, con_dota = node.status()
-
-                status_steam = "Ok" if con_steam else "Not ok"
-                status_dota = "Ok" if con_dota else "Not ok"
-
-                return "Connection status: Steam: %s | Dota: %s" % (status_steam, status_dota)
-
-            if args[0].lower() == 'restart':
-                node.restart()
-
-                return "Restarting steam bot, this should only take a few seconds."
-
-            if args[0].lower() == 'matchmaking':
-                # return "This breaks the bot.  Fix it first idiot."
-
-                import difflib, time
-                mmdata = node.get_mm_stats()
-
-                try:
-                    args[1]
-                except:
-                    args.append('USEast')
-
-                # region = difflib.get_close_matches(args[1], mmdata.keys(), 1)[0]
-
-                try:
-                    lnames = {n.lower():n for n in mmdata.keys()}
-                    region = [lnames[r] for r in difflib.get_close_matches(args[1].lower(), lnames, 1)][0]
-                except:
-                    return "No match for %s" % args[1]
-
-                searchers = mmdata[region]
-
-                return  "Matchmaking data for region %s: Players in queue: %s" % (region, searchers)
-
-
-    coms.append(command.Command('#!node', f, bot, groups=me_only_group))
-
     def f(channel, user, message, args, data, bot):
         import twitchapi, datetime, dateutil.parser, dateutil.relativedelta
 
@@ -665,6 +619,51 @@ def generate_message_commands(bot):
             ', Staff: %s' % len(chatters['chatters']['staff']) if len(chatters['chatters']['staff']) else '')
 
     coms.append(command.Command('!chatters', f, bot, True, repeatdelay=15))
+
+    def f(channel, user, message, args, data, bot):
+        import node
+
+        if args:
+            if args[0].lower() == 'status':
+                con_steam, con_dota = node.status()
+
+                status_steam = "Ok" if con_steam else "Not ok"
+                status_dota = "Ok" if con_dota else "Not ok"
+
+                return "Connection status: Steam: %s | Dota: %s" % (status_steam, status_dota)
+
+            if args[0].lower() == 'restart' and user == 'imayhaveborkedit':
+                node.restart()
+
+                return "Restarting steam bot, this should only take a few seconds."
+
+            if args[0].lower() == 'matchmaking':
+                # return "This breaks the bot.  Fix it first idiot."
+
+                import difflib, time
+                mmdata = node.get_mm_stats()
+
+                try:
+                    args[1]
+                except:
+                    args.append('USEast')
+
+                # region = difflib.get_close_matches(args[1], mmdata.keys(), 1)[0]
+
+                if args[1] == 'list':
+                    return 'Matchmaking regions: %s' % ', '.join(mmdata.keys())
+
+                try:
+                    lnames = {n.lower():n for n in mmdata.keys()}
+                    region = [lnames[r] for r in difflib.get_close_matches(args[1].lower(), lnames, 1)][0]
+                except:
+                    return "No match for %s" % args[1]
+
+                searchers = mmdata[region]
+
+                return  "Matchmaking data for region %s: Players in queue: %s" % (region, searchers)
+
+    coms.append(command.Command('!node', f, bot, True, repeatdelay=10))
 
     ######################################################################
     #
@@ -1120,11 +1119,22 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         if args:
+            doreset = len(args) >= 2
             if args[0] == 'steam':
+                if doreset and args[1] == 'reset':
+                    settings.setdata('%s_dota_last_steam_rss_update_url' % channel, '0')
+                    return
+
                 return settings.getdata('%s_dota_last_steam_rss_update_url' % channel)
 
             if args[0] == 'dota':
+                if doreset and args[1] == 'reset':
+                    settings.setdata('%s_dota_last_dota2_rss_update_url' % channel, '0')
+                    return
+
                 return settings.getdata('%s_dota_last_dota2_rss_update_url' % channel)
+
+
 
     coms.append(command.Command('!blog', f, bot, repeatdelay=30))
 
@@ -1257,8 +1267,8 @@ def generate_message_commands(bot):
     #coms.append(command.SimpleCommand(['!song', '!currentsong', '!songname'], 'The name of the song is in the top left of the stream.  Open your eyeholes!', bot,
     #    channels=['monkeys_forever'], repeatdelay=25, targeted=False))
 
-    # coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'],
-        # "", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
+    coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'],
+        "https://play.spotify.com/user/monkeys-/playlist/7ob9QZOQi569vMVXh8GhDT", bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand('!songrequest', 'This aint no nightbot stream', bot, channels=['monkeys_forever'], repeatdelay=10))
 
@@ -1622,7 +1632,6 @@ def generate_message_commands(bot):
         moneys = data['result']['prize_pool']
 
         prizes = {
-             9000000: 'Wyvern Hatchling Courier',
             10000000: 'Immortal Treasure III',
             11000000: 'Desert Terrain',
             12000000: 'Music Pack',
@@ -1646,10 +1655,58 @@ def generate_message_commands(bot):
             return 'Current TI5 prize pool: ${:,} -- {} in ${:,}'.format(moneys, nextprize, remaining)
         else:
             return 'Current TI5 prize pool: ${:,} -- {}'.format(moneys, nextprize)
-        
+
 
     coms.append(command.Command('!prizepool', f, bot, True, repeatdelay=30))
 
+
+    def f(channel, user, message, args, data, bot):
+        import twitchapi, datetime, dateutil.parser
+
+        if args:
+            followinguser = args[0]
+            if len(args) > 1:
+                targetuser = args[1]
+            else:
+                targetuser = channel
+
+            try:
+                userdata = twitchapi.get('users/%s/follows/channels/%s' % (followinguser.lower(), targetuser.lower()))
+            except:
+                return "Either they don't follow that user or the twitchapi borked"
+
+            isotime = userdata['created_at']
+
+            t_0 = dateutil.parser.parse(isotime)
+            t_now = datetime.datetime.now(dateutil.tz.tzutc())
+            reldelta = dateutil.relativedelta.relativedelta(t_now, t_0)
+
+            reldelta.microseconds = 0
+            strdelta = str(reldelta).replace('relativedelta','').replace('+','').replace('(','').replace(')','')
+
+            listdelta = strdelta.split(', ')
+            for x in xrange(0, len(listdelta)):
+                if listdelta[x].endswith('s=1'):
+                    listdelta[x] = listdelta[x].replace('s=1', '=1')
+
+            timedata = [ ' '.join(reversed(x.split('='))) for x in listdelta]
+
+            return "[Not sure if accurate] %s has followed %s for %s." % (followinguser, targetuser, ', '.join(timedata))
+
+            # years=1, months=2, days=22, hours=12, minutes=42, seconds=16
+
+
+    coms.append(command.Command('!followingsince', f, bot, True, groups=me_only_group))
+
+
+    def f(channel, user, message, args, data, bot):
+        import twitchapi, random
+
+        chatters = twitchapi.get_chatters(channel)['chatters']
+        return 'I choose %s!' % random.choice(chatters['viewers'] + chatters['moderators'] + chatters['staff'] + chatters['admins'])
+
+
+    coms.append(command.Command('!randomviewer', f, bot, True))
 
     ######################################################################
 

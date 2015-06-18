@@ -50,5 +50,5 @@ def log(user, channel, msg, isop, isaction = False, logstdout = True):
         except UnicodeEncodeError:
             print 'Error logging line:', msg
             print 'Attempting to decode'
-            f.write(logfileformat % (now, user, msg.decode('utf8')))
+            f.write(logfileformat % (now, user, msg.encode('utf8')))
 

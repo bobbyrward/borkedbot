@@ -2,6 +2,7 @@ import sys
 sys.dont_write_bytecode = True
 
 from HTMLParser import HTMLParser
+from twisted.internet import reactor
 import os, time, json, subprocess, shlex, requests, feedparser
 import steamapi, twitchapi, settings, node, timer
 
@@ -77,9 +78,17 @@ def alert(event):
             settings.setdata('%s_notable_message_count' % event.channel, mes_count + 1, announce=False)
 
             try:
-                blurb(event.channel, event.bot)
+                if not settings.trygetset('%s_matchblurb_running' % event.channel, False):
+                    settings.setdata('%s_matchblurb_running' % event.channel, True, announce=False)
+                    blurb(event.channel, event.bot)
+                else:
+                    raise RuntimeWarning('Blurb already running')
+            except RuntimeWarning, e:
+                pass
             except Exception, e:
                print '[Dota-Error] Match blurb failure: %s' % e
+            else:
+                settings.setdata('%s_matchblurb_running' % event.channel, False, announce=False)
             msgtimer.stop()
             # print msgtimer
 
@@ -100,13 +109,12 @@ def alert(event):
             except Exception, e:
                 print '[Dota-Error] Notable player blurb failure: %s' % e
 
-
             try:
                 prizepooldata = check_for_prizepool_update(event.channel)
                 if prizepooldata:
                     event.bot.botsay(prizepooldata)
             except Exception, e:
-                print '[Dota-Error] Prizepool check error (probably api): ', e
+                print '[Dota-Error] Prizepool check error (probably api)'
 
 def blurb(channel, bot, override=False):
     t1 = time.time()
@@ -114,9 +122,11 @@ def blurb(channel, bot, override=False):
 
     if r is not None:
         t2 = time.time()
-        print "[Dota] Blurb time: %4.4fms" % ((t2-t1)*1000)
+        print "[Dota] Blurb time: %4.4fms (posting in 6 seconds)" % ((t2-t1)*1000)
 
-        bot.botsay(r)
+        settings.setdata('%s_matchblurb_running' % channel, False, announce=False)
+        reactor.callLater(6.0, bot.botsay, r)
+        # bot.botsay(r)
 
     return r is not None
 
@@ -304,6 +314,7 @@ def getmatchMMRstring(channel, dotaid):
     wentok = updateMMR(channel)
     if not wentok:
         print "[Dota-MMR] SOMETHING MAY HAVE GONE HORRIBLY WRONG GETTING MMR"
+        return '[MMR Error: Something broke, try again later]'
 
     with open('/var/www/twitch/%s/data' % channel, 'r') as d:
         dotadata = json.loads(d.readline())
