@@ -1144,7 +1144,7 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import twitchapi
         if user not in bot.channelsubs:
-            # print user, user in bot.channelsubs
+            print user, 'is not a sub'
             if user != 'imayhaveborkedit' or user not in bot.oplist:
                 return
 

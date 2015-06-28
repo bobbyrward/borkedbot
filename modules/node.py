@@ -31,10 +31,10 @@ class ZRPC(object):
 
     def __exit__(self, etype, evalue, tb):
         if etype is not None:
-            print 'Node error:'
-            print etype
-            print evalue
-            print tb
+            print 'Node error:', evalue, '(%s)' % etype
+            # print etype
+            # print evalue
+            # print tb
 
         # print 'closing'
         self.zrpc.close()

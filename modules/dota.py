@@ -476,13 +476,6 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
                     try:
                         playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
                     except:
-                        # try:
-                            # print 'found notable player picking hero %s, position ' % notable_players[steamToDota(player['steamId'])],
-                            # print players.index(player)
-                            # print 'I think their color is %s' % POSITION_COLORS[players.index(player)]
-                        # except Exception, e:
-                            # print 'you borked something idiot', e
-
                         playerhero = POSITION_COLORS[players.index(player)]
 
                     if long(steamToDota(player['steamId'])) != long(targetdotaid):
@@ -491,7 +484,7 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
                         print '[Dota-Notable] Discounting target player'
 
                 if steamToDota(player['steamId']) == long(targetdotaid):
-                    print '[Dota-Notable] found target player,',
+                    print '[Dota-Notable] found target player'
                     target_found = True
 
             #TODO: ADD THE OTHER DATA IN HERE SOMEWHERE
@@ -505,7 +498,7 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
                 return notable_players_found
             # print 'searched game %s, T+%4.4fms' % (games.index(game), (time.time()-t0)*1000)
 
-        print '[Dota-Notable] searched game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
+        print '[Dota-Notable] searched page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
 
 def getNotableCheckReady(channel):
