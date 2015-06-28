@@ -69,7 +69,6 @@ class Borkedbot(irc.IRCClient):
     def signedOn(self):
         self.send_event(None, None, 'serverjoin', None, self, None)
 
-        self.sendLine('TWITCHCLIENT 3')
         self.sendLine('CAP REQ :twitch.tv/commands')
 
         self.log("Signed on as %s.\n" % self.nickname)
@@ -180,6 +179,15 @@ class Borkedbot(irc.IRCClient):
             # def event(channel, user, etype, data, bot, isop):
             self.send_event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
 
+    def noticed(self, user, channel, msg):
+        print '[Borkedbot] Notice from %s to %s: %s' % (user, channel, msg)
+
+        if 'The moderators of this room are:' in msg:
+            self.oplist = set(msg.split(': ')[1].split(', ')) | {self.chan()}
+            if not self.gotops:
+                self.log("Received initial list of ops")
+                self.gotops = True
+
 
     def botsay(self, msg):
         try:
@@ -214,25 +222,20 @@ class Borkedbot(irc.IRCClient):
         c = ch or self.channel
         return c.replace('#','')
 
-    def userJoined(self, user, channel):
-        print 'Oh dear we\'re gettings joins.  Resending TC 3'
-        self.sendLine('TWITCHCLIENT 3')
-        return
+    # def userJoined(self, user, channel):
+        # return
+        # self.userlist.append(user)
+        # self.userlist = list(set(self.userlist))
+        # self.send_event(self.chan(channel), None, 'join', user, self, user in self.oplist)
 
-        self.userlist.append(user)
-        self.userlist = list(set(self.userlist))
-        self.send_event(self.chan(channel), None, 'join', user, self, user in self.oplist)
-
-    def userLeft(self, user, channel):
-        self.sendLine('TWITCHCLIENT 3')
-        return
-
-        try:
-            self.userlist.remove(user)
-        except:
-            print "User not in list to part from (%s)" % user
-        self.userlist = list(set(self.userlist))
-        self.send_event(self.chan(channel), None, 'part', user, self, user in self.oplist)
+    # def userLeft(self, user, channel):
+        # return
+        # try:
+            # self.userlist.remove(user)
+        # except:
+            # print "User not in list to part from (%s)" % user
+        # self.userlist = list(set(self.userlist))
+        # self.send_event(self.chan(channel), None, 'part', user, self, user in self.oplist)
 
     def quirkyMessage(self, s):
         print "\nSomething odd has happened:"
