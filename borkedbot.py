@@ -203,7 +203,6 @@ class Borkedbot(irc.IRCClient):
             # No need to log because the notice event will
             self.send_event(self.chan(), None, 'hosting', None, self, self.nickname in self.oplist)
         else:
-            pass
             self.log('Hosting {} for {} viewers'.format(*params[1:]))
             self.send_event(self.chan(), None, 'hosting', params[1], self, self.nickname in self.oplist, [params[2]])
 
