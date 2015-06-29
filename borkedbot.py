@@ -203,7 +203,7 @@ class Borkedbot(irc.IRCClient):
         if params[1].split()[0] == '-':
             pass # Exiting host mode
         else:
-            self.log('Hosting %s for %s viewers' % params[1].split())
+            self.log('Hosting %s for %s viewers' % tuple(params[1].split()))
 
 
     def irc_RPL_NAMREPLY(self, prefix, params):
