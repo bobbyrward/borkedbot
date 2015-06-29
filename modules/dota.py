@@ -493,7 +493,7 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
                 if notable_players_found:
                     print 'managed to find: %s' % notable_players_found
                 else:
-                    print 'no notable players.'
+                    print '[Dota-Notable] No notable players.'
 
                 return notable_players_found
             # print 'searched game %s, T+%4.4fms' % (games.index(game), (time.time()-t0)*1000)
