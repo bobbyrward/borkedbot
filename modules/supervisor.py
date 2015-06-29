@@ -16,7 +16,7 @@ class BorkedbotClientService(rpyc.Service):
 
 
 def setup(bot):
-    connect(bot)    
+    connect(bot)
 
 def alert(event):
     check_connection(event.bot)
@@ -24,10 +24,14 @@ def alert(event):
 
 
 def check_connection(bot):
+    if sv_con is None:
+        connect(bot)
+        return
+
     try:
         sv_con.ping()
     except:
-        print 'Ping failed, reconnecting'
+        print '[Supervisor] Ping failed, reconnecting'
         try:
             connect(bot)
         except Exception as e:
@@ -42,7 +46,7 @@ def connect(bot):
     BorkedbotClientService.bot = bot
     sv_con = rpyc.connect('localhost', 29389, service=BorkedbotClientService, config={'allow_all_attrs': True, 'exposed_prefix': ''})
     sv_con.root.init_bot(bot)
-    
+
     # print 'connected'
 
 def check_mail(bot):
