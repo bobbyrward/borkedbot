@@ -23,6 +23,8 @@ class Borkedbot(irc.IRCClient):
     timertask = None
     timertick = 5
 
+    debug_printraw = False
+
     @property
     def password(self):
         with open('passwd', 'r') as f:
@@ -179,14 +181,61 @@ class Borkedbot(irc.IRCClient):
             # def event(channel, user, etype, data, bot, isop):
             self.send_event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
 
+
     def noticed(self, user, channel, msg):
-        print '[Borkedbot] Notice from %s to %s: %s' % (user, channel, msg)
+        # self.log('Notice from %s in %s: %s' % (user, channel, msg))
+        self.log('Notice: ' + msg)
 
         if 'The moderators of this room are:' in msg:
             self.oplist = set(msg.split(': ')[1].split(', ')) | {self.chan()}
             if not self.gotops:
                 self.log("Received initial list of ops")
                 self.gotops = True
+
+
+    def irc_CAP(self, prefix, params):
+        self.log('CAP %s' % ' '.join(params))
+
+    def irc_CLEARCHAT(self, prefix, params):
+        self.log("CLEARCHAT " + ' '.join(params))
+
+    def irc_HOSTTARGET(self, prefix, params):
+        if params[1].split()[0] == '-':
+            pass # Exiting host mode
+        else:
+            self.log('Hosting %s for %s viewers' % params[1].split())
+
+
+    def irc_RPL_NAMREPLY(self, prefix, params):
+        return
+        self.log('Receiving names: ' + ' '.join(params))
+
+    def irc_RPL_ENDOFNAMES(self, prefix, params):
+        return
+        self.log('Names list received.')
+
+
+    ### I need tags for these
+
+    def irc_USERSTATE(self, prefix, params):
+        # self.log('USERSTATE ' + params)
+        pass
+
+    def irc_GLOBALUSERSTATE(self, prefix, params):
+        pass
+
+    def irc_ROOMSTATE(self, prefix, params):
+        # self.log('ROOMSTATE ' + params)
+        pass
+
+    ########################
+
+    def irc_PONG(self, prefix, params):
+        pass
+
+    def irc_unknown(self, prefix, command, params):
+        print 'No handler for irc command "%s": %s (:%s)' % (command, params, prefix)
+
 
 
     def botsay(self, msg):
@@ -218,6 +267,7 @@ class Borkedbot(irc.IRCClient):
         if message: self.botsay(message)
 
 
+
     def chan(self, ch=None):
         c = ch or self.channel
         return c.replace('#','')
@@ -240,15 +290,12 @@ class Borkedbot(irc.IRCClient):
     def quirkyMessage(self, s):
         print "\nSomething odd has happened:"
         print s
+        print
 
-    def badMessage(self, line, excType, excValue, tb):
-        print "\nSomething bad has happened:"
-        print line, excType, excValue
-
-    # def lineReceived(self, line):
-        # print line
-        # irc.IRCClient.lineReceived(self, line)
-
+    def lineReceived(self, line):
+        if self.debug_printraw: print line
+        irc.IRCClient.lineReceived(self, line)
+#
     # TODO: Add a stdin reading thread
 
 class BotFactory(protocol.ClientFactory):

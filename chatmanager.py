@@ -97,7 +97,7 @@ def _manage_modules():
                 if_issue = True
                 fresh_imports.remove(fi)
 
-            if getattr(fi, 'DO_NOT_ALERT', False): # Maybe I need `if` instead of `elif`?
+            if getattr(fi, 'DO_NOT_ALERT', False):
                 _debug("%s has been disabled and will not be imported." % fi.__name__)
                 if_issue = False
                 fresh_imports.remove(fi)
@@ -121,6 +121,7 @@ def _manage_modules():
         if len(new_imports):
             _info("Importing %s new modules:" % len(new_imports))
             [_info('- %s' % m.__name__) for m in new_imports]
+            print
 
             for mm in imported_modules:
                 modules_mtime[mm] = os.path.getmtime(mm.__file__)
@@ -128,6 +129,7 @@ def _manage_modules():
         if len(removed_imports):
             _info("Removing %s modules:" % len(removed_imports))
             [_info('- %s' % m.__name__) for m in removed_imports]
+            print
 
             for mm in removed_imports:
                 if mm in imported_modules:
