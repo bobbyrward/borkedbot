@@ -1138,6 +1138,8 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!blog', f, bot, repeatdelay=30))
 
+    coms.append(command.SimpleCommand('!announcer', 'Weeaboo anime boatgirl announcer > https://www.youtube.com/watch?v=AQXQkDFE-sk',
+        bot, channels=['barnyyy', 'moodota2'], targeted=True, repeatdelay=15))
 
     # Monkeys_forever ######################################################
 
@@ -1284,9 +1286,6 @@ def generate_message_commands(bot):
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     # Barny #########################################################
-
-    coms.append(command.SimpleCommand('!announcer', 'Weeaboo anime boatgirl announcer > https://www.youtube.com/watch?v=AQXQkDFE-sk',
-        bot, channels=['barnyyy'], targeted=True, repeatdelay=15))
 
     coms.append(command.SimpleCommand('!rightclick', 'dota_player_auto_repeat_right_mouse 1',
         bot, channels=['barnyyy'], targeted=True, repeatdelay=15))

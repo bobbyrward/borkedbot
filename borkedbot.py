@@ -169,12 +169,6 @@ class Borkedbot(irc.IRCClient):
 
                     self.log('Unknown SPECIALUSER: %s' % tag_data)
 
-                elif 'The moderators of this room are:' in msg:
-                    self.oplist = set(msg.split(': ')[1].split(', ')) | {self.chan()}
-                    if not self.gotops:
-                        self.log("Received initial list of ops")
-                        self.gotops = True
-
                 self.send_event(self.chan(), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
                 return
         else:
@@ -184,7 +178,7 @@ class Borkedbot(irc.IRCClient):
 
     def noticed(self, user, channel, msg):
         # self.log('Notice from %s in %s: %s' % (user, channel, msg))
-        self.log('Notice: ' + msg)
+        # self.log('Notice: ' + msg)
 
         if 'The moderators of this room are:' in msg:
             self.oplist = set(msg.split(': ')[1].split(', ')) | {self.chan()}
@@ -192,19 +186,25 @@ class Borkedbot(irc.IRCClient):
                 self.log("Received initial list of ops")
                 self.gotops = True
 
+        self.send_event(self.chan(), user, 'notice', msg, self, user.split('.')[0] in self.oplist)
+
 
     def irc_CAP(self, prefix, params):
         self.log('CAP %s' % ' '.join(params))
 
     def irc_CLEARCHAT(self, prefix, params):
-        self.log("CLEARCHAT " + ' '.join(params))
+        # self.log("CLEARCHAT " + ' '.join(params))
+        self.send_event(self.chan(), params[1] if len(params) > 1 else None, 'clearchat', self.chan(params[0]), self, self.nickname in self.oplist)
 
     def irc_HOSTTARGET(self, prefix, params):
-        if params[1].split()[0] == '-':
-            pass # Exiting host mode
-        else:
-            self.log('Hosting %s for %s viewers' % tuple(params[1].split()))
+        if ' ' in params[1]: params.extend(params.pop().split()) # channel, target, number
 
+        if params[1] == '-': # Exiting host mode
+            # No need to log because the notice event will
+            self.send_event(self.chan(), None, 'hosting', None, self, self.nickname in self.oplist)
+        else:
+            self.log('Hosting {} for {} viewers'.format(*params[1:]))
+            self.send_event(self.chan(), None, 'hosting', params[1], self, self.nickname in self.oplist, [params[2]])
 
     def irc_RPL_NAMREPLY(self, prefix, params):
         return
@@ -218,14 +218,16 @@ class Borkedbot(irc.IRCClient):
     ### I need tags for these
 
     def irc_USERSTATE(self, prefix, params):
-        # self.log('USERSTATE ' + params)
+        # self.log('USERSTATE %s' % params)
+
+        # At least with this one it confirms messages
         pass
 
     def irc_GLOBALUSERSTATE(self, prefix, params):
         pass
 
     def irc_ROOMSTATE(self, prefix, params):
-        # self.log('ROOMSTATE ' + params)
+        # self.log('ROOMSTATE %s' % params)
         pass
 
     ########################
@@ -348,3 +350,4 @@ if __name__ == "__main__":
         print "\nTotal run time: %s (%s)" % (str(timedelta(seconds=int(time.time() - starttime))), time.time() - starttime)
 
 
+    # TODO: Add way to remake and reconnect the bot
