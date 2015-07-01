@@ -1637,7 +1637,8 @@ def generate_message_commands(bot):
             12000000: 'Music Pack',
             13000000: 'Bristleback Announcer Pack',
             14000000: 'New Weather Effects',
-            15000000: 'Special Axe Immortal & Longform Comic'
+            15000000: 'Special Axe Immortal & Longform Comic',
+            100000000: 'Half Life 3 Released'
         }
 
         remaining = None

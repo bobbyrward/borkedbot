@@ -193,7 +193,7 @@ class Borkedbot(irc.IRCClient):
         self.log('CAP %s' % ' '.join(params))
 
     def irc_CLEARCHAT(self, prefix, params):
-        # self.log("CLEARCHAT " + ' '.join(params))
+        self.log("CLEARCHAT " + ' '.join(params))
         self.send_event(self.chan(), params[1] if len(params) > 1 else None, 'clearchat', self.chan(params[0]), self, self.nickname in self.oplist)
 
     def irc_HOSTTARGET(self, prefix, params):
