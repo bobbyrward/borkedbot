@@ -24,9 +24,11 @@ def alert(event):
                     extra = ' | If you want an invite to the sub guild use !guildinvite (Make sure you have \"Allow guild invites from -> Anyone\" enabled)'
 
                 event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s%s' % (event.data.split()[0].upper(), extra))
+                event.bot.channelsubs.add(event.data.split()[0].lower())
 
             if 'subscribed for ' in event.data:
                 event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ RE-SUB HYPE! PRAISE %s' % event.data.split()[0].upper())
+                event.bot.channelsubs.add(event.data.split()[0].lower())
 
 
     # watch?v=n4D-N6aWIV4
