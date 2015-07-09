@@ -480,8 +480,8 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
 
                     if long(steamToDota(player['steamId'])) != long(targetdotaid):
                         notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
-                    else:
-                        print '[Dota-Notable] Discounting target player'
+                    # else:
+                        # print '[Dota-Notable] Discounting target player'
 
                 if steamToDota(player['steamId']) == long(targetdotaid):
                     print '[Dota-Notable] found target player'
@@ -491,7 +491,7 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
 
             if target_found:
                 if notable_players_found:
-                    print 'managed to find: %s' % notable_players_found
+                    print '[Dota-Notable] Found: %s' % notable_players_found
                 else:
                     print '[Dota-Notable] No notable players.'
 

@@ -1632,12 +1632,7 @@ def generate_message_commands(bot):
         moneys = data['result']['prize_pool']
 
         prizes = {
-            10000000: 'Immortal Treasure III',
-            11000000: 'Desert Terrain',
-            12000000: 'Music Pack',
-            13000000: 'Bristleback Announcer Pack',
-            14000000: 'New Weather Effects',
-            15000000: 'Special Axe Immortal & Longform Comic',
+            1600000: 'Valve fixes their shit',
             100000000: 'Half Life 3 Released'
         }
 

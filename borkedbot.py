@@ -131,6 +131,7 @@ class Borkedbot(irc.IRCClient):
                 self.send_event(self.chan(channel), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
                 return
 
+            ''' ALL OF THIS IS NOW WORTHLESS
             if user == 'jtv':
 
                 # TODO: remove mod on CLEARCHAT
@@ -171,6 +172,7 @@ class Borkedbot(irc.IRCClient):
 
                 self.send_event(self.chan(), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
                 return
+            '''
         else:
             # def event(channel, user, etype, data, bot, isop):
             self.send_event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
@@ -206,6 +208,9 @@ class Borkedbot(irc.IRCClient):
             self.log('Hosting {} for {} viewers'.format(*params[1:]))
             self.send_event(self.chan(), None, 'hosting', params[1], self, self.nickname in self.oplist, [params[2]])
 
+    def irc_RECONNECT(self, prefix, params):
+        self.log('Sever restarting in 30 seconds, disconnect imminent.')
+
     def irc_RPL_NAMREPLY(self, prefix, params):
         return
         self.log('Receiving names: ' + ' '.join(params))
@@ -218,7 +223,7 @@ class Borkedbot(irc.IRCClient):
     ### I need tags for these
 
     def irc_USERSTATE(self, prefix, params):
-        # self.log('USERSTATE %s' % params)
+        self.log('USERSTATE %s' % params)
 
         # At least with this one it confirms messages
         pass
