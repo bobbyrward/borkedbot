@@ -67,7 +67,8 @@ def getHeroNamedict(localname=True):
 
 
 def setup(bot):
-    return
+    settings.setdata('%s_matchblurb_running' % bot.chan(), False, announce=False)
+    # rework into a context manager
 
 def alert(event):
     if event.channel in enabled_channels:

@@ -209,7 +209,9 @@ class Borkedbot(irc.IRCClient):
             self.send_event(self.chan(), None, 'hosting', params[1], self, self.nickname in self.oplist, [params[2]])
 
     def irc_RECONNECT(self, prefix, params):
-        self.log('Sever restarting in 30 seconds, disconnect imminent.')
+        self.log('Twitch chat sever restarting in 30 seconds, disconnect imminent.')
+        self.log('Estimated restart at %s' % time.time() + 30.0)
+        self.botsay('Twitch chat server restart in 30 seconds.  Bot will reconnect shortly.')
 
     def irc_RPL_NAMREPLY(self, prefix, params):
         return
@@ -225,7 +227,7 @@ class Borkedbot(irc.IRCClient):
     def irc_USERSTATE(self, prefix, params):
         self.log('USERSTATE %s' % params)
 
-        # At least with this one it confirms messages
+        # I have confirmed that messages that don't show up don't have userstate sent
         pass
 
     def irc_GLOBALUSERSTATE(self, prefix, params):
