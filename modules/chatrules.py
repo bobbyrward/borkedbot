@@ -519,9 +519,11 @@ def generate_message_commands(bot):
     coms.append(command.Command('!twitch2steam', f, bot, groups=me_and_broadcaster))
 
     def f(channel, user, message, args, data, bot):
-        import twitchapi
+        import twitchapi, dota
         if args:
-            twitchname = twitchapi.get_twitch_from_steam_id(args[0])
+            sid = dota.determineSteamid(args[0])
+            if sid is None: return 'Could not resolve steam id.'
+            twitchname = twitchapi.get_twitch_from_steam_id(sid)
             twitchname = twitchname if twitchname else 'No twitch account linked to this id.'
             return twitchname
 
