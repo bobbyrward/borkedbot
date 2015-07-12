@@ -17,7 +17,7 @@ def setup(bot):
 def alert(event):
     # Sub alert
     if event.etype == 'twitchnotify':
-        if event.channel in ['monkeys_forever', 'superjoe', 'kizzmett', 'unsanitylive']:
+        if event.channel in ['monkeys_forever', 'superjoe', 'kizzmett', 'moodota2', 'unsanitylive']:
             if 'just subscribed!' in event.data:
                 extra = ''
                 if event.channel in ['monkeys_forever', 'kizzmett']:
