@@ -566,6 +566,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
     playerformat = '%s%s: %s\n'              # ('#### ' if markdown else '  ', hero, name)
     notableformat = '%sNotable player: %s\n' # ('###### ' if markdown else '   - ', name)
     linkformat = '   - %s%s\n'               # (linktype, linkdata)
+    
     linktypes = {
         'steam': 'http://steamcommunity.com/profiles/',
         'dotabuff': 'http://www.dotabuff.com/players/',
@@ -585,7 +586,15 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
                 if steamToDota(player['steamId']) in notable_players:
                     data += notableformat % ('###### ' if markdown else '   - ', notable_players[steamToDota(player['steamId'])])
 
-                data += linkformat % (linktypes['steam'],  player['steamId'])
+                mkupsteamlink = linkformat % (linktypes['steam'], player['steamId'])
+                
+                ressteam = requests.head(linktypes['steam'] + player['steamId']).headers.get('location')
+
+                if ressteam:
+                    data += mkupsteamlink.replace('\n', '') + ' (%s)\n' % ressteam.split('.com')[-1][:-1]
+                else:
+                    data += mkupsteamlink
+
                 data += linkformat % (linktypes['dotabuff'], steamToDota(long(player['steamId'])))
                 if checktwitch:
                     tname = twitchapi.get_twitch_from_steam_id(player['steamId'])

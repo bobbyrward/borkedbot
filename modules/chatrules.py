@@ -120,7 +120,6 @@ def setup(bot):
     reload(command)
 
     generate_message_commands(bot)
-    generate_joinpart_commands(bot)
 
 
 def alert(event):
@@ -1023,7 +1022,7 @@ def generate_message_commands(bot):
             return
 
         if user == 'bluepowervan' and user not in bot.oplist:
-            bot.botsay('.timeout bluepowervan 960')
+            bot.botsay('.timeout bluepowervan 1920')
             return "You know that doesn't work for you, stop trying."
 
         if user not in bot.oplist and user != 'imayhaveborkedit':
@@ -1140,6 +1139,8 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!blog', f, bot, repeatdelay=30))
 
+    coms.append(command.SimpleCommand('!announcer', 'Weeaboo anime boatgirl announcer > https://www.youtube.com/watch?v=AQXQkDFE-sk',
+        bot, channels=['barnyyy', 'moodota2'], targeted=True, repeatdelay=15))
 
     # Monkeys_forever ######################################################
 
@@ -1286,9 +1287,6 @@ def generate_message_commands(bot):
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     # Barny #########################################################
-
-    coms.append(command.SimpleCommand('!announcer', 'Weeaboo anime boatgirl announcer > https://www.youtube.com/watch?v=AQXQkDFE-sk',
-        bot, channels=['barnyyy'], targeted=True, repeatdelay=15))
 
     coms.append(command.SimpleCommand('!rightclick', 'dota_player_auto_repeat_right_mouse 1',
         bot, channels=['barnyyy'], targeted=True, repeatdelay=15))
@@ -1575,6 +1573,11 @@ def generate_message_commands(bot):
         'Like/Follow/Subscribe/whatever you want, that\'s where you can find Tom!',
         bot, channels=['unsanitylive'], prependuser=False, repeatdelay=10))
 
+    # Moo
+
+    coms.append(command.SimpleCommand('!ohnohesretarded', 'http://i.imgur.com/ZdaV0PG.png', bot, channels=['moodota2', 'barnyyy'], targeted=True, repeatdelay=15))
+
+    #
 
     ######################################################################
     #
@@ -1711,10 +1714,6 @@ def generate_message_commands(bot):
     message_commands = coms
 
     return "Generated %s message commands" % len(message_commands)
-
-
-def generate_joinpart_commands(bot):
-    global joinpart_commands
 
 
 def _getargs(msg):
