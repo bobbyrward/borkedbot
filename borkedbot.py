@@ -210,7 +210,7 @@ class Borkedbot(irc.IRCClient):
 
     def irc_RECONNECT(self, prefix, params):
         self.log('Twitch chat sever restarting in 30 seconds, disconnect imminent.')
-        self.log('Estimated restart at %s' % time.time() + 30.0)
+        self.log('Estimated restart at %s' % str(time.time() + 30.0))
         self.botsay('Twitch chat server restart in 30 seconds.  Bot will reconnect shortly.')
 
     def irc_RPL_NAMREPLY(self, prefix, params):
