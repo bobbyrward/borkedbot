@@ -65,14 +65,14 @@ def alert(event):
 def get_youtube_title(v_id, backup=False):
     if not backup:
         try:
-            title = re.findall('&title=(.*?)&', requests.get('http://youtube.com/get_video_info?video_id=%s' % v_id).text)[0]
+            title = re.findall('&title=(.*?)&', requests.get('http://youtube.com/get_video_info?video_id=%s' % v_id).content)[0]
             title = title.replace('+', ' ')
         except:
             print '[ExtraEvents] Youtube lookup failed, using backup method'
             return get_youtube_title(v_id, True)
 
     else:
-        ytd = requests.get('https://www.youtube.com/watch?v=%s' % v_id).text
+        ytd = requests.get('https://www.youtube.com/watch?v=%s' % v_id).content
         title = ytd[ytd.index('<title>')+7:ytd.index('</title>')-10]
 
     parser = HTMLParser()

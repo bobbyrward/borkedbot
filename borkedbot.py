@@ -249,19 +249,19 @@ class Borkedbot(irc.IRCClient):
 
     def botsay(self, msg):
         try:
-            self.say(self.factory.channel, str(msg))
+            self.say(self.factory.channel, msg)
         except:
             print '[Borkedbot] Blarg how do I do this shit: %s' % msg
 
             try:
-                self.say(self.factory.channel, msg)
+                self.say(self.factory.channel, msg.decode("utf-8"))
             except Exception, e:
-                print 'Ok that didn\'t work, lets try this:'
-
+                print 'No that didn\'t work either, wtf how retarded is twisted/unicode'
+                
                 try:
                     self.say(self.factory.channel, msg.encode("utf-8"))
                 except Exception, e:
-                    print 'No that didn\'t work either, wtf how retarded is twisted/unicode'
+                    print 'I give up'
                     return
 
         self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.nickname in self.oplist)
