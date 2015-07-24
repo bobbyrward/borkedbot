@@ -6,7 +6,7 @@ sys.dont_write_bytecode = True
 
 LOAD_ORDER = 700
 
-_CHANNEL = None
+_CHANNEL = ''
 
 def setup(bot):
     global _CHANNEL
@@ -38,9 +38,14 @@ def set_window_name(text):
 def reset_window_name():
     set_window_title(_CHANNEL)
 
-
 def send_command(command, data, name=None, window=None):
-    if name is None: name = get_screen_name()
-    if window is None: window = get_window_number()
-
+    name = name or get_screen_name()
+    window = window or get_window_number()
     os.system('screen -S %s -p %s -X %s %s' % (name, window, command, text))
+
+
+def update_online_status(online=True):
+    if not _CHANNEL: raise ValueError("No channel set.")
+    wname = '%s - %s' % (_CHANNEL, 'Online' if online else 'Offline')
+    print '[Screen] Setting window %s name to %s' % (get_window_number(), wname)
+    set_window_name(wname)
