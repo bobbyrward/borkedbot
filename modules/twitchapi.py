@@ -32,6 +32,11 @@ def get_chatters(channel):
     r.raise_for_status()
     return r.json()
 
+def get_chatters_list(channel):
+    ctrs = get_chatters(channel)
+    return ctrs['chatters']['admins'] + ctrs['chatters']['global_mods'] + ctrs['chatters']['moderators'] + ctrs['chatters']['staff'] + ctrs['chatters']['viewers']
+
+
 def get_steam_id_from_twitch(name):
     try:
         return _apiget('channels/%s' % name, root='https://api.twitch.tv/api/')['steam_id']
