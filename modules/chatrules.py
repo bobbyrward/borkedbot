@@ -681,7 +681,7 @@ def generate_message_commands(bot):
         else:
             return thing
 
-    coms.append(command.Command('!saysomething', f, bot, True, repeatdelay=30))
+    coms.append(command.Command('!saysomething', f, bot, True, chanblacklist=['monkeys_forever'], repeatdelay=30))
 
     def f(channel, user, message, args, data, bot):
        if message.endswith('?'):
@@ -1552,19 +1552,6 @@ def generate_message_commands(bot):
 
     coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=4))
 
-    # def f(channel, user, message, args, data, bot):
-        # try:
-            # x = int(args[0])
-        # except:
-            # return "Are you sure that's a number?"
-        # for i in range(2, x-1):
-            # if x % i == 0:
-                # return 'False'
-        # else:
-            # return 'True'
-
-    # coms.append(command.Command('!isprime', f, bot, channels=['superjoe']))
-
     # Kizzmett ##########
 
     # Tom ##############
@@ -1603,7 +1590,7 @@ def generate_message_commands(bot):
         if pdata is None:
             return 'Cannot find match.'
 
-        addr = makegist.create_dota_playerinfo(channel, pdata)
+        addr = makegist.create_dota_playerinfo(channel, pdata, shorten=True)
         return "Player info for this game is available here: %s" % addr
 
     coms.append(command.Command('!playerinfo', f, bot, repeatdelay=30, groups=me_and_broadcaster))
@@ -1657,7 +1644,6 @@ def generate_message_commands(bot):
         else:
             return 'Current TI5 prize pool: ${:,} -- {}'.format(moneys, nextprize)
 
-
     coms.append(command.Command('!prizepool', f, bot, True, repeatdelay=30))
 
 
@@ -1696,7 +1682,6 @@ def generate_message_commands(bot):
 
             # years=1, months=2, days=22, hours=12, minutes=42, seconds=16
 
-
     coms.append(command.Command('!followingsince', f, bot, True, groups=me_only_group))
 
 
@@ -1706,8 +1691,29 @@ def generate_message_commands(bot):
         chatters = twitchapi.get_chatters(channel)['chatters']
         return 'I choose %s!' % random.choice(chatters['viewers'] + chatters['moderators'] + chatters['staff'] + chatters['admins'])
 
-
     coms.append(command.Command('!randomviewer', f, bot, True))
+
+
+    def f(channel, user, message, args, data, bot):
+        import twitchapi
+
+        if len(args) == 1:
+            basechannel = channel
+            targetchannel = args[0]
+        elif len(args) == 2:
+            basechannel = args[0]
+            targetchannel = args[1]
+
+        basechatters = set(twitchapi.get_chatters_list(basechannel))
+        targetchatters = set(twitchapi.get_chatters_list(targetchannel))
+
+        print '======'
+        print [str(c) for c in basechatters & targetchatters]
+        print '======'
+
+        return 'There are %s people in both chats' % len(basechatters & targetchatters)
+
+    coms.append(command.Command('!crosschat', f, bot, True))
 
     ######################################################################
 
