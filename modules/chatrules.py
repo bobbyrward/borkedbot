@@ -296,6 +296,11 @@ def generate_message_commands(bot):
     coms.append(command.Command('!notable', f, bot, groups=me_only_group))
 
 
+    ######################################################################
+    # Broadcaster/me message_commands
+    #
+
+
     def f(channel, user, message, args, data, bot):
         import twitchapi, datetime, dateutil.parser, dateutil.relativedelta
 
@@ -309,11 +314,6 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!accountage', f, bot, groups=me_and_broadcaster))
 
-
-
-    ######################################################################
-    # Broadcaster/me message_commands
-    #
 
     def f(channel, user, message, args, data, bot):
         import string, random, argparse
@@ -604,7 +604,7 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import twitchapi
 
-        if args: channel = args[0]
+        if args: channel = args[0].lower()
 
         chatters = twitchapi.get_chatters(channel)
         num_chatters = chatters['chatter_count']
@@ -638,7 +638,7 @@ def generate_message_commands(bot):
 
                 return "Restarting steam bot, this should only take a few seconds."
 
-            if args[0].lower() == 'matchmaking':
+            if args[0].lower() in ['matchmaking', 'mm']:
                 # return "This breaks the bot.  Fix it first idiot."
 
                 import difflib, time
@@ -653,6 +653,9 @@ def generate_message_commands(bot):
 
                 if args[1] == 'list':
                     return 'Matchmaking regions: %s' % ', '.join(mmdata.keys())
+
+                if args[1].lower() == 'all':
+                    return 'Matchmaking data for all regions: https://rjackson.me/tools/mmstats/'
 
                 try:
                     lnames = {n.lower():n for n in mmdata.keys()}
@@ -1097,13 +1100,13 @@ def generate_message_commands(bot):
         reldelta = dateutil.relativedelta.relativedelta(t_now, lt)
 
         daystr = ('{0} is rank {1} on the leaderboards, with {2} mmr. Last leaderboard update: '
-            '{3.days} days, {3.hours} hours, {3.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
+            '{3.days} days, {3.hours} hours, {3.minutes} minutes ago - http://dota2.com/leaderboards/#americas')
 
         hourstr = ('{0} is rank {1} on the leaderboards, with {2} mmr. Last leaderboard update: '
-            '{3.hours} hours, {3.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
+            '{3.hours} hours, {3.minutes} minutes ago - http://dota2.com/leaderboards/#americas')
 
         minstr = ('{0} is rank {1} on the leaderboards, with {2} mmr. Last leaderboard update: '
-            '{3.minutes} minutes ago ( http://dota2.com/leaderboards/#americas )')
+            '{3.minutes} minutes ago - http://dota2.com/leaderboards/#americas')
 
         if reldelta.days:
             return daystr.format(channel, rank, mmr, reldelta)
@@ -1139,8 +1142,6 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!blog', f, bot, repeatdelay=30))
 
-    coms.append(command.SimpleCommand('!announcer', 'Weeaboo anime boatgirl announcer > https://www.youtube.com/watch?v=AQXQkDFE-sk',
-        bot, channels=['barnyyy', 'moodota2'], targeted=True, repeatdelay=15))
 
     # Monkeys_forever ######################################################
 
@@ -1297,6 +1298,8 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('!consolecommands', 'Right click mouse spam: dota_player_auto_repeat_right_mouse 1 -- No pathing movement: dota_unit_allow_moveto_direction 1',
         bot, channels=['barnyyy'], targeted=True, repeatdelay=15))
 
+    coms.append(command.SimpleCommand('!announcer', 'Weeaboo anime boatgirl announcer > https://www.youtube.com/watch?v=AQXQkDFE-sk',
+        bot, channels=['barnyyy'], targeted=True, repeatdelay=15))
 
     # Superjoe ######################################################
 
@@ -1564,6 +1567,9 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!ohnohesretarded', 'http://i.imgur.com/ZdaV0PG.png', bot, channels=['moodota2', 'barnyyy'], targeted=True, repeatdelay=15))
 
+    coms.append(command.SimpleCommand('!announcer', 'Weeaboo anime waifu announcer > http://saylith.github.io/harem-announcer/',
+        bot, channels=['moodota2'], targeted=True, repeatdelay=15))
+
     #
 
     ######################################################################
@@ -1624,7 +1630,7 @@ def generate_message_commands(bot):
         moneys = data['result']['prize_pool']
 
         prizes = {
-            1600000: 'Valve fixes their shit',
+            1600001: 'Valve fixes their shit',
             100000000: 'Half Life 3 Released'
         }
 

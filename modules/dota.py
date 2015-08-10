@@ -584,7 +584,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
                 data += playerformat % ('#### ' if markdown else '  ', herodict[player['heroId']], player['name'].decode('utf8'))
 
                 if steamToDota(player['steamId']) in notable_players:
-                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[steamToDota(player['steamId'])])
+                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[steamToDota(player['steamId'])].decode('utf8'))
 
                 mkupsteamlink = linkformat % (linktypes['steam'], player['steamId'])
                 
