@@ -98,22 +98,21 @@ def addmessage(mes):
 def markov(key=None):
     if key is None:
         key = redis_conn.randomkey()
-    #print list(key)
+
     messages = []
     best_message = ''
 
     for i in range(messages_to_generate):
         generated = generate_message(seed=key)
-        if len(generated) > len(best_message) + 1:
+
+        if len(generated) > len(best_message):
             best_message = generated
-
-        if best_message:
             messages.append(best_message)
-
+            
     print "we have this: %s " % messages
 
-    if len(messages) and not len(set(messages)) == 1:
-        return str(random.choice(messages[2:]))
+    if len(messages) and len(messages[0].split()) > 1:
+        return str(random.choice(messages[int(len(messages)*0.6):]))
     else:
         return "I got nothing."
 
