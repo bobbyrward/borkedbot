@@ -11,7 +11,7 @@ LOAD_ORDER = 35
 
 
 STEAM_TO_DOTA_CONSTANT = 76561197960265728
-POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange', 'Pink' , 'Gray', 'Light Blue', 'Green', 'Brown']
+POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange',      'Pink', 'Gray', 'Light Blue', 'Green', 'Brown']
 
 enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 herodata = None

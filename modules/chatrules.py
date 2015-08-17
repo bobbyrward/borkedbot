@@ -1565,7 +1565,7 @@ def generate_message_commands(bot):
 
     # Moo
 
-    coms.append(command.SimpleCommand('!ohnohesretarded', 'http://i.imgur.com/ZdaV0PG.png', bot, channels=['moodota2', 'barnyyy'], targeted=True, repeatdelay=15))
+    coms.append(command.SimpleCommand('!ohnohesretarded', 'http://i.imgur.com/ZdaV0PG.png', bot, channels=['moodota2', 'barnyyy', 'lamperkat'], targeted=True, repeatdelay=15))
 
     coms.append(command.SimpleCommand('!announcer', 'Weeaboo anime waifu announcer > http://saylith.github.io/harem-announcer/',
         bot, channels=['moodota2'], targeted=True, repeatdelay=15))
@@ -1710,8 +1710,8 @@ def generate_message_commands(bot):
             basechannel = args[0]
             targetchannel = args[1]
 
-        basechatters = set(twitchapi.get_chatters_list(basechannel))
-        targetchatters = set(twitchapi.get_chatters_list(targetchannel))
+        basechatters = set(twitchapi.get_chatters_list(basechannel.lower()))
+        targetchatters = set(twitchapi.get_chatters_list(targetchannel.lower()))
 
         print '======'
         print [str(c) for c in basechatters & targetchatters]
