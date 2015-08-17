@@ -41,7 +41,7 @@ def reset_window_name():
 def send_command(command, data, name=None, window=None):
     name = name or get_screen_name()
     window = window or get_window_number()
-    os.system('screen -S %s -p %s -X %s %s' % (name, window, command, text))
+    os.system('screen -S %s -p %s -X %s %s' % (name, window, command, data))
 
 
 def update_online_status(online=True):
