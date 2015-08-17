@@ -14,8 +14,8 @@ to other running bots.
 class BorkedbotSupervisorCodebase(object):
     class MAILTYPES(object):
         CHAT_MESSAGE = 'chatmsg'
-        CODE_EXEC = 'exec'
-        CODE_EVAL = 'eval'
+        SCREEN_NAME_UPDATE = 'screen_update'
+        SCREEN_NAME_RESET = 'screen_reset'
 
     def __init__(self, supervisor):
         self.supervisor = supervisor
@@ -52,19 +52,24 @@ class BorkedbotSupervisorCodebase(object):
 
     def update_screen_status(self, channels=None):
         if not channels:
+            olcs = _get_multi_channel_online(channels)
             self.mass_print('Sending mass screen name update')
             for sv in self.supervisor.get_bot_supervisors():
                 sv.reload_codebase()
-                sv.send_mail(self.MAILTYPES.CODE_EXEC, 'import screen; screen.update_online_status()')
-            else:
-                for ch in channels:
-                    try:
-                        self.supervisor.sv_list.get(ch)
-                    except:
-                        self.cprint('Skipping channel',ch)
-                        continue
-                    self.supervisor.sv_list[ch].codebase.cprint('Sending mass screen name update')
-                    self.supervisor.sv_list[ch].reload_codebase()
-                    self.supervisor.send_mail(self.MAILTYPES.CODE_EXEC, 'import screen; screen.update_online_status()', ch)
+                sv.send_mail(self.MAILTYPES.SCREEN_NAME_UPDATE, sv.botchannel in olcs)
+        else:
+            olcs = _get_multi_channel_online(channels)
+            for ch in channels:
+                try:
+                    self.supervisor.sv_list.get(ch)
+                except:
+                    self.cprint('Skipping channel',ch)
+                    continue
+                self.supervisor.sv_list[ch].codebase.cprint('Sending mass screen name update')
+                self.supervisor.sv_list[ch].reload_codebase()
+                self.supervisor.send_mail(self.MAILTYPES.SCREEN_NAME_UPDATE, ch in olcs, ch)
         print
 
+    def _get_multi_channel_online(self, channels):
+        data = requests.get('https://api.twitch.tv/kraken/streams?channel=%s' % ','.join([c.lower() for c in channels]))
+        return [d['channel']['name'] for d in data['streams']]

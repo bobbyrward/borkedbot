@@ -15,6 +15,19 @@ class BorkedbotClientService(rpyc.Service):
         return getattr(self, name)
 
 
+class MailHandler(object):
+    def chatmsg(bot, data):
+        bot.botsay(data)
+
+    def screen_update(bot, data):
+        import screen
+        screen.update_online_status(data)
+
+    def screen_reset(bot, data):
+        import screen
+        screen.reset_window_name()
+
+
 def setup(bot):
     connect(bot)
 
