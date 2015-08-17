@@ -52,13 +52,13 @@ class BorkedbotSupervisorCodebase(object):
 
     def update_screen_status(self, channels=None):
         if not channels:
-            olcs = _get_multi_channel_online(channels)
+            olcs = self._get_multi_channel_online([c.botchannel for c in self.supervisor.get_bot_supervisors()])
             self.mass_print('Sending mass screen name update')
             for sv in self.supervisor.get_bot_supervisors():
                 sv.reload_codebase()
                 sv.send_mail(self.MAILTYPES.SCREEN_NAME_UPDATE, sv.botchannel in olcs)
         else:
-            olcs = _get_multi_channel_online(channels)
+            olcs = self._get_multi_channel_online(channels)
             for ch in channels:
                 try:
                     self.supervisor.sv_list.get(ch)
@@ -71,5 +71,5 @@ class BorkedbotSupervisorCodebase(object):
         print
 
     def _get_multi_channel_online(self, channels):
-        data = requests.get('https://api.twitch.tv/kraken/streams?channel=%s' % ','.join([c.lower() for c in channels]))
+        data = requests.get('https://api.twitch.tv/kraken/streams?channel=%s' % ','.join([c.lower() for c in channels])).json()
         return [d['channel']['name'] for d in data['streams']]
