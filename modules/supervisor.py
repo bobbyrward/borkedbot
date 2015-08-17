@@ -16,16 +16,38 @@ class BorkedbotClientService(rpyc.Service):
 
 
 class MailHandler(object):
-    def chatmsg(bot, data):
+
+    @staticmethod
+    def handle(bot, mailtype, data):
+        try:
+            getattr(MailHandler, '_' + mailtype)(bot, data)
+        except:
+            MailHandler._unknown(bot, (mailtype, data))
+
+    @staticmethod
+    def _chatmsg(bot, data):
+        print 'sending chat message'
         bot.botsay(data)
 
-    def screen_update(bot, data):
+    @staticmethod
+    def _screen_update(bot, data):
+        print 'updating screen name status'
         import screen
         screen.update_online_status(data)
 
-    def screen_reset(bot, data):
+    @staticmethod
+    def _screen_reset(bot, data):
+        print 'resetting screen name status'
         import screen
         screen.reset_window_name()
+
+    @staticmethod
+    def _test(bot, data):
+        print 'ok ' + data
+
+    @staticmethod
+    def _unknown(bot, data):
+        print 'Discarding unknown mail: ' + data
 
 
 def setup(bot):
@@ -65,11 +87,7 @@ def connect(bot):
 def check_mail(bot):
     mail = sv_con.root.get_mail()
     if mail is None: return
-    print 'got new mail:', mail
+    print '[Supervisor] Got new mail:', mail
 
-    if mail[0] == sv_con.root.codebase.MAILTYPES.CHAT_MESSAGE:
-        print 'sending chat message'
-        bot.botsay(mail[1])
-    else:
-        print 'Discarding unknown mail:', mail
+    MailHandler.handle(bot, mail[0], mail[1])
 
