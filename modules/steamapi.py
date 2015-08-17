@@ -74,7 +74,7 @@ def _get_call(apipath, **args):
 
     requestdata = requests.get(apicall, timeout=4)
     
-    if requestdata.status_code != 200:
+    if requestdata.status_code not in [200, 503]:
         print '[SteamAPI] API call failure:', requestdata, requestdata.reason, apipath.split('/')[-3:-2]
         try:
             requestdata.raise_for_status()

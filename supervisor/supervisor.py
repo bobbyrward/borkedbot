@@ -14,6 +14,8 @@ to other running bots.
 class BorkedbotSupervisorCodebase(object):
     class MAILTYPES(object):
         CHAT_MESSAGE = 'chatmsg'
+        CODE_EXEC = 'exec'
+        CODE_EVAL = 'eval'
 
     def __init__(self, supervisor):
         self.supervisor = supervisor
@@ -48,4 +50,21 @@ class BorkedbotSupervisorCodebase(object):
                 self.supervisor.send_mail(self.MAILTYPES.CHAT_MESSAGE, message, ch)
         print
 
+    def update_screen_status(self, channels=None):
+        if not channels:
+            self.mass_print('Sending mass screen name update')
+            for sv in self.supervisor.get_bot_supervisors():
+                sv.reload_codebase()
+                sv.send_mail(self.MAILTYPES.CODE_EXEC, 'import screen; screen.update_online_status()')
+            else:
+                for ch in channels:
+                    try:
+                        self.supervisor.sv_list.get(ch)
+                    except:
+                        self.cprint('Skipping channel',ch)
+                        continue
+                    self.supervisor.sv_list[ch].codebase.cprint('Sending mass screen name update')
+                    self.supervisor.sv_list[ch].reload_codebase()
+                    self.supervisor.send_mail(self.MAILTYPES.CODE_EXEC, 'import screen; screen.update_online_status()', ch)
+        print
 

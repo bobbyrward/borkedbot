@@ -11,7 +11,7 @@ LOAD_ORDER = 35
 
 
 STEAM_TO_DOTA_CONSTANT = 76561197960265728
-POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange', 'Pink' , 'Gray', 'Light Blue', 'Green', 'Brown']
+POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange',      'Pink', 'Gray', 'Light Blue', 'Green', 'Brown']
 
 enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 herodata = None
@@ -584,7 +584,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
                 data += playerformat % ('#### ' if markdown else '  ', herodict[player['heroId']], player['name'].decode('utf8'))
 
                 if steamToDota(player['steamId']) in notable_players:
-                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[steamToDota(player['steamId'])])
+                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[steamToDota(player['steamId'])].decode('utf8'))
 
                 mkupsteamlink = linkformat % (linktypes['steam'], player['steamId'])
                 

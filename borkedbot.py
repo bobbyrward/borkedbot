@@ -4,6 +4,7 @@ sys.dont_write_bytecode = True
 import chatmanager
 import cPickle, base64, time
 from datetime import timedelta
+from contextlib import contextmanager
 from twisted.internet import reactor, task, protocol#, stdio
 from twisted.words.protocols import irc
 #from twisted.protocols import basic
@@ -67,6 +68,13 @@ class Borkedbot(irc.IRCClient):
 
     def update_mods(self):
         self.say(self.factory.channel, '/mods')
+
+    @contextmanager
+    def unlock_ratelimit(self):
+        lr = self.lineRate
+        self.lineRate = 0
+        yield
+        self.lineRate = lr
 
     def signedOn(self):
         self.send_event(None, None, 'serverjoin', None, self, None)
