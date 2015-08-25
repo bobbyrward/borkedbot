@@ -1190,7 +1190,7 @@ def generate_message_commands(bot):
             try:
                 steamid = dota.determineSteamid(targetsteamid)
                 if steamid == 76561198153108180:
-                    return "%s: No, you're supposed to use your own account.  I'm already in the guild." % user
+                    return "%s: No, you're supposed to use your own account.  FailFish" % user
             except Exception as e:
                 print e
                 return "Something went wrong, it might be an issue with the steam api"
