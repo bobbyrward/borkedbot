@@ -44,8 +44,8 @@ def send_command(command, data, name=None, window=None):
     os.system('screen -S %s -p %s -X %s %s' % (name, window, command, data))
 
 
-def update_online_status(online=True):
+def update_online_status(online=True, onlinetext=' - Online', offlinetext=' - Offline'):
     if not _CHANNEL: raise ValueError("No channel set.")
-    wname = '%s - %s' % (_CHANNEL, 'Online' if online else 'Offline')
+    wname = '%s%s' % (_CHANNEL, onlinetext if online else offlinetext)
     print '[Screen] Setting window %s name to %s' % (get_window_number(), wname)
     set_window_name(wname)
