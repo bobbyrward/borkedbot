@@ -212,11 +212,11 @@ def send_steam_message(steamid, message):
 
 def invite_to_guild(guildid, steamid):
     with ZRPC() as zrpc:
-        return zrpc.invitetoguild(guildid, steamid)
+        return zrpc.invitetoguild(guildid, str(steamid))
 
 def cancel_invite_to_guild(guildid, steamid):
     with ZRPC() as zrpc:
-        return zrpc.cancelinvitetoguild(guildid, steamid)
+        return zrpc.cancelinvitetoguild(guildid, str(steamid))
 
 def set_guild_role(guildid, targetid, targetrole):
     # 0 - Kick from guild
@@ -224,11 +224,11 @@ def set_guild_role(guildid, targetid, targetrole):
     # 2 - Officer
     # 3 - Member
     with ZRPC() as zrpc:
-        return zrpc.setguildrole(guildid, targetid, targetrole)
+        return zrpc.setguildrole(guildid, str(targetid), targetrole)
 
 def kick_from_guild(guildid, targetid):
     with ZRPC() as zrpc:
-        return zrpc.setguildrole(guildid, targetid, 0)
+        return zrpc.setguildrole(guildid, str(targetid), 0)
 
 ########
 
