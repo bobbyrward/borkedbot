@@ -73,3 +73,4 @@ class BorkedbotSupervisorCodebase(object):
     def _get_multi_channel_online(self, channels):
         data = requests.get('https://api.twitch.tv/kraken/streams?channel=%s' % ','.join([c.lower() for c in channels])).json()
         return [d['channel']['name'] for d in data['streams']]
+

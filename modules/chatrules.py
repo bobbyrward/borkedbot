@@ -687,8 +687,10 @@ def generate_message_commands(bot):
     coms.append(command.Command('!saysomething', f, bot, True, chanblacklist=['monkeys_forever'], repeatdelay=30))
 
     def f(channel, user, message, args, data, bot):
-       if message.endswith('?'):
-           return "%s, %s"%(user, random.choice(data))
+        if message.lower() in ['borkedbot, ?', 'borkedbot,?']:
+            return "That's not even a real question."
+        elif message.endswith('?'):
+            return "%s, %s"%(user, random.choice(data))
 
     coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'barnyyy'], data=magic8ball, repeatdelay=15))
 
@@ -1025,7 +1027,7 @@ def generate_message_commands(bot):
             return
 
         if user == 'bluepowervan' and user not in bot.oplist:
-            bot.botsay('.timeout bluepowervan 1920')
+            bot.botsay('.timeout bluepowervan 3840')
             return "You know that doesn't work for you, stop trying."
 
         if user not in bot.oplist and user != 'imayhaveborkedit':
@@ -1567,8 +1569,8 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!ohnohesretarded', 'http://i.imgur.com/ZdaV0PG.png', bot, channels=['moodota2', 'barnyyy', 'lamperkat'], targeted=True, repeatdelay=15))
 
-    coms.append(command.SimpleCommand('!announcer', 'Weeaboo Onodera waifu announcer > http://saylith.github.io/harem-announcer/',
-        bot, channels=['moodota2'], targeted=True, repeatdelay=15))
+    #coms.append(command.SimpleCommand('!announcer', 'Weeaboo Onodera waifu announcer > http://saylith.github.io/harem-announcer/',
+    #    bot, channels=['moodota2'], targeted=True, repeatdelay=15))
 
     #
 
@@ -1623,34 +1625,34 @@ def generate_message_commands(bot):
     coms.append(command.Command('!massunban', f, bot, repeatdelay=30, groups=me_and_broadcaster))
 
 
-    def f(channel, user, message, args, data, bot):
-        import steamapi
-        data = steamapi.GetTournamentPrizePool(2733)
-
-        moneys = data['result']['prize_pool']
-
-        prizes = {
-            1600001: 'Valve fixes their shit',
-            100000000: 'Half Life 3 Released'
-        }
-
-        remaining = None
-        for prize in sorted(prizes.keys()):
-            if moneys < prize:
-                nextprize = prizes[prize]
-                remaining = prize - moneys
-                break
-
-        if moneys == 1600000:
-            remaining = False
-            nextprize = 'Valve pls fix ur shit'
-
-        if remaining:
-            return 'Current TI5 prize pool: ${:,} -- {} in ${:,}'.format(moneys, nextprize, remaining)
-        else:
-            return 'Current TI5 prize pool: ${:,} -- {}'.format(moneys, nextprize)
-
-    coms.append(command.Command('!prizepool', f, bot, True, repeatdelay=30))
+#    def f(channel, user, message, args, data, bot):
+#        import steamapi
+#        data = steamapi.GetTournamentPrizePool(2733)
+#
+#        moneys = data['result']['prize_pool']
+#
+#        prizes = {
+#            1600001: 'Valve fixes their shit',
+#            100000000: 'Half Life 3 Released'
+#        }
+#
+#        remaining = None
+#        for prize in sorted(prizes.keys()):
+#            if moneys < prize:
+#                nextprize = prizes[prize]
+#                remaining = prize - moneys
+#                break
+#
+#        if moneys == 1600000:
+#            remaining = False
+#            nextprize = 'Valve pls fix ur shit'
+#
+#        if remaining:
+#            return 'Current TI5 prize pool: ${:,} -- {} in ${:,}'.format(moneys, nextprize, remaining)
+#        else:
+#            return 'Current TI5 prize pool: ${:,} -- {}'.format(moneys, nextprize)
+#
+#    coms.append(command.Command('!prizepool', f, bot, True, repeatdelay=30))
 
 
     def f(channel, user, message, args, data, bot):

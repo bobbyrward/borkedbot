@@ -110,12 +110,6 @@ def alert(event):
             except Exception, e:
                 print '[Dota-Error] Notable player blurb failure: %s' % e
 
-            # try:
-                # prizepooldata = check_for_prizepool_update(event.channel)
-                # if prizepooldata:
-                    # event.bot.botsay(prizepooldata)
-            # except Exception, e:
-                # print '[Dota-Error] Prizepool check error (probably api)'
 
 def blurb(channel, bot, override=False):
     t1 = time.time()
@@ -811,6 +805,10 @@ def check_for_prizepool_update(channel, override=False):
         if currenttier > lasttier:
             settings.setdata('%s_last_prizepool_tier' % channel, currenttier)
             return 'Compendium Stretch Goal {} Unlocked at ${:,}'.format(prizes[currenttier], moneys)
+
+
+
+
 
 
 class Lobby(object):
