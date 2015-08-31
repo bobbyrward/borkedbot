@@ -574,32 +574,38 @@ def generate_message_commands(bot):
         return get_process_output('ddate', shell=True)
     coms.append(command.Command('#!ddate', f, bot, True))
 
-    # def f(channel, user, message, args, data, bot):
-    #     while True:
-    #         out = get_process_output('fortune', shell=True)
-    #         if len(out) <= 256:
-    #             return out
+    def f(channel, user, message, args, data, bot):
+        import re
+        while True:
+            out = get_process_output('fortune', shell=True).replace('\n', ' ').replace('\t','').strip()
+            re.sub('\s{2,}', ' ', out)
+            if len(out) <= 400:
+                print list(out)
+                return out
 
-    # coms.append(command.Command('#!fortune', f, bot, True))
-
-    # def f(channel, user, message, args, data, bot):
-    #     while True:
-    #         out = get_process_output('ofortune', shell=True)
-    #         if len(out) <= 256:
-    #             return out
-
-    # coms.append(command.Command('#!ofortune', f, bot, True))
+    coms.append(command.Command('!fortune', f, bot, True))
 
     def f(channel, user, message, args, data, bot):
-        if args:
-            if bot.usercolors.has_key(args[0].lower()):
-                return bot.usercolors[args[0].lower()]
-            else:
-                return "No data for %s" % args[0].lower()
-        else:
-            return "Use the command properly, idiot."
+        import re
+        while True:
+            out = get_process_output('fortune -o', shell=True).replace('\n', ' ').replace('\t','').strip()
+            re.sub('\s{2,}', ' ', out)
+            if len(out) <= 400:
+                print list(out)
+                return out
 
-    coms.append(command.Command('!usercolor', f, bot, True, repeatdelay=8))
+    coms.append(command.Command('!ofortune', f, bot, True))
+
+    # def f(channel, user, message, args, data, bot):
+    #     if args:
+    #         if bot.usercolors.has_key(args[0].lower()):
+    #             return bot.usercolors[args[0].lower()]
+    #         else:
+    #             return "No data for %s" % args[0].lower()
+    #     else:
+    #         return "Use the command properly, idiot."
+
+    # coms.append(command.Command('!usercolor', f, bot, True, repeatdelay=8))
 
     def f(channel, user, message, args, data, bot):
         import twitchapi

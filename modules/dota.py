@@ -537,7 +537,7 @@ def notablePlayerBlurb(channel, pages=33):
                     if players:
                         return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
         else:
-            notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 900.0)
+            notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 600.0)
             settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 60.0, announce=False)
 
 
