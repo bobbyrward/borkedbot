@@ -191,7 +191,7 @@ class SimpleCommand(Command):
 
 
 def get_process_output(incomm, shell=False, stripnls=False):
-    out = subprocess.check_output(incomm, shell=shell)
+    out = subprocess.check_output(incomm, shell=shell, stderr=subprocess.STDOUT)
     return out if not stripnls else out.replace('\n','')
 
 def setup(bot):

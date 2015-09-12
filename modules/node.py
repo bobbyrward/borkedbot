@@ -27,14 +27,12 @@ class ZRPC(object):
     def __enter__(self):
         # print 'connecting'
         self.zrpc.connect('tcp://127.0.0.1:29390')
-        return self.zrpc
+        return self.zrpc if self.zrpc else None
 
     def __exit__(self, etype, evalue, tb):
         if etype is not None:
             print 'Node error:', evalue, '(%s)' % etype
-            # print etype
-            # print evalue
-            # print tb
+
 
         # print 'closing'
         self.zrpc.close()

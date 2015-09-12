@@ -93,22 +93,22 @@ def alert(event):
             msgtimer.stop()
             # print msgtimer
 
-        if event.etype == 'timer':
-            try:
-                rss_update = check_for_steam_dota_rss_update(event.channel)
-                if rss_update:
-                    print '[Dota] RSS update found: ' + rss_update
-                    event.bot.botsay(rss_update)
-            except Exception, e:
-                print '[Dota-Error] RSS check failure: %s (%s)' % (e,type(e))
+        # if event.etype == 'timer':
+            # try:
+                # rss_update = check_for_steam_dota_rss_update(event.channel)
+                # if rss_update:
+                    # print '[Dota] RSS update found: ' + rss_update
+                    # event.bot.botsay(rss_update)
+            # except Exception, e:
+                # print '[Dota-Error] RSS check failure: %s (%s)' % (e,type(e))
 
 
-            try:
-                nblurb = notablePlayerBlurb(event.channel)
-                if nblurb:
-                    event.bot.botsay(nblurb)
-            except Exception, e:
-                print '[Dota-Error] Notable player blurb failure: %s' % e
+            # try:
+                # nblurb = notablePlayerBlurb(event.channel)
+                # if nblurb:
+                    # event.bot.botsay(nblurb)
+            # except Exception, e:
+                # print '[Dota-Error] Notable player blurb failure: %s' % e
 
 
 def blurb(channel, bot, override=False):
@@ -315,18 +315,18 @@ def getmatchMMRstring(channel, dotaid):
         dotadata = json.loads(d.readline())
 
     try:
-        dotadata['gameAccountClient']
+        dotadata['game_account_client']
     except:
         if dotadata['result'] == 15:
             return '[MMR Error: Private profile?]'
         if dotadata['result'] == 2:
             return '[MMR Error]'
 
-    old_mmr_s = str(olddotadata['gameAccountClient']['soloCompetitiveRank'])
-    old_mmr_p = str(olddotadata['gameAccountClient']['competitiveRank'])
+    old_mmr_s = str(olddotadata['game_account_client']['solo_competitive_rank'])
+    old_mmr_p = str(olddotadata['game_account_client']['competitive_rank'])
 
-    new_mmr_s = str(dotadata['gameAccountClient']['soloCompetitiveRank'])
-    new_mmr_p = str(dotadata['gameAccountClient']['competitiveRank'])
+    new_mmr_s = str(dotadata['game_account_client']['solo_competitive_rank'])
+    new_mmr_p = str(dotadata['game_account_client']['competitive_rank'])
 
     mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
     mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
