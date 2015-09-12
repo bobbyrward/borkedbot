@@ -515,7 +515,7 @@ def generate_message_commands(bot):
             sid = 'http://steamcommunity.com/profiles/' + sid if sid else 'No steam account linked to %s.' % args[0]
             return sid
 
-    coms.append(command.Command('!twitch2steam', f, bot, groups=me_and_broadcaster))
+    coms.append(command.Command('!twitch2steam', f, bot, True))
 
     def f(channel, user, message, args, data, bot):
         import twitchapi, dota
@@ -526,7 +526,7 @@ def generate_message_commands(bot):
             twitchname = twitchname if twitchname else 'No twitch account linked to this id.'
             return twitchname
 
-    coms.append(command.Command('!steam2twitch', f, bot, groups=me_and_broadcaster))
+    coms.append(command.Command('!steam2twitch', f, bot, True))
 
     ######################################################################
     # Mod message_commands
@@ -576,22 +576,42 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         import re
+
+        if args:
+            if args[0].lower() == 'list':
+                data = get_process_output('fortune -f', shell=True)
+                
+                cats = sorted([fl.strip() for fl in data.split('\n')[1:] if fl], reverse=True)
+                noper_cats = ', '.join([c.split()[1] for c in cats])
+
+                return noper_cats
+
         while True:
             out = get_process_output('fortune', shell=True).replace('\n', ' ').replace('\t','').strip()
             re.sub('\s{2,}', ' ', out)
             if len(out) <= 400:
-                print list(out)
+                # print list(out)
                 return out
 
     coms.append(command.Command('!fortune', f, bot, True))
 
     def f(channel, user, message, args, data, bot):
         import re
+
+        if args:
+            if args[0].lower() == 'list':
+                data = get_process_output('fortune -of', shell=True)
+                
+                cats = sorted([fl.strip() for fl in data.split('\n')[1:] if fl], reverse=True)
+                noper_cats = ', '.join([c.split()[1] for c in cats])
+
+                return noper_cats
+
         while True:
             out = get_process_output('fortune -o', shell=True).replace('\n', ' ').replace('\t','').strip()
             re.sub('\s{2,}', ' ', out)
             if len(out) <= 400:
-                print list(out)
+                # print list(out)
                 return out
 
     coms.append(command.Command('!ofortune', f, bot, True))
@@ -790,11 +810,11 @@ def generate_message_commands(bot):
 
             dotadata = dota.getUserDotaData(channel)
 
-            old_mmr_s = str(olddotadata['gameAccountClient']['soloCompetitiveRank'])
-            old_mmr_p = str(olddotadata['gameAccountClient']['competitiveRank'])
+            old_mmr_s = str(olddotadata['game_account_client']['solo_competitive_rank'])
+            old_mmr_p = str(olddotadata['game_account_client']['competitive_rank'])
 
-            new_mmr_s = str(dotadata['gameAccountClient']['soloCompetitiveRank'])
-            new_mmr_p = str(dotadata['gameAccountClient']['competitiveRank'])
+            new_mmr_s = str(dotadata['game_account_client']['solo_competitive_rank'])
+            new_mmr_p = str(dotadata['game_account_client']['competitive_rank'])
 
             mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
             mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
@@ -808,15 +828,15 @@ def generate_message_commands(bot):
             dotadata = dota.getUserDotaData(channel)
 
             try:
-                mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
-                mmrp = dotadata['gameAccountClient']['competitiveRank']
+                mmr = dotadata['game_account_client']['solo_competitive_rank']
+                mmrp = dotadata['game_account_client']['competitive_rank']
             except:
                 print '[Dota-MMR] Error getting mmr fields for %s, might be first time setup' % channel
                 wentok = dota.updateMMR(channel)
                 dotadata = dota.getUserDotaData(channel)
 
-                mmr = dotadata['gameAccountClient']['soloCompetitiveRank']
-                mmrp = dotadata['gameAccountClient']['competitiveRank']
+                mmr = dotadata['game_account_client']['solo_competitive_rank']
+                mmrp = dotadata['game_account_client']['competitive_rank']
 
             # ???
             return outputstring % (mmr,mmrp)
