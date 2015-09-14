@@ -24,7 +24,8 @@ class Borkedbot(irc.IRCClient):
     timertask = None
     timertick = 5
 
-    debug_printraw = False
+    _max_line_length = None
+    _debug_printraw = False
 
     @property
     def password(self):
@@ -75,6 +76,13 @@ class Borkedbot(irc.IRCClient):
         self.lineRate = 0
         yield
         self.lineRate = lr
+
+    @contextmanager
+    def unlock_linelength(self, length=1000):
+        oml = self._max_line_length
+        self._max_line_length = length
+        yield
+        self._max_line_length = oml
 
     def signedOn(self):
         self.send_event(None, None, 'serverjoin', None, self, None)
@@ -255,19 +263,20 @@ class Borkedbot(irc.IRCClient):
 
 
 
-    def botsay(self, msg):
+    def botsay(self, msg, length=None):
+        if length == None: length = self._max_line_length
         try:
-            self.say(self.factory.channel, msg)
+            self.say(self.factory.channel, msg, length)
         except:
             print '[Borkedbot] Blarg how do I do this shit: %s' % msg
 
             try:
-                self.say(self.factory.channel, msg.decode("utf-8"))
+                self.say(self.factory.channel, msg.decode("utf-8"), length)
             except Exception, e:
                 print 'No that didn\'t work either, wtf how retarded is twisted/unicode'
                 
                 try:
-                    self.say(self.factory.channel, msg.encode("utf-8"))
+                    self.say(self.factory.channel, msg.encode("utf-8"), length)
                 except Exception, e:
                     print 'I give up'
                     return
@@ -308,9 +317,9 @@ class Borkedbot(irc.IRCClient):
         print "\nSomething odd has happened:"
         print s
         print
-
     def lineReceived(self, line):
-        if self.debug_printraw: print line
+        # _max_line_length = None # ?????
+        if self._debug_printraw: print line
         irc.IRCClient.lineReceived(self, line)
 #
     # TODO: Add a stdin reading thread
