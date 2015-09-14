@@ -577,17 +577,26 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import re
 
+        cat = ''
         if args:
-            if args[0].lower() == 'list':
-                data = get_process_output('fortune -f', shell=True)
+            data = get_process_output('fortune -f', shell=True)
                 
-                cats = sorted([fl.strip() for fl in data.split('\n')[1:] if fl], reverse=True)
-                noper_cats = ', '.join([c.split()[1] for c in cats])
+            cats = sorted([fl.strip() for fl in data.split('\n')[1:] if fl], reverse=True)
+            catlist = [c.split()[1] for c in cats]
+            noper_cats = ', '.join(catlist)
 
+            if args[0].lower() == 'list':
                 return noper_cats
+            elif args[0].lower() in catlist:
+                cat = args[0].lower()
+            else:
+                return '%s is not a category.' % args[0]
 
         while True:
-            out = get_process_output('fortune', shell=True).replace('\n', ' ').replace('\t','').strip()
+            try:
+                out = get_process_output('fortune %s' % cat, shell=True).replace('\n', ' ').replace('\t','').strip()
+            except Exception as e:
+                return "Error: %s WutFace" % e
             re.sub('\s{2,}', ' ', out)
             if len(out) <= 400:
                 # print list(out)
@@ -598,17 +607,26 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import re
 
+        cat = '-o'
         if args:
-            if args[0].lower() == 'list':
-                data = get_process_output('fortune -of', shell=True)
+            data = get_process_output('fortune -of', shell=True)
                 
-                cats = sorted([fl.strip() for fl in data.split('\n')[1:] if fl], reverse=True)
-                noper_cats = ', '.join([c.split()[1] for c in cats])
+            cats = sorted([fl.strip() for fl in data.split('\n')[1:] if fl], reverse=True)
+            catlist = [c.split()[1] for c in cats]
+            noper_cats = ', '.join(catlist)
 
-                return noper_cats
+            if args[0].lower() == 'list':
+                return catlist
+            elif args[0].lower() in catlist:
+                cat = '/usr/share/games/fortunes/off/' + args[0].lower()
+            else:
+                return '%s is not a category.' % args[0]
 
         while True:
-            out = get_process_output('fortune -o', shell=True).replace('\n', ' ').replace('\t','').strip()
+            try:
+                out = get_process_output('fortune %s' % cat, shell=True).replace('\n', ' ').replace('\t','').strip()
+            except Exception as e:
+                return "Error: %s WutFace" % e
             re.sub('\s{2,}', ' ', out)
             if len(out) <= 400:
                 # print list(out)
@@ -1047,6 +1065,8 @@ def generate_message_commands(bot):
     coms.append(command.Command('!dotaconfig', f, bot, groups=me_and_broadcaster, repeatdelay=5))
 
     def f(channel, user, message, args, data, bot):
+        return "Currently broken due to Source 2.  Will be fixed Soon™."
+
         import dota, settings, node
 
         if channel not in dota.enabled_channels:
@@ -1144,10 +1164,6 @@ def generate_message_commands(bot):
             return minstr.format(channel, rank, mmr, reldelta)
 
     coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, repeatdelay=25))
-
-
-    coms.append(command.SimpleCommand('!mumble', 'doc.asdfxyz.de (default port) 100 slot open server, on 24/7.  Try not to be awful, or bork will ban you.',
-        bot, channels=['superjoe', 'monkeys_forever'], repeatdelay=15, targeted=True))
 
     def f(channel, user, message, args, data, bot):
         if args:
@@ -1307,9 +1323,6 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('!background',
         "It's a bug with the TI2 animated background.  Launch option: \"-dashboard international_2012\" "+
         "Console command: \"dota_embers 0\"  Then close, open, and close your console, and play a game.",
-        bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
-
-    coms.append(command.SimpleCommand(['!rangefinder', '!greenarrow'], "Here's the console command: dota_disable_range_finder 0",
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand(['!fountainhooks', '!pudgefail', '!pudgefails'], 'rip root http://www.youtube.com/watch?v=7ba9nCot71w&hd=1',

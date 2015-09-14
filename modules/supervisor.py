@@ -31,13 +31,13 @@ class MailHandler(object):
 
     @staticmethod
     def _screen_update(bot, data):
-        print 'updating screen name status'
+        # print 'updating screen name status'
         import screen
         screen.update_online_status(data)
 
     @staticmethod
     def _screen_reset(bot, data):
-        print 'resetting screen name status'
+        # print 'resetting screen name status'
         import screen
         screen.reset_window_name()
 
