@@ -1608,8 +1608,8 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!ohnohesretarded', 'http://i.imgur.com/ZdaV0PG.png', bot, channels=['moodota2', 'barnyyy', 'lamperkat'], targeted=True, repeatdelay=15))
 
-    #coms.append(command.SimpleCommand('!announcer', 'Weeaboo Onodera waifu announcer > http://saylith.github.io/harem-announcer/',
-    #    bot, channels=['moodota2'], targeted=True, repeatdelay=15))
+    coms.append(command.SimpleCommand('!announcer', 'Weeaboo Onodera+Kongou waifu announcer > http://saylith.github.io/harem-announcer/',
+       bot, channels=['moodota2'], targeted=True, repeatdelay=15))
 
     #
 
