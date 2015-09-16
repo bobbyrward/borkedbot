@@ -47,7 +47,7 @@ class MailHandler(object):
 
     @staticmethod
     def _unknown(bot, data):
-        print 'Discarding unknown mail: ' + data
+        print 'Discarding unknown mail: %s' % data
 
 
 def setup(bot):
