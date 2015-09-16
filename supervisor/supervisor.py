@@ -16,6 +16,7 @@ class BorkedbotSupervisorCodebase(object):
         CHAT_MESSAGE = 'chatmsg'
         SCREEN_NAME_UPDATE = 'screen_update'
         SCREEN_NAME_RESET = 'screen_reset'
+        SCREEN_WINDOW_NUMBER_UPDATE = 'screen_window_num_update'
 
     def __init__(self, supervisor):
         self.supervisor = supervisor
@@ -71,7 +72,7 @@ class BorkedbotSupervisorCodebase(object):
         print
 
     def set_screen_window_number(self, channel, number):
-        os.system('export WINDOW="%s"' % number)
+        self.supervisor.send_mail(self.MAILTYPES.SCREEN_WINDOW_NUMBER_UPDATE, number, channel)
 
     def _get_multi_channel_online(self, channels):
         data = requests.get('https://api.twitch.tv/kraken/streams?channel=%s' % ','.join([c.lower() for c in channels])).json()

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import sys
+import sys, os
 sys.dont_write_bytecode = True
 
 import rpyc
@@ -40,6 +40,10 @@ class MailHandler(object):
         # print 'resetting screen name status'
         import screen
         screen.reset_window_name()
+
+    @staticmethod
+    def _screen_window_num_update(bot, data):
+        os.system('export WINDOW="%s"' % data)
 
     @staticmethod
     def _test(bot, data):
