@@ -70,6 +70,9 @@ class BorkedbotSupervisorCodebase(object):
                 self.supervisor.send_mail(self.MAILTYPES.SCREEN_NAME_UPDATE, ch in olcs, ch)
         print
 
+    def set_screen_window_number(self, channel, number):
+        os.system('export WINDOW="%s"' % number)
+
     def _get_multi_channel_online(self, channels):
         data = requests.get('https://api.twitch.tv/kraken/streams?channel=%s' % ','.join([c.lower() for c in channels])).json()
         return [d['channel']['name'] for d in data['streams']]
