@@ -43,7 +43,7 @@ class MailHandler(object):
 
     @staticmethod
     def _screen_window_num_update(bot, data):
-        os.system('export WINDOW="%s"' % data)
+        os.environ['WINDOW'] = str(data)
 
     @staticmethod
     def _test(bot, data):
