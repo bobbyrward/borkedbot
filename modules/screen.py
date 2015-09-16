@@ -2,7 +2,7 @@
 import sys, os
 sys.dont_write_bytecode = True
 
-
+import subprocess
 
 LOAD_ORDER = 700
 
@@ -27,13 +27,14 @@ def get_screen_name():
 
 def get_window_number():
     return int(os.environ['WINDOW'])
+    # return subprocess.check_output('screen -Q number', shell=True).split()[0]
 
 def _get_window_name():
     raise NotImplementedError("I don't even know if I can do this.")
 
 
 def set_window_name(text):
-    os.system('screen -S %s -p %s -X title "%s"' % (get_screen_name(), get_window_number(), text))
+    os.system('screen -X title "%s"' % text)
 
 def reset_window_name():
     set_window_title(_CHANNEL)
@@ -47,5 +48,5 @@ def send_command(command, data, name=None, window=None):
 def update_online_status(online=True, onlinetext=' - Online', offlinetext=' - Offline'):
     if not _CHANNEL: raise ValueError("No channel set.")
     wname = '%s%s' % (_CHANNEL, onlinetext if online else offlinetext)
-    print '[Screen] Setting window %s name to %s' % (get_window_number(), wname)
+    print '[Screen] Setting window name to %s' % wname
     set_window_name(wname)
