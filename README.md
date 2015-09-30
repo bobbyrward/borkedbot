@@ -250,7 +250,7 @@ Unlike most commands, this command parses options using argparse.  The first opt
 ##### Arguments:
   * `create` - Create a new lobby.  Only one lobby can be active at a time, across all instances of borkedbot using a particular steam account.
     - `-name lobbyname` - Name of the lobby.  May contain spaces.  Defaults to "Borkedbot lobby".
-    - `-mode gamemode` - Sets the lobby gamemode.  Gamemodes are lowercase abreviations of the full name.  Defaults to All Pick.
+    - `-mode gamemode` - Sets the lobby gamemode.  Gamemodes are lowercase abbreviations of the full name.  Defaults to All Pick.
       + `ap` - All Pick
       + `cm` - Captains Mode
       + `rd` - Random Draft
