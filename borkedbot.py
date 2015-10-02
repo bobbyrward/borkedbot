@@ -32,8 +32,12 @@ class Borkedbot(irc.IRCClient):
 
     @property
     def password(self):
-        with open('passwd', 'r') as f:
-            return base64.b64decode(f.readline())
+        with open('passwd', 'r+') as f:
+            for line in f:
+                return base64.b64decode(line)
+            password = raw_input("Please input password: ")
+            f.write(base64.b64encode(password))
+            return password
 
     @property
     def nickname(self):
@@ -149,49 +153,6 @@ class Borkedbot(irc.IRCClient):
                 # print "!!Notification from twitch!! (%s): %s" % (channel, msg)
                 self.send_event(self.chan(channel), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
                 return
-
-            ''' ALL OF THIS IS NOW WORTHLESS
-            if user == 'jtv':
-
-                # TODO: remove mod on CLEARCHAT
-
-                if msg.split()[0] in ['EMOTESET', 'USERCOLOR', 'SPECIALUSER']:
-                    tag_user = msg.split()[1]
-                    tag_data = msg.split()[2]
-
-                    self.usertags.setdefault(tag_user, dict())
-
-                if msg.split()[0] == 'EMOTESET':
-                    self.usertags[tag_user]['EMOTESET'] = tag_data
-                    return
-
-                elif msg.split()[0] == 'USERCOLOR':
-                    self.usertags[tag_user]['USERCOLOR'] = tag_data
-                    return
-
-                elif msg.split()[0] == 'SPECIALUSER':
-
-                    self.usertags[tag_user].setdefault('SPECIALUSER', set())
-                    self.usertags[tag_user]['SPECIALUSER'].add(tag_data)
-
-                    if tag_data in ['turbo']:
-                        return
-
-                    elif tag_data == 'subscriber':
-                        self.channelsubs.add(tag_user)
-                        return
-
-                    elif tag_data in ['admin', 'staff', 'global_mod']:
-                        self.opsinchan.add(tag_user)
-                        print "Whoop whoop twitch police in the house (%s)" % tag_user
-                        self.oplist.add(tag_user)
-                        return
-
-                    self.log('Unknown SPECIALUSER: %s' % tag_data)
-
-                self.send_event(self.chan(), 'jtv', 'jtvmsg', msg, self, user in self.oplist)
-                return
-            '''
         else:
             # def event(channel, user, etype, data, bot, isop):
             self.send_event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
@@ -322,6 +283,7 @@ class Borkedbot(irc.IRCClient):
         print "\nSomething odd has happened:"
         print s
         print
+
     def lineReceived(self, line):
         # _max_line_length = None # ?????
         if self._debug_printraw: print line
@@ -346,17 +308,6 @@ class BotFactory(protocol.ClientFactory):
         print "Could not connect, retrying..."
         connector.connect()
 
-
-# def temp_get_channel_chat_server(channel, port80=False):
-#     import requests, random
-#     r = requests.get('https://api.twitch.tv/api/channels/%s/chat_properties' % channel.replace('#','')).json()
-#     servers = r['chat_servers']
-#     if port80:
-#         return str(random.choice([server for server in servers if server.endswith(':80')]))
-#     else:
-#         return str(random.choice(servers))
-
-
 if __name__ == "__main__":
     if len(sys.argv) is not 2:
         print "Usage: python borkedbot.py [twitch_channel]"
@@ -365,7 +316,8 @@ if __name__ == "__main__":
 
         server = 'irc.twitch.tv'
         port = 6667
-        chan = sys.argv[1] if sys.argv[1].startswith('#') else '#%s' % sys.argv[1]
+        chan = '#{}'.format(sys.argv[1])
+        print chan
         mbf = BotFactory(chan, 'borkedbot')
 
         # server, port = temp_get_channel_chat_server(chan).split(':')

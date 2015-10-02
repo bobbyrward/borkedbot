@@ -7,7 +7,7 @@ LOAD_ORDER = 90
 
 with open('apikey', 'r') as f:
     apikey = f.readline()
-del f
+#del f
 
 root = 'https://api.steampowered.com/'
 
