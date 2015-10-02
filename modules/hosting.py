@@ -17,9 +17,10 @@ def setup(bot):
     settings.setdata('%s_hosted_channel' % bot.channel.replace('#',''), '')
 
 def alert(event):
+    message = 'Only the channel owner and channel editors can use the /unhost command.'
+    
     if event.channel:
-        if event.etype == 'jtvmsg':
-            if 'Only the channel owner and channel editors can use the /unhost command.' in event.data:
+        if event.etype == 'jtvmsg' and message in event.data:
                 print "[Hosting] Not an editor, cannot unhost."
                 settings.setdata('%s_auto_unhost' % event.channel, False)
 
@@ -28,8 +29,6 @@ def alert(event):
             # checkifhostonline(event) # This line might need to be outside the if check
 
         return
-        if settings.trygetset('%s_is_hosting' % event.channel, False):
-            checkifhostonline(event)
 
 
 def nowhosting(event):

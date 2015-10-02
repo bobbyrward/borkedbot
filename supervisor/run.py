@@ -77,7 +77,9 @@ class BorkedbotSupervisorService(rpyc.Service):
             return self.mailqueue.popleft()
 
     def has_new_mail(self):
-        return bool(len(self.mailqueue))
+        if self.mailqueue:
+            return True
+        return False
 
     def send_mail(self, datatype, data, channel=None):
         if channel is None: channel = self.botchannel

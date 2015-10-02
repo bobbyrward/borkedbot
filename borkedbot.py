@@ -27,6 +27,9 @@ class Borkedbot(irc.IRCClient):
     _max_line_length = None
     _debug_printraw = False
 
+    def __init__(self):
+        pass
+
     @property
     def password(self):
         with open('passwd', 'r') as f:
@@ -231,11 +234,11 @@ class Borkedbot(irc.IRCClient):
 
     def irc_RPL_NAMREPLY(self, prefix, params):
         return
-        self.log('Receiving names: ' + ' '.join(params))
+        #self.log('Receiving names: ' + ' '.join(params))
 
     def irc_RPL_ENDOFNAMES(self, prefix, params):
         return
-        self.log('Names list received.')
+        #self.log('Names list received.')
 
 
     ### I need tags for these
@@ -286,11 +289,13 @@ class Borkedbot(irc.IRCClient):
 
     def ban(self, user, message=None):
         self.botsay('.ban %s' % user)
-        if message: self.botsay(message)
+        if message:
+            self.botsay(message)
 
     def timeout(self, user, duration=600, message=None):
         self.botsay('.timeout %s %s' % (user, duration))
-        if message: self.botsay(message)
+        if message:
+            self.botsay(message)
 
 
 

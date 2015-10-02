@@ -72,7 +72,7 @@ def generatefromoldmessages(channel):
             t = rf.readline()
             t = t.replace('\n','')
 
-            message =  re.sub(pa, "", t)
+            message = re.sub(pa, "", t)
 
             if len(message.split()) < chain_length: continue
 

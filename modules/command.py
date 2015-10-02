@@ -59,7 +59,6 @@ class Command(object):
         if self.lastuse is None: return True
         return int(self._htime() - self.lastuse) > self.repeatdelay
 
-
     def _dochecks(self, channel, user, msg, args):
         try:
             msg.split()[0]
@@ -87,7 +86,6 @@ class Command(object):
         if self.channels and channel not in self.channels:
             return BAD_CHANNEL
 
-
         if user == 'imayhaveborkedit':
             return OK
 
@@ -108,7 +106,6 @@ class Command(object):
             return DELAY_LOCKED
 
         return OK
-
 
     def enabledInChannel(self, channel):
         return channel in self.channels and channel not in self.blacklist
@@ -159,7 +156,6 @@ class SimpleCommand(Command):
         else:
             self.groups.extend(groups)
 
-
     def process(self, channel, user, message, args):
         err = self._dochecks(channel, user, message, args)
         if err != OK:
@@ -186,8 +182,7 @@ class SimpleCommand(Command):
             else:
                 res = res % ('', self.output)
 
-
-        return (res, OK)
+        return res, OK
 
 
 def get_process_output(incomm, shell=False, stripnls=False):
@@ -254,7 +249,7 @@ class Commander(object):
                 t1 = time.time()
                 output = comm.process(event.channel, event.user, event.data, self._getargs(event.data))
                 t2 = time.time()
-                if output[1] is command.OK:
+                if output[1] is comm.OK:
                     print "[%s] Output for %s: %s" % (self.modulename, comm.trigger, output[0])
                     print "[%s] Command time: %4.4fms, Total time: %4.4fms" % (self.modulename, (t2-t1)*1000,(t2-tstart)*1000)
                     event.bot.botsay(str(output[0]))

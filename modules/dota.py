@@ -84,9 +84,9 @@ def alert(event):
                     blurb(event.channel, event.bot)
                 else:
                     raise RuntimeWarning('Blurb already running')
-            except RuntimeWarning, e:
+            except RuntimeWarning as e:
                 pass
-            except Exception, e:
+            except Exception as e:
                print '[Dota-Error] Match blurb failure: %s' % e
             else:
                 settings.setdata('%s_matchblurb_running' % event.channel, False, announce=False)
@@ -182,7 +182,7 @@ def checktimeout(channel):
         else:
             return laststreamingstate
     except Exception as e:
-        print '[Dota] twitch api check error:',e
+        print '[Dota] twitch api check error: ',e
         return False
 
     if is_streaming:
@@ -215,6 +215,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
     matchdata = steamapi.GetMatchDetails(latestmatch['match_id'])
     herodata = getHeroes()
 
+    playerdata = None
     for p in matchdata['result']['players']:
         if str(p['account_id']) == str(dotaid):
             playerdata = p
@@ -266,8 +267,10 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
     d_gpm = playerdata['gold_per_min']
     d_xpm = playerdata['xp_per_min']
 
-    d_victory = 'Victory' if not (matchdata['result']['radiant_win'] ^ (d_team == 'Radiant')) else 'Defeat'
-
+    if matchdata['result']['radiant_win'] ^ (d_team == 'Radiant'):
+        d_victory = 'Defeat'
+    else:
+        d_victory = 'Victory'
 
     print "[Dota] Skipped %s matches" % skippedmatches
 
@@ -786,7 +789,7 @@ def check_for_prizepool_update(channel, override=False):
         data = steamapi.GetTournamentPrizePool(2733)
         moneys = data['result']['prize_pool']
 
-
+        currenttier = None
         for prizetier in sorted(prizes.keys()):
             if moneys < prizetier:
                 nextprize = prizes[prizetier]
