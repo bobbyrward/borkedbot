@@ -36,7 +36,7 @@ def alert(event):
 
     if event.etype in ['msg', 'action']:
         if event.channel in ['monkeys_forever', 'unsanitylive', 'pelmaleon', 'mynameisamanda', 'imayhaveborkedit', 'barnyyy', 'moodota2', 'gixgaming', 'kazkarontwo', 'lamperkat','f4ldota']:
-            if ('watch?v=' in event.data or 'youtu.be/' in event.data) and not event.data.strip().startswith('!'):# and event.user != 'rime_':
+            if ('youtube.com/watch?' in event.data or 'youtu.be/' in event.data) and not event.data.strip().startswith('!'):# and event.user != 'rime_':
                 print '[ExtraEvents] Found youtube link, looking up title'
 
                 ids = re.findall('watch\?.*?v=(\S{11})', event.data) + re.findall('youtu.be/(.{11})', event.data)

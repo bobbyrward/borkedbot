@@ -93,14 +93,14 @@ def alert(event):
             msgtimer.stop()
             # print msgtimer
 
-        # if event.etype == 'timer':
-            # try:
-                # rss_update = check_for_steam_dota_rss_update(event.channel)
-                # if rss_update:
-                    # print '[Dota] RSS update found: ' + rss_update
-                    # event.bot.botsay(rss_update)
-            # except Exception, e:
-                # print '[Dota-Error] RSS check failure: %s (%s)' % (e,type(e))
+        if event.etype == 'timer':
+            try:
+                rss_update = check_for_steam_dota_rss_update(event.channel)
+                if rss_update:
+                    print '[Dota] RSS update found: ' + rss_update
+                    event.bot.botsay(rss_update)
+            except Exception, e:
+                print '[Dota-Error] RSS check failure: %s (%s)' % (e,type(e))
 
 
             # try:
