@@ -40,7 +40,7 @@ class Timer(object):
         except Exception, e:
             return None
 
-    def reset():
+    def reset(self):
         self.start_time = None
         self.stop_time = None
         self.laps = []

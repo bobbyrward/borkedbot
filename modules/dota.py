@@ -9,7 +9,6 @@ import steamapi, twitchapi, settings, node, timer
 
 LOAD_ORDER = 35
 
-
 STEAM_TO_DOTA_CONSTANT = 76561197960265728
 POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange',      'Pink', 'Gray', 'Light Blue', 'Green', 'Brown']
 
@@ -23,13 +22,11 @@ def dotaToSteam(dotaid):
 def steamToDota(steamid):
     return int(steamid) - STEAM_TO_DOTA_CONSTANT
 
-
 def update_channels():
     global enabled_channels
     # print "[Dota] Updating enabled channels"
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
     # os.system('touch %s' % os.path.abspath(__file__))
-
 
 def enable_channel(channel, dotaid, mmr=False):
     dotaid = steamToDota(determineSteamid(dotaid))
@@ -84,9 +81,9 @@ def alert(event):
                     blurb(event.channel, event.bot)
                 else:
                     raise RuntimeWarning('Blurb already running')
-            except RuntimeWarning, e:
+            except RuntimeWarning as e:
                 pass
-            except Exception, e:
+            except Exception as e:
                print '[Dota-Error] Match blurb failure: %s' % e
             else:
                 settings.setdata('%s_matchblurb_running' % event.channel, False, announce=False)
@@ -182,7 +179,7 @@ def checktimeout(channel):
         else:
             return laststreamingstate
     except Exception as e:
-        print '[Dota] twitch api check error:',e
+        print '[Dota] twitch api check error: ',e
         return False
 
     if is_streaming:
@@ -215,6 +212,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
     matchdata = steamapi.GetMatchDetails(latestmatch['match_id'])
     herodata = getHeroes()
 
+    playerdata = None
     for p in matchdata['result']['players']:
         if str(p['account_id']) == str(dotaid):
             playerdata = p
@@ -266,8 +264,10 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
     d_gpm = playerdata['gold_per_min']
     d_xpm = playerdata['xp_per_min']
 
-    d_victory = 'Victory' if not (matchdata['result']['radiant_win'] ^ (d_team == 'Radiant')) else 'Defeat'
-
+    if matchdata['result']['radiant_win'] ^ (d_team == 'Radiant'):
+        d_victory = 'Defeat'
+    else:
+        d_victory = 'Victory'
 
     print "[Dota] Skipped %s matches" % skippedmatches
 
@@ -786,7 +786,7 @@ def check_for_prizepool_update(channel, override=False):
         data = steamapi.GetTournamentPrizePool(2733)
         moneys = data['result']['prize_pool']
 
-
+        currenttier = None
         for prizetier in sorted(prizes.keys()):
             if moneys < prizetier:
                 nextprize = prizes[prizetier]

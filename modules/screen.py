@@ -37,7 +37,7 @@ def set_window_name(text):
     os.system('screen -p %s -X title "%s"' % (get_window_number(), text))
 
 def reset_window_name():
-    set_window_title(_CHANNEL)
+    set_window_name(_CHANNEL)
 
 def send_command(command, data, name=None, window=None):
     name = name or get_screen_name()
