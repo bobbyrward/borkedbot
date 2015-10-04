@@ -536,43 +536,15 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand(['!source', '!guts'], "BLEUGH https://github.com/imayhaveborkedit/borkedbot", bot, True, prependuser=True, repeatdelay=10, targeted=True))
 
-    coms.append(command.SimpleCommand('#!bursday', "Happy Bursday! http://www.youtube.com/watch?v=WCYzk67y_wc", bot, True))
+    coms.append(command.SimpleCommand('!bursday', "Happy Bursday! http://www.youtube.com/watch?v=WCYzk67y_wc", bot, True))
 
     coms.append(command.SimpleCommand('#!riot', 'ヽ༼ຈل͜ຈ༽ﾉ', bot, True, prependuser = False))
     coms.append(command.SimpleCommand('#!shrug', '¯\_(ツ)_/¯', bot, True, prependuser = False))
 
 
-    # def f(channel, user, message, args, data, bot):
-    #     if 'nightbot' in set(bot.oplist + bot.userlist):
-    #         if 'nightbot' in bot.oplist and 'nightbot' not in bot.userlist:
-    #             return "Nightbot is modded but not in the channel? O.o"
-    #         elif 'nightbot' not in bot.oplist and 'nightbot' in bot.userlist:
-    #             return "I think nightbot just got here."
-    #         return "Nightbot should be here."
-    #     else:
-    #         return "Nightbot doesn't seem to be here."
-
-    # coms.append(command.Command('!nightbot', f, bot, True))
-
-    # def f(channel, user, message, args, data, bot):
-    #     if not len(args):
-    #         return
-
-    #     pag = args[0].lower()
-    #     # lower args[0]
-
-    #     if pag in set(bot.oplist + bot.userlist):
-    #         if pag in bot.oplist and pag not in bot.userlist:
-    #             return "%s is modded but not in the channel? O.o" % pag
-    #         return "%s should be here." % pag
-    #     else:
-    #         return "%s doesn't seem to be here." % pag
-
-    # coms.append(command.Command('!paging', f, bot, True))
-
     def f(channel, user, message, args, data, bot):
         return get_process_output('ddate', shell=True)
-    coms.append(command.Command('#!ddate', f, bot, True))
+    coms.append(command.Command('!ddate', f, bot, True))
 
     def f(channel, user, message, args, data, bot):
         import re
@@ -580,13 +552,13 @@ def generate_message_commands(bot):
         cat = ''
         if args:
             data = get_process_output('fortune -f', shell=True)
-                
+
             cats = sorted([fl.strip() for fl in data.split('\n')[1:] if fl], reverse=True)
             catlist = [c.split()[1] for c in cats]
             noper_cats = ', '.join(catlist)
 
             if args[0].lower() == 'list':
-                return noper_cats
+                return ', '.join(noper_cats)
             elif args[0].lower() in catlist:
                 cat = args[0].lower()
             else:
@@ -610,13 +582,13 @@ def generate_message_commands(bot):
         cat = '-o'
         if args:
             data = get_process_output('fortune -of', shell=True)
-                
+
             cats = sorted([fl.strip() for fl in data.split('\n')[1:] if fl], reverse=True)
             catlist = [c.split()[1] for c in cats]
             noper_cats = ', '.join(catlist)
 
             if args[0].lower() == 'list':
-                return catlist
+                return ', '.join(catlist)
             elif args[0].lower() in catlist:
                 cat = '/usr/share/games/fortunes/off/' + args[0].lower()
             else:
@@ -634,16 +606,6 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!ofortune', f, bot, True))
 
-    # def f(channel, user, message, args, data, bot):
-    #     if args:
-    #         if bot.usercolors.has_key(args[0].lower()):
-    #             return bot.usercolors[args[0].lower()]
-    #         else:
-    #             return "No data for %s" % args[0].lower()
-    #     else:
-    #         return "Use the command properly, idiot."
-
-    # coms.append(command.Command('!usercolor', f, bot, True, repeatdelay=8))
 
     def f(channel, user, message, args, data, bot):
         import twitchapi
@@ -861,7 +823,7 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!mmr', f, bot, repeatdelay=20))
 
-    def f(channel, user, message, args, data, bot):
+    def f(channel, user, message, args, data, bot): #TODO: rework this since the bot can't add people
         import dota, node, settings
         '''
         76561197960265728 <- THAT IS THE NUMBER TO SUBTRACT FROM STEAM ID'S TO MAKE A DOTA ID
@@ -1125,7 +1087,6 @@ def generate_message_commands(bot):
     coms.append(command.Command('!nel', f, bot, repeatdelay=50))
 
     def f(channel, user, message, args, data, bot):
-
         if channel not in ['monkeys_forever', 'moodota2']: return
 
         namemap = {
@@ -1138,12 +1099,16 @@ def generate_message_commands(bot):
         lburl = "http://www.dota2.com/webapi/ILeaderboard/GetDivisionLeaderboard/v0001?division=americas"
         jdata = json.loads(requests.get(lburl).text)
 
-        rank, mmr = {i['name']:(i['rank'],i['solo_mmr']) for i in jdata['leaderboard']}[namemap[channel]]
-        ltime = time.localtime(int(jdata['time_posted']))
+        try:
+            rank, mmr = {i['name']:(i['rank'],i['solo_mmr']) for i in jdata['leaderboard']}[namemap[channel]]
+        except:
+            return "Uhhh, about that..."
+
+        ltime = time.localtime(int(jdata['time_posted']) + (time.altzone if time.daylight else time.timezone))
 
         lastupdate = time.strftime('%b %d, %I:%M%p',ltime)
         lt = datetime.datetime.fromtimestamp(time.mktime(ltime)).replace(tzinfo=dateutil.tz.tzutc())
-        t_now = datetime.datetime.now(dateutil.tz.tzutc())
+        t_now = datetime.datetime.now(dateutil.tz.tzlocal())
 
         reldelta = dateutil.relativedelta.relativedelta(t_now, lt)
 
@@ -1157,11 +1122,11 @@ def generate_message_commands(bot):
             '{3.minutes} minutes ago - http://dota2.com/leaderboards/#americas')
 
         if reldelta.days:
-            return daystr.format(channel, rank, mmr, reldelta)
+            return daystr.format(channel, rank, mmr, reldelta).replace('rank 1 ', 'ヽ༼ຈل͜ຈ༽ﾉ rank 1 ヽ༼ຈل͜ຈ༽ﾉ ')
         elif reldelta.hours:
-            return hourstr.format(channel, rank, mmr, reldelta)
+            return hourstr.format(channel, rank, mmr, reldelta).replace('rank 1 ', 'ヽ༼ຈل͜ຈ༽ﾉ rank 1 ヽ༼ຈل͜ຈ༽ﾉ ')
         else:
-            return minstr.format(channel, rank, mmr, reldelta)
+            return minstr.format(channel, rank, mmr, reldelta).replace('rank 1 ', 'ヽ༼ຈل͜ຈ༽ﾉ rank 1 ヽ༼ຈل͜ຈ༽ﾉ ')
 
     coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, repeatdelay=25))
 
@@ -1761,6 +1726,17 @@ def generate_message_commands(bot):
         return 'There are %s people in both chats' % len(basechatters & targetchatters)
 
     coms.append(command.Command('!crosschat', f, bot, True))
+
+
+    def f(channel, user, message, args, data, bot):
+        if args:
+            if args[0] == 'start':
+                pass
+
+        else:
+            return 'this is the help text'
+    coms.append(command.Command('!adventure', f, bot, True, groups=me_and_broadcaster))
+
 
     ######################################################################
 
