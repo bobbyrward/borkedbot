@@ -328,8 +328,12 @@ def getmatchMMRstring(channel, dotaid):
     new_mmr_s = str(dotadata['game_account_client']['solo_competitive_rank'])
     new_mmr_p = str(dotadata['game_account_client']['competitive_rank'])
 
-    mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
-    mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
+    if None in [old_mmr_s, old_mmr_p, new_mmr_s, new_mmr_p]:
+        mmr_s_change = str(int(new_mmr_s or 0) - int(old_mmr_s or 0))
+        mmr_p_change = str(int(new_mmr_p or 0) - int(old_mmr_p or 0))
+    else:
+        mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
+        mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
 
     if int(mmr_s_change) >= 0: mmr_s_change = '+' + mmr_s_change
     if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
