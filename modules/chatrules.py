@@ -696,9 +696,15 @@ def generate_message_commands(bot):
         if message.lower() in ['borkedbot, ?', 'borkedbot,?']:
             return "That's not even a real question."
         elif message.endswith('?'):
+            # if message.lower().split(',')[1].strip().startswith('who'): return "%s, uhhh... you? Me? That guy? WutFace" % user
+            # if message.lower().split(',')[1].strip().startswith('what'): return "%s,  WutFace" % user
+            # if message.lower().split(',')[1].strip().startswith('when'): return "%s, look time is hard when the only numbers you're good with are 0 and 1 NotLikeThis" % user
+            # if message.lower().split(',')[1].strip().startswith('where'): return "%s, http://maps.google.com Kappa" % user
+            # if message.lower().split(',')[1].strip().startswith('why'): return "%s, because you smell bad WutFace" % user
+            # if message.lower().split(',')[1].strip().startswith('how'): return "%s, because you smell bad WutFace" % user
             return "%s, %s"%(user, random.choice(data))
 
-    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'barnyyy'], data=magic8ball, repeatdelay=15))
+    coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'barnyyy'], data=magic8ball, repeatdelay=10))
 
     def f(channel, user, message, args, data, bot):
         import datetime, dateutil, dateutil.parser, dateutil.relativedelta, twitchapi, settings
@@ -790,19 +796,29 @@ def generate_message_commands(bot):
 
             dotadata = dota.getUserDotaData(channel)
 
-            old_mmr_s = str(olddotadata['game_account_client']['solo_competitive_rank'])
-            old_mmr_p = str(olddotadata['game_account_client']['competitive_rank'])
+            old_mmr_s = str(olddotadata['game_account_client']['solo_competitive_rank'] or 0)
+            old_mmr_p = str(olddotadata['game_account_client']['competitive_rank'] or 0)
 
-            new_mmr_s = str(dotadata['game_account_client']['solo_competitive_rank'])
-            new_mmr_p = str(dotadata['game_account_client']['competitive_rank'])
+            new_mmr_s = str(dotadata['game_account_client']['solo_competitive_rank'] or 0)
+            new_mmr_p = str(dotadata['game_account_client']['competitive_rank'] or 0)
 
             mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
             mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
 
-            if int(mmr_s_change) >= 0: mmr_s_change = '+' + mmr_s_change
-            if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
+            if new_mmr_s == 0: new_mmr_s = 'None'
+            if new_mmr_p == 0: new_mmr_p = 'None'
 
-            return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
+            if int(mmr_s_change) != 0: 
+                mmr_s_change = ' (%s%s)' % ('+' if int(mmr_s_change) > 0 else '', mmr_s_change)
+            else:
+                mmr_s_change = ''
+            
+            if int(mmr_p_change) != 0: 
+                mmr_p_change = ' (%s%s)' % ('+' if int(mmr_p_change) > 0 else '', mmr_p_change)
+            else:
+                mmr_p_change = ''
+
+            return outputstring % ('%s%s' % (new_mmr_s, mmr_s_change), '%s%s' % (new_mmr_p, mmr_p_change))
 
         else:
             dotadata = dota.getUserDotaData(channel)
@@ -936,9 +952,7 @@ def generate_message_commands(bot):
             return "Bad option"
 
                 # maybe change to simple explainations and say use the help argument
-        return '''Hi.  You have two options.  1: You give me something to add you from (example: http://i.imgur.com/7Yepc8i.png either blue section or either link) \
-                or 2: you add me on steam.  These are the commands, respectively: !mmrsetup addme < steam thing > OR !mmrsetup addyou .  \
-                Once added, send me a steam message saying this: enable mmr'''
+        return '''Hi.  Add the bot on steam and send it a steam message saying this: enable mmr'''
 
     coms.append(command.Command('!mmrsetup', f, bot, groups=me_and_broadcaster, repeatdelay=5))
     #TODO: Maybe split mmr setup stuff and configuration stuff
@@ -1728,14 +1742,36 @@ def generate_message_commands(bot):
     coms.append(command.Command('!crosschat', f, bot, True))
 
 
+    # def f(channel, user, message, args, data, bot):
+    #     if args:
+    #         if args[0] == 'start':
+    #             pass
+    #     else:
+    #         return 'this is the help text'
+    # coms.append(command.Command('!adventure', f, bot, True, groups=me_and_broadcaster)) # This is never going to happen
+
+
     def f(channel, user, message, args, data, bot):
+        import random
         if args:
-            if args[0] == 'start':
-                pass
+            try:
+                dice, sides = args[0].lower().split('d')
+
+            
+                dice = int(dice)
+                sides = int(sides)
+                rolls = []
+            except:
+                return 'Hmmm, you borked something.  Example: !roll 2d10'
+            
+            for x in range(dice):
+                rolls.append(random.randrange(1, sides))
+
+            return '%s: %s -> %s %s' % (user, args[0], sum(rolls), str(rolls).replace('[', '(').replace(']', ')'))
 
         else:
-            return 'this is the help text'
-    coms.append(command.Command('!adventure', f, bot, True, groups=me_and_broadcaster))
+            return '%s: 1d6 -> %s' % (user, random.randint(1,6))
+    coms.append(command.Command('!roll', f, bot, True))
 
 
     ######################################################################

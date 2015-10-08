@@ -288,8 +288,8 @@ class Borkedbot(irc.IRCClient):
         # _max_line_length = None # ?????
         if self._debug_printraw: print line
         irc.IRCClient.lineReceived(self, line)
-#
-    # TODO: Add a stdin reading thread
+
+    # TODO: Add a stdin reading thread maybe?
 
 class BotFactory(protocol.ClientFactory):
     protocol = Borkedbot
@@ -317,7 +317,6 @@ if __name__ == "__main__":
         server = 'irc.twitch.tv'
         port = 6667
         chan = '#{}'.format(sys.argv[1])
-        print chan
         mbf = BotFactory(chan, 'borkedbot')
 
         # server, port = temp_get_channel_chat_server(chan).split(':')
