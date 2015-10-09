@@ -108,4 +108,4 @@ testfile
 modules/test
 modules/node-test
 modules/skype/*
-secrets
+secrets/*.py
