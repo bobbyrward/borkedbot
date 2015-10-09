@@ -3,14 +3,19 @@ sys.dont_write_bytecode = True
 
 import chatmanager
 import cPickle, base64, time
+
+from secrets.auth import TWITCH_IRC_OAUTH_KEY
+
 from datetime import timedelta
 from contextlib import contextmanager
 from twisted.internet import reactor, task, protocol#, stdio
 from twisted.words.protocols import irc
 #from twisted.protocols import basic
 
+
 class Borkedbot(irc.IRCClient):
     lineRate = 2
+    password = TWITCH_IRC_OAUTH_KEY
 
     opsinchan = set()
     oplist = set()
@@ -30,14 +35,16 @@ class Borkedbot(irc.IRCClient):
     def __init__(self):
         pass
 
-    @property
-    def password(self):
-        with open('passwd', 'r+') as f:
-            for line in f:
-                return base64.b64decode(line)
-            password = raw_input("Please input password: ")
-            f.write(base64.b64encode(password))
-            return password
+    #@property
+    #def password(self):
+    #    return TWITCH_IRC_OAUTH_KEY
+    #    # Do something different here or try/catch the key import
+    #    with open('passwd', 'r+') as f:
+    #        for line in f:
+    #            return base64.b64decode(line)
+    #        password = raw_input("Please input password: ")
+    #        f.write(base64.b64encode(password))
+    #        return password
 
     @property
     def nickname(self):

@@ -2,12 +2,10 @@ import sys
 sys.dont_write_bytecode = True
 
 import requests, json, traceback
+from secrets.auth import TWITCH_IRC_OAUTH_KEY
 
 LOAD_ORDER = 90
 
-with open('apikey', 'r') as f:
-    apikey = f.readline()
-#del f
 
 root = 'https://api.steampowered.com/'
 
@@ -62,7 +60,7 @@ DOTA_MATCH_TYPES = {
 #     return _apiget(path) if not key else _apiget(path)[key]
 
 def _get_call(apipath, **args):
-    apicall = apipath + '?key=%s' % apikey
+    apicall = apipath + '?key=%s' % TWITCH_IRC_OAUTH_KEY
     raw_request = False
 
     for a in args:
