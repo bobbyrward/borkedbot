@@ -98,12 +98,13 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
-# My stuff 
+# My stuff
+# =========================
+
 testfile
 *.p
 *.old
 
-modules/moderation.py
 modules/test
 modules/node-test
 modules/skype/*
