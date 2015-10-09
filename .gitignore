@@ -98,17 +98,14 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 
-# My stuff 
-passwd
-apikey
-github_gist
-settings.data
+# My stuff
+# =========================
+
 testfile
-joinpartbot.py
 *.p
 *.old
 
-modules/moderation.py
 modules/test
 modules/node-test
 modules/skype/*
+secrets

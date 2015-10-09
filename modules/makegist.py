@@ -4,15 +4,13 @@ sys.dont_write_bytecode = True
 
 import time, requests
 from github3 import login
+from secrets.auth import GITHUB_GIST_KEY
 
 # DISABLE_MODULE = True
 LOAD_ORDER = 500
 
-with open('github_gist', 'r') as f:
-    apikey = f.readline()
-del f
 
-git = login(token=apikey)
+git = login(token=GITHUB_GIST_KEY)
 
 
 def create(data, desc=None, filename=None, public=False, shorten=False):
