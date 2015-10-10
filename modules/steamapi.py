@@ -2,7 +2,7 @@ import sys
 sys.dont_write_bytecode = True
 
 import requests, json, traceback
-from secrets.auth import TWITCH_IRC_OAUTH_KEY
+from secrets.auth import STEAM_API_KEY
 
 LOAD_ORDER = 90
 
@@ -60,7 +60,7 @@ DOTA_MATCH_TYPES = {
 #     return _apiget(path) if not key else _apiget(path)[key]
 
 def _get_call(apipath, **args):
-    apicall = apipath + '?key=%s' % TWITCH_IRC_OAUTH_KEY
+    apicall = apipath + '?key=%s' % STEAM_API_KEY
     raw_request = False
 
     for a in args:

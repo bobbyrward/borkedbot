@@ -1,4 +1,6 @@
 import sys, os, time, logging, rpyc
+sys.dont_write_bytecode = True
+
 import supervisor
 
 from collections import deque

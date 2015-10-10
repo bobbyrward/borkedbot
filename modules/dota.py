@@ -5,6 +5,7 @@ from HTMLParser import HTMLParser
 from twisted.internet import reactor
 import os, time, json, subprocess, shlex, requests, feedparser
 import steamapi, twitchapi, settings, node, timer
+from secrets.moderation import USER_AGENT
 
 
 LOAD_ORDER = 35
@@ -631,7 +632,7 @@ def update_verified_notable_players():
 
     parser = DotabuffParser()
 
-    r = requests.get('http://www.dotabuff.com/players', headers = {'User-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:34.0) Gecko/20100101 Firefox/34.0.1'})
+    r = requests.get('http://www.dotabuff.com/players', headers = {'User-agent': USER_AGENT})
     if r.status_code == 429:
         return 429
 
@@ -773,42 +774,42 @@ def collect_match_ids(dotaid, games):
 # The rest should be matchable
 
 
-def check_for_prizepool_update(channel, override=False):
-    lasttier = settings.trygetset('%s_last_prizepool_tier' % channel, 'unset')
-    lastcheck = settings.trygetset('%s_last_prizepool_check' % channel, time.time())
+# def check_for_prizepool_update(channel, override=False):
+#     lasttier = settings.trygetset('%s_last_prizepool_tier' % channel, 'unset')
+#     lastcheck = settings.trygetset('%s_last_prizepool_check' % channel, time.time())
 
-    prizes = {
-        10000000: 'Immortal Treasure III',
-        11000000: 'Desert Terrain',
-        12000000: 'Music Pack',
-        13000000: 'Bristleback Announcer Pack',
-        14000000: 'New Weather Effects',
-        15000000: 'Special Axe Immortal & Longform Comic'
-    }
+#     prizes = {
+#         10000000: 'Immortal Treasure III',
+#         11000000: 'Desert Terrain',
+#         12000000: 'Music Pack',
+#         13000000: 'Bristleback Announcer Pack',
+#         14000000: 'New Weather Effects',
+#         15000000: 'Special Axe Immortal & Longform Comic'
+#     }
 
-    if time.time() - lastcheck > 120 or override:
-        data = steamapi.GetTournamentPrizePool(2733)
-        moneys = data['result']['prize_pool']
+#     if time.time() - lastcheck > 120 or override:
+#         data = steamapi.GetTournamentPrizePool(2733)
+#         moneys = data['result']['prize_pool']
 
-        currenttier = None
-        for prizetier in sorted(prizes.keys()):
-            if moneys < prizetier:
-                nextprize = prizes[prizetier]
-                break
-            else:
-                currenttier = prizetier
+#         currenttier = None
+#         for prizetier in sorted(prizes.keys()):
+#             if moneys < prizetier:
+#                 nextprize = prizes[prizetier]
+#                 break
+#             else:
+#                 currenttier = prizetier
 
-        # print 'last, current: ', lasttier, currenttier
+#         # print 'last, current: ', lasttier, currenttier
 
-        settings.setdata('%s_last_prizepool_check' % channel, time.time(), announce=False)
+#         settings.setdata('%s_last_prizepool_check' % channel, time.time(), announce=False)
 
-        if lasttier == 'unset':
-            settings.setdata('%s_last_prizepool_tier' % channel, currenttier, announce=False)
-            return
+#         if lasttier == 'unset':
+#             settings.setdata('%s_last_prizepool_tier' % channel, currenttier, announce=False)
+#             return
 
-        if currenttier > lasttier:
-            settings.setdata('%s_last_prizepool_tier' % channel, currenttier)
-            return 'Compendium Stretch Goal {} Unlocked at ${:,}'.format(prizes[currenttier], moneys)
+#         if currenttier > lasttier:
+#             settings.setdata('%s_last_prizepool_tier' % channel, currenttier)
+#             return 'Compendium Stretch Goal {} Unlocked at ${:,}'.format(prizes[currenttier], moneys)
 
 
 
