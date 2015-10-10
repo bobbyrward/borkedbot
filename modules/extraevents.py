@@ -32,11 +32,30 @@ def alert(event):
                 event.bot.channelsubs.add(event.data.split()[0].lower())
 
 
+    #######################################
+    ## TODO:
+
+    # Move this code over to some infoposter.py module
+    # It would post titles to youtube links, twitter post text
+    # steam game link info, more as I think of them
+
     # watch?v=n4D-N6aWIV4
     # http://youtube.com/get_video_info?video_id=n4D-N6aWIV4
 
     if event.etype in ['msg', 'action']:
-        if event.channel in ['monkeys_forever', 'unsanitylive', 'pelmaleon', 'mynameisamanda', 'imayhaveborkedit', 'barnyyy', 'moodota2', 'gixgaming', 'kazkarontwo', 'lamperkat','f4ldota']:
+        if event.channel in [
+            'monkeys_forever', 
+            'unsanitylive', 
+            'pelmaleon', 
+            'mynameisamanda', 
+            'imayhaveborkedit', 
+            'barnyyy', 
+            'moodota2', 
+            'gixgaming', 
+            'kazkarontwo', 
+            'lamperkat', 
+            'f4ldota', 
+            'kizzmett']:
             if ('youtube.com/watch?' in event.data or 'youtu.be/' in event.data) and not event.data.strip().startswith('!'):# and event.user != 'rime_':
                 print '[ExtraEvents] Found youtube link, looking up title'
 
