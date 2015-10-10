@@ -106,7 +106,7 @@ def alert(event):
                                 print '[Moderation] Banning %s for shortlink' % event.user
                                 ban(event)
 
-                            break
+                            return
                     else:
                         print '[Moderation] Found a new shortlink, do something: %s -> %s' % (l, bitly)
                         timeout(event, 1, "I don't know if that's a bad link or not.  It's probably bad though.  If it's fine a mod can post it again.")
