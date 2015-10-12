@@ -3,39 +3,39 @@ import sys
 sys.dont_write_bytecode = True
 
 import re, time, requests
-from secrets.moderation import *
+from secrets import moderation
 from twisted.internet import reactor
 
 LOAD_ORDER = 110
 
 
 def setup(bot):
-    return
+    reload(moderation)
 
 def alert(event):
     if event.etype in ['msg', 'action'] and 'borkedbot' in event.bot.oplist and event.user not in event.bot.oplist:
 
         # Spam check
         if check_for_option('spam', event.channel):
-            for spam in SPAM_LIST:
+            for spam in moderation.SPAM_LIST:
                 if spam in event.data.lower().replace(' ',''):
-                    # watdo = SPAM_LIST[spam]
-                    watdo = get_moderation_time(spam, SPAM_LIST, 'fakebans' in CHANNEL_RULES[event.channel])
+                    # watdo = moderation.SPAM_LIST[spam]
+                    watdo = get_moderation_time(spam, moderation.SPAM_LIST, 'fakebans' in moderation.CHANNEL_RULES[event.channel])
                     if watdo:
                         print '[Moderation] Timing %s out for %ss for spam' % (event.user, watdo)
                         timeout(event, watdo, 'Spam is bad and you should feel bad.')
-                        break
+                        return
                     else:
                         print '[Moderation] Banning %s for spam' % event.user
                         ban(event, 'Spam is bad and you should feel bad.')
-                        break
+                        return
 
         # Copypasta check
         if check_for_option('pasta', event.channel):
-            for pasta in COPYPASTAS:
+            for pasta in moderation.COPYPASTAS:
                 if pasta in event.data.lower().replace(' ',''):
-                    # watdo = COPYPASTAS[pasta]
-                    watdo = get_moderation_time(pasta, COPYPASTAS, 'fakebans' in CHANNEL_RULES[event.channel])
+                    # watdo = moderation.COPYPASTAS[pasta]
+                    watdo = get_moderation_time(pasta, moderation.COPYPASTAS, 'fakebans' in moderation.CHANNEL_RULES[event.channel])
                     if watdo:
                         print '[Moderation] Timing %s out for %ss for copypasta' % (event.user, watdo)
                         timeout(event, watdo)
@@ -47,13 +47,13 @@ def alert(event):
 
         # Long message check
         if check_for_option('longmsg', event.channel):
-            if len(event.data) > LONG_MESSAGE_LENGTH and event.user not in event.bot.oplist:
+            if len(event.data) > moderation.LONG_MESSAGE_LENGTH and event.user not in event.bot.oplist:
                 print '[Moderation] Clearing long message from %s' % event.user
                 timeout(event, 10, "That's way too much text for chat dude.")
 
         # Banned names check
         if check_for_option('names', event.channel):
-            for pat in NAMES_BLACKLIST:
+            for pat in moderation.NAMES_BLACKLIST:
                 if re.match(pat, event.user):
                     print '[Moderation] Banning %s for name' % event.user
                     ban(event)
@@ -62,16 +62,17 @@ def alert(event):
         if check_for_option('shortlinks', event.channel):
             if 'goo.gl/' in event.data.lower():
                 links = re.findall('goo.gl/......', event.data, re.I)
+                links = list(set(links))
                 print '[Moderation] Found goo.gl link, looking up %s' % links
 
                 for l in links:
                     goog = expand_shortlink('http://' + l)
                     print '[Moderation] Resolved %s -> %s' % (l, goog)
 
-                    for sl in SPAM_LIST.keys():
+                    for sl in moderation.SPAM_LIST.keys():
                         if sl in goog:
                             # watdo = shortlinks[sl]
-                            watdo = get_moderation_time(sl, SPAM_LIST, 'fakebans' in CHANNEL_RULES[event.channel])
+                            watdo = get_moderation_time(sl, moderation.SPAM_LIST, 'fakebans' in moderation.CHANNEL_RULES[event.channel])
 
                             if watdo:
                                 print '[Moderation] Timing out %s for %ss for shortlink' % (event.user, watdo)
@@ -80,7 +81,7 @@ def alert(event):
                                 print '[Moderation] Banning %s for shortlink' % event.user
                                 ban(event)
 
-                            break
+                            return
                     else:
                         print '[Moderation] Found a new shortlink, do something: %s -> %s' % (l, goog)
                         timeout(event, 1, "I don't know if that's a bad link or not.  It's probably bad though.")
@@ -88,16 +89,17 @@ def alert(event):
 
             elif 'bit.ly/' in event.data.lower():
                 links = re.findall('bit.ly/\S*', event.data, re.I)
+                links = list(set(links))
                 print '[Moderation] Found bit.ly link, looking up %s' % links
 
                 for l in links:
                     bitly = expand_shortlink('http://' + l)
                     print '[Moderation] Resolved %s -> %s' % (l, bitly)
 
-                    for sl in SPAM_LIST.keys():
+                    for sl in moderation.SPAM_LIST.keys():
                         if sl in bitly:
                             # watdo = shortlinks[sl]
-                            watdo = get_moderation_time(sl, SPAM_LIST, 'fakebans' in CHANNEL_RULES[event.channel])
+                            watdo = get_moderation_time(sl, moderation.SPAM_LIST, 'fakebans' in moderation.CHANNEL_RULES[event.channel])
 
                             if watdo:
                                 print '[Moderation] Timing out %s for %ss for shortlink' % (event.user, watdo)
@@ -116,24 +118,31 @@ def alert(event):
         inspect_for_bad_link(event)
 
 def check_for_option(option, channel):
-    return channel in CHANNEL_RULES and (option in CHANNEL_RULES[channel] or 'all' in CHANNEL_RULES[channel]) and 'none' not in CHANNEL_RULES[channel]
+    return channel in moderation.CHANNEL_RULES and (option in moderation.CHANNEL_RULES[channel] or 'all' in moderation.CHANNEL_RULES[channel]) and 'none' not in moderation.CHANNEL_RULES[channel]
 
 def get_moderation_time(spam, table, fakebans=False):
     watdo = table[spam]
-    return watdo if not fakebans else MAX_TIMEOUT_DURATION
+    return watdo if not fakebans else moderation.MAX_TIMEOUT_DURATION
 
 def ban(event, message=None, fakeban=False):
-    event.bot.timeout(event.user, 600)
+    _delayed_timeout(event.bot, 0.1, event.user, 600)
+    _delayed_timeout(event.bot, 0.4, event.user, 600)
+
     if fakeban:
-        reactor.callLater(0.6, event.bot.timeout, event.user, MAX_TIMEOUT_DURATION)
+        _delayed_timeout(event.bot, 0.8, event.user, moderation.MAX_TIMEOUT_DURATION)
     else:
-        reactor.callLater(0.6, event.bot.ban, event.user, message)
+        _delayed_ban(event.bot, 0.8, event.user)
 
 def timeout(event, duration=600, message=None):
-    event.bot.timeout(event.user, duration, message)
+    _delayed_timeout(event.bot, 0.1, event.user, duration)
+    _delayed_timeout(event.bot, 0.4, event.user, duration)
+    _delayed_timeout(event.bot, 0.8, event.user, duration)
 
-    reactor.callLater(0.4, event.bot.timeout, event.user, duration)
-    reactor.callLater(0.8, event.bot.timeout, event.user, duration)
+def _delayed_ban(bot, delay, user):
+    reactor.callLater(delay, bot.ban, user)
+
+def _delayed_timeout(bot, delay, user, duration):
+    reactor.callLater(delay, bot.timeout, user, duration)
 
 
 def expand_googl(url):
@@ -163,14 +172,15 @@ def expand_shortlink(url):
 
 def inspect_for_bad_link(event):
     t0 = time.time()
-    foundlinks = [m[0] for m in LINK_REGEX.findall(event.data) if m]
+    foundlinks = [m[0] for m in moderation.LINK_REGEX.findall(event.data) if m]
+    foundlinks = list(set(foundlinks))
 
     if foundlinks:
         print foundlinks, time.time() - t0
         for l in foundlinks:
             if not (l.startswith('http://') or l.startswith('https://')): l = 'http://' + l
 
-            if any([wll in l for wll in INSPECT_WHITELIST]): # should change to regex matching + change whitelist to regex format
+            if any([wll in l for wll in moderation.INSPECT_WHITELIST]): # should change to regex matching + change whitelist to regex format
                 print '[Moderation-Scan] Link is whitelisted'
                 continue
 
@@ -178,9 +188,9 @@ def inspect_for_bad_link(event):
             if badlink:
                 print '[Moderation-Scan] Bad link detected'
                 if check_for_option('inspect', event.channel):
-                    ban(event, 'I have determined that is a bad link, don\'t touch it. (%s)' % badlink)
-                else:
-                    event.bot.botsay('I would advise against clicking that link. (%s)' % badlink)
+                    ban(event, 'That looks like a bad link, don\'t touch it. (%s)' % badlink)
+                # else:
+                    # event.bot.botsay('I would advise against clicking that link. (%s)' % badlink)
                 break
 
 
@@ -196,12 +206,12 @@ def scan_link(link):
 
     if r.is_redirect:
         r2 = requests.head(link, allow_redirects=True)
-        print r2
+        print r2.status_code, r2.reason
         print [x.url for x in r2.history]
         print r2.headers
 
         if r2.headers.get('transfer-encoding') == 'chunked':
-            print 'this may be a download'
+            # print 'this may be a download'
             return 'Redirect to download'
 
         # 'content-disposition': 'attachment; filename="Screenshot093.scr"
@@ -214,9 +224,9 @@ def scan_link(link):
             # if l in loc:
                 # return 'Redirect to link shortener'
 
-        for sl in SPAM_LIST:
+        for sl in moderation.SPAM_LIST:
             if sl in loc:
-                return 'Redirect to known spam link'
+                return 'Redirect to spam'
 
         print '[Moderation-Scan] Found redirect: %s' % loc
 
