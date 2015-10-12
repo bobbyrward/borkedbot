@@ -195,7 +195,7 @@ def inspect_for_bad_link(event):
 
 
 def scan_link(link):
-    r = requests.head(link, headers={'User-agent': USER_AGENT})
+    r = requests.head(link, headers={'User-agent': moderation.USER_AGENT})
     if r.status_code is not 200:
         print '[Moderation-Scan] Non 200 response:'
         print r.status_code, r.reason
@@ -230,4 +230,23 @@ def scan_link(link):
 
         print '[Moderation-Scan] Found redirect: %s' % loc
 
+    else:
+        # various if checks to make sure what we're about to do is sane
+
+        print '[Moderation-Scan] Inspecting page source'
+        
+        ## Meta redirect check
+        rget = requests.get(link, headers={'User-agent': moderation.USER_AGENT})
+        
+        # This should work and I don't know if I want to bring in BeautifulSoup just for this
+        metamatch = re.search(r'\<meta.+?url\=(.+?)">', rget.text, re.IGNORECASE) 
+
+        if metamatch:
+            print '[Moderation-Scan] Scanning meta redirect to "%s"' % metamatch.groups()[0]
+            return scan_link(metamatch.groups()[0]) 
+            # I hope I don't have an infinite redirect issue, that'd be awkward.
+            # All i'd need to do is add a recursion level arg to scan_link() and stop after X recursions
+
+
+        # Other checks
         # check for links to exes and scrs and warn, maybe return a (ban_duration:int [-1 no ban, 0 ban, 1+ timeout duration], reason:str)
