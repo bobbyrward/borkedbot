@@ -58,61 +58,62 @@ def alert(event):
                     print '[Moderation] Banning %s for name' % event.user
                     ban(event)
 
-        # Shortlinks check
-        if check_for_option('shortlinks', event.channel):
-            if 'goo.gl/' in event.data.lower():
-                links = re.findall('goo.gl/......', event.data, re.I)
-                links = list(set(links))
-                print '[Moderation] Found goo.gl link, looking up %s' % links
-
-                for l in links:
-                    goog = expand_shortlink('http://' + l)
-                    print '[Moderation] Resolved %s -> %s' % (l, goog)
-
-                    for sl in moderation.SPAM_LIST.keys():
-                        if sl in goog:
-                            # watdo = shortlinks[sl]
-                            watdo = get_moderation_time(sl, moderation.SPAM_LIST, 'fakebans' in moderation.CHANNEL_RULES[event.channel])
-
-                            if watdo:
-                                print '[Moderation] Timing out %s for %ss for shortlink' % (event.user, watdo)
-                                timeout(event, watdo)
-                            else:
-                                print '[Moderation] Banning %s for shortlink' % event.user
-                                ban(event)
-
-                            return
-                    else:
-                        print '[Moderation] Found a new shortlink, do something: %s -> %s' % (l, goog)
-                        timeout(event, 1, "I don't know if that's a bad link or not.  It's probably bad though.")
-                        # break
-
-            elif 'bit.ly/' in event.data.lower():
-                links = re.findall('bit.ly/\S*', event.data, re.I)
-                links = list(set(links))
-                print '[Moderation] Found bit.ly link, looking up %s' % links
-
-                for l in links:
-                    bitly = expand_shortlink('http://' + l)
-                    print '[Moderation] Resolved %s -> %s' % (l, bitly)
-
-                    for sl in moderation.SPAM_LIST.keys():
-                        if sl in bitly:
-                            # watdo = shortlinks[sl]
-                            watdo = get_moderation_time(sl, moderation.SPAM_LIST, 'fakebans' in moderation.CHANNEL_RULES[event.channel])
-
-                            if watdo:
-                                print '[Moderation] Timing out %s for %ss for shortlink' % (event.user, watdo)
-                                timeout(event, watdo)
-                            else:
-                                print '[Moderation] Banning %s for shortlink' % event.user
-                                ban(event)
-
-                            return
-                    else:
-                        print '[Moderation] Found a new shortlink, do something: %s -> %s' % (l, bitly)
-                        timeout(event, 1, "I don't know if that's a bad link or not.  It's probably bad though.  If it's fine a mod can post it again.")
-                        # break
+# Fuck it we're doing it go away code
+#        # Shortlinks check
+#        if check_for_option('shortlinks', event.channel):
+#            if 'goo.gl/' in event.data.lower():
+#                links = re.findall('goo.gl/......', event.data, re.I)
+#                links = list(set(links))
+#                print '[Moderation] Found goo.gl link, looking up %s' % links
+#
+#                for l in links:
+#                    goog = expand_shortlink('http://' + l)
+#                    print '[Moderation] Resolved %s -> %s' % (l, goog)
+#
+#                    for sl in moderation.SPAM_LIST.keys():
+#                        if sl in goog:
+#                            # watdo = shortlinks[sl]
+#                            watdo = get_moderation_time(sl, moderation.SPAM_LIST, 'fakebans' in moderation.CHANNEL_RULES[event.channel])
+#
+#                            if watdo:
+#                                print '[Moderation] Timing out %s for %ss for shortlink' % (event.user, watdo)
+#                                timeout(event, watdo)
+#                            else:
+#                                print '[Moderation] Banning %s for shortlink' % event.user
+#                                ban(event)
+#
+#                            return
+#                    else:
+#                        print '[Moderation] Found a new shortlink, do something: %s -> %s' % (l, goog)
+#                        timeout(event, 1, "I don't know if that's a bad link or not.  It's probably bad though.")
+#                        # break
+#
+#            elif 'bit.ly/' in event.data.lower():
+#                links = re.findall('bit.ly/\S*', event.data, re.I)
+#                links = list(set(links))
+#                print '[Moderation] Found bit.ly link, looking up %s' % links
+#
+#                for l in links:
+#                    bitly = expand_shortlink('http://' + l)
+#                    print '[Moderation] Resolved %s -> %s' % (l, bitly)
+#
+#                    for sl in moderation.SPAM_LIST.keys():
+#                        if sl in bitly:
+#                            # watdo = shortlinks[sl]
+#                            watdo = get_moderation_time(sl, moderation.SPAM_LIST, 'fakebans' in moderation.CHANNEL_RULES[event.channel])
+#
+#                            if watdo:
+#                                print '[Moderation] Timing out %s for %ss for shortlink' % (event.user, watdo)
+#                                timeout(event, watdo)
+#                            else:
+#                                print '[Moderation] Banning %s for shortlink' % event.user
+#                                ban(event)
+#
+#                            return
+#                    else:
+#                        print '[Moderation] Found a new shortlink, do something: %s -> %s' % (l, bitly)
+#                        timeout(event, 1, "I don't know if that's a bad link or not.  It's probably bad though.  If it's fine a mod can post it again.")
+#                        # break
 
     if event.etype in ['msg', 'action'] and not event.isop:
         inspect_for_bad_link(event)
