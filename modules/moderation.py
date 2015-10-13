@@ -200,11 +200,12 @@ def scan_link(link):
         r = requests.head(link, headers={'User-agent': moderation.USER_AGENT})
     except Exception as e:
         if isinstance(e, requests.exceptions.ConnectionError):
-            if e.args[0][1].args[1] == 'getaddrinfo failed':
+            if e.args[0][1].args[1] in ['getaddrinfo failed', 'Name or service not known']:
                 # This is not a real link
                 return
         print 'Something fucked up checking %s:' % link
         print e
+        return
 
     if r.status_code is not 200:
         print '[Moderation-Scan] Non 200 response:'
