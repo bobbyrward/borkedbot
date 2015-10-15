@@ -126,18 +126,29 @@ def get_moderation_time(spam, table, fakebans=False):
     return watdo if not fakebans else moderation.MAX_TIMEOUT_DURATION
 
 def ban(event, message=None, fakeban=False):
-    _delayed_timeout(event.bot, 0.1, event.user, 600)
-    _delayed_timeout(event.bot, 0.4, event.user, 600)
+    with event.bot.unlock_ratelimit(): # I have no idea if this works with the deferreds
+        if message:
+            event.bot.botsay(message)
 
-    if fakeban:
-        _delayed_timeout(event.bot, 0.8, event.user, moderation.MAX_TIMEOUT_DURATION)
-    else:
-        _delayed_ban(event.bot, 0.8, event.user)
+        _delayed_timeout(event.bot, 0.1, event.user, 600)
+        _delayed_timeout(event.bot, 0.4, event.user, 600)
+
+        if fakeban:
+            _delayed_timeout(event.bot, 0.8, event.user, moderation.MAX_TIMEOUT_DURATION)
+        else:
+            _delayed_ban(event.bot, 0.8, event.user)
+
+        # time.sleep(1) # If it doesn't work I might need this
 
 def timeout(event, duration=600, message=None):
-    _delayed_timeout(event.bot, 0.1, event.user, duration)
-    _delayed_timeout(event.bot, 0.4, event.user, duration)
-    _delayed_timeout(event.bot, 0.8, event.user, duration)
+    with event.bot.unlock_ratelimit():
+        if message:
+            event.bot.botsay(message)
+        _delayed_timeout(event.bot, 0.1, event.user, duration)
+        _delayed_timeout(event.bot, 0.4, event.user, duration)
+        _delayed_timeout(event.bot, 0.8, event.user, duration)
+
+        # time.sleep(1)
 
 def _delayed_ban(bot, delay, user):
     reactor.callLater(delay, bot.ban, user)
@@ -187,29 +198,36 @@ def inspect_for_bad_link(event):
 
             badlink = scan_link(l)
             if badlink:
-                print '[Moderation-Scan] Bad link detected'
+                print '[Moderation-Scan] Bad link detected (%s)' % badlink
+
                 if check_for_option('inspect', event.channel):
-                    ban(event, 'That looks like a bad link, don\'t touch it. (%s)' % badlink)
-                # else:
-                    # event.bot.botsay('I would advise against clicking that link. (%s)' % badlink)
+
+                    if check_for_option('inspect-warning', event.channel):
+                        bl_warning = 'That looks like a bad link, don\'t touch it. (%s)' % badlink
+                    else:
+                        bl_warning = None
+
+                    ban(event, bl_warning)
+
+                elif check_for_option('inspect-warning', event.channel):
+                    event.bot.botsay('I would advise against clicking that link. (%s)' % badlink)
                 break
 
 
 def scan_link(link):
     try:
         r = requests.head(link, headers={'User-agent': moderation.USER_AGENT})
+    except requests.exceptions.ConnectionError as e:
+        if e.args[0][1].args[1] in ['getaddrinfo failed', 'Name or service not known']:
+            # This is not a real link
+            return
     except Exception as e:
-        if isinstance(e, requests.exceptions.ConnectionError):
-            if e.args[0][1].args[1] in ['getaddrinfo failed', 'Name or service not known']:
-                # This is not a real link
-                return
         print 'Something fucked up checking %s:' % link
         print e
         return
 
     if r.status_code is not 200:
-        print '[Moderation-Scan] Non 200 response:'
-        print r.status_code, r.reason
+        print '[Moderation-Scan] Non 200 response:', r.status_code, r.reason
         print r.headers
 
     if r.status_code == 404:
@@ -217,15 +235,15 @@ def scan_link(link):
 
     if r.is_redirect:
         r2 = requests.head(link, allow_redirects=True)
-        print r2.status_code, r2.reason
-        print [x.url for x in r2.history]
+        print '[Moderation-Scan] Redirect destination status:', r2.status_code, r2.reason
+        print '[Moderation-Scan] Redirect history:', [x.url for x in r2.history]
         print r2.headers
 
         if r2.headers.get('transfer-encoding') == 'chunked':
-            # print 'this may be a download'
+            # perhaps this should only return if it went through a link shortener
             return 'Redirect to download'
 
-        # 'content-disposition': 'attachment; filename="Screenshot093.scr"
+        # 'content-disposition': 'attachment; filename="Screenshot###.scr"
         if r2.headers.get('content-disposition', '').startswith('attachment;'):
             if re.search('filename\=.+?\.scr', r2.headers.get('content-disposition'), re.IGNORECASE):
                 return '.scr download'
@@ -239,7 +257,7 @@ def scan_link(link):
             if sl in loc:
                 return 'Redirect to spam'
 
-        print '[Moderation-Scan] Found redirect: %s' % loc
+        # print '[Moderation-Scan] Found redirect: %s' % loc
 
     else:
         # various if checks to make sure what we're about to do is sane
