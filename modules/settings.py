@@ -5,11 +5,11 @@ import os
 import dill
 import redis
 
-from secrets.auth import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM
+from secrets import auth
 
 LOAD_ORDER = 50
 
-redisdb = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB_NUM)
+redisdb = redis.StrictRedis(host=auth.REDIS_HOST, port=auth.REDIS_PORT, db=auth.REDIS_DB_NUM)
 
 defaultdomain = 'settings-global'
 
@@ -83,7 +83,7 @@ def dumpkeys(domain=defaultdomain):
 
 
 def setup(bot):
-    return
+    reload(auth)
 
 def alert(event):
     return
