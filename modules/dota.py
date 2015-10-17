@@ -321,6 +321,8 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
 
 def getmatchMMRstring(channel, dotaid):
+    return '[MMR function currently broken thanks valve]'
+
     outputstring = "Updated MMR: Solo: %s | Party: %s "
 
     print "[Dota-MMR] Updating mmr"
@@ -586,7 +588,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
     playerformat = '%s%s: %s\n'              # ('#### ' if markdown else '  ', hero, name)
     notableformat = '%sNotable player: %s\n' # ('###### ' if markdown else '   - ', name)
     linkformat = '   - %s%s\n'               # (linktype, linkdata)
-    
+
     linktypes = {
         'steam': 'http://steamcommunity.com/profiles/',
         'dotabuff': 'http://www.dotabuff.com/players/',
@@ -607,7 +609,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
                     data += notableformat % ('###### ' if markdown else '   - ', notable_players[steamToDota(player['steamId'])].decode('utf8'))
 
                 mkupsteamlink = linkformat % (linktypes['steam'], player['steamId'])
-                
+
                 ressteam = requests.head(linktypes['steam'] + player['steamId']).headers.get('location')
 
                 if ressteam:

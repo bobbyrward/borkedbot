@@ -770,6 +770,8 @@ def generate_message_commands(bot):
             print 'Channel not enabled for dota'
             return
 
+        return '[MMR function currently broken thanks valve]'
+
         if channel in dota.enabled_channels.keys() and not dota.enabled_channels[channel][1]:
             if user == channel:
                 rs = '''Hi %s, I can provide accurate MMR and automatically announce \
