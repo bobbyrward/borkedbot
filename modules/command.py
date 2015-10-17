@@ -2,7 +2,9 @@
 import sys
 sys.dont_write_bytecode = True
 
-import time, subprocess, random
+import time
+import subprocess
+import random
 
 LOAD_ORDER = 70
 # DO_NOT_ALERT = True
@@ -19,8 +21,8 @@ class SPECIAL_RESTRICTED(): pass    # Only I can use these
 
 
 class Command(object):
-    def __init__(self, trigger, outfunc, bot, opcom = False, channels = [], chanblacklist = [], data = None, groups = [],
-        repeatdelay = 0, casesensitive = False, helpstring=None):
+    def __init__(self, trigger, outfunc, bot, opcom=False, channels=[], chanblacklist=[], data=None, groups=[],
+            repeatdelay=0, casesensitive=False, helpstring=None):
 
         self.trigger = trigger
         self.outfunc = outfunc
@@ -220,8 +222,6 @@ class Commander(object):
     PERMISSION_WHITELIST_AND_BLACKLIST = 7
 
     def __init__(self, modulename, submodulepart='', eventtypes=['msg']):
-        import time, command
-
         self.commands = []
         self.modulename = modulename
         self.eventtypes = eventtypes
@@ -234,7 +234,7 @@ class Commander(object):
     def addCommand(self, newcom):
         self.commands.append(newcom)
 
-    def getCommand(self, tigger):
+    def getCommand(self, trigger):
         for c in self.commands:
             if trigger in c.trigger:
                 return c

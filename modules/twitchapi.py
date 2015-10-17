@@ -1,7 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 
-import requests, json
+import requests
 
 LOAD_ORDER = 80
 
@@ -9,7 +9,6 @@ root = 'https://api.twitch.tv/kraken/'
 
 
 def _apiget(path, root=root):
-    # print root+path
     r = requests.get(root+path, timeout=4)
     r.raise_for_status()
 
@@ -20,17 +19,19 @@ def _apiget(path, root=root):
         print e
 
 
-
 def get(path='', key=None):
     return _apiget(path) if not key else _apiget(path)[key]
 
+
 def is_streaming(channel):
     return get('streams/%s' % channel, 'stream') is not None
+
 
 def get_chatters(channel):
     r = requests.get('https://tmi.twitch.tv/group/user/%s/chatters' % channel, timeout=4)
     r.raise_for_status()
     return r.json()
+
 
 def get_chatters_list(channel):
     ctrs = get_chatters(channel)
@@ -43,12 +44,14 @@ def get_steam_id_from_twitch(name):
     except:
         return None
 
+
 def get_twitch_from_steam_id(steamid):
     #might need to resolve steamid
     try:
         return _apiget('steam/%s' % steamid, root='https://api.twitch.tv/api/')['name']
     except:
         return None
+
 
 def setup(bot):
     return

@@ -2,13 +2,12 @@ import sys
 sys.dont_write_bytecode = True
 
 import chatmanager
-import cPickle, base64, time
+import time
 
 from datetime import timedelta
 from contextlib import contextmanager
-from twisted.internet import reactor, task, protocol#, stdio
+from twisted.internet import reactor, task, protocol
 from twisted.words.protocols import irc
-#from twisted.protocols import basic
 
 try:
     from secrets.auth import TWITCH_IRC_OAUTH_KEY
@@ -54,7 +53,7 @@ class Borkedbot(irc.IRCClient):
 
     @property
     def usercolors(self):
-        return {k:v['USERCOLOR'] for k,v in self.usertags.items()}
+        return {k: v['USERCOLOR'] for k, v in self.usertags.items()}
 
     def usercolor(self, user):
         return self.usertags.get(user.lower(), {'USERCOLOR':None}).get('USERCOLOR', None)
@@ -69,6 +68,7 @@ class Borkedbot(irc.IRCClient):
         del self
         chatmanager.event(**vars())
 
+    @staticmethod
     def reload_manager(self):
         reload(chatmanager)
 
@@ -102,7 +102,6 @@ class Borkedbot(irc.IRCClient):
         self.oplist.add(self.chan())
 
         chatmanager.setup(self)
-
 
     def joined(self, channel):
         self.log("Joined %s." % self.chan(channel))
@@ -138,11 +137,9 @@ class Borkedbot(irc.IRCClient):
             self.extrapos = self.extrapos | (self.opsinchan - self.oplist)
             self.update_mods()
 
-
     def action(self, user, channel, data):
         user = user.split("!")[0]
         self.send_event(self.chan(channel), user, 'action', data, self, user in self.oplist)
-
 
     def privmsg(self, user, channel, msg):
         fulluser = user
@@ -327,6 +324,5 @@ if __name__ == "__main__":
         reactor.run()
 
         print "\nTotal run time: %s (%s)" % (str(timedelta(seconds=int(time.time() - starttime))), time.time() - starttime)
-
 
     # TODO: Add way to remake and reconnect the bot

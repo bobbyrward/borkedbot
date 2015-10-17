@@ -1,8 +1,10 @@
 import sys
 sys.dont_write_bytecode = True
 
-import time, dill
+import time
+import dill
 import settings
+
 from twisted.internet import task, threads
 
 LOAD_ORDER = 31
@@ -10,14 +12,17 @@ LOAD_ORDER = 31
 recurring_domain = None
 the_channel = None
 
+
 def setup(bot):
     global recurring_domain
     global the_channel
     recurring_domain = 'recurring_events_for_%s' % bot.chan()
     the_channel = bot.chan()
 
+
 def alert(event):
     return
+
 
 # TODO: switch to key name settings reqest to allow for easy changing
 def _online_check_wrapper(channel, message, bot):
@@ -27,7 +32,7 @@ def _online_check_wrapper(channel, message, bot):
         bot.botsay(message)
 
 
-def register_new_recurring(bot, name, message, timeout, duration=None, autostart=True):
+def register_new_recurring(bot, name, message, timeout, autostart=True):
     if settings.exists(name, recurring_domain):
         return False
 
@@ -47,6 +52,7 @@ def register_new_recurring(bot, name, message, timeout, duration=None, autostart
 
     return True
 
+
 def delete_recurring(name):
     if not settings.exists(name, recurring_domain):
         return False
@@ -65,11 +71,13 @@ def delete_recurring(name):
 
     return True
 
+
 def is_resurring_running(name):
     if not settings.exists(name, recurring_domain):
         return None
 
     return _get_recurring(name).running
+
 
 def list_recurring(channel=None):
     channel = channel or the_channel
@@ -86,6 +94,7 @@ def start_recurring(name):
 
     print '[Recurring] Starting %s for %s' % (name, the_channel)
     return True
+
 
 def stop_recurring(name):
     if not settings.exists(name, recurring_domain):

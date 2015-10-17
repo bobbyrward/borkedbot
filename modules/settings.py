@@ -1,11 +1,15 @@
 import sys
 sys.dont_write_bytecode = True
 
-import os, dill, redis
+import os
+import dill
+import redis
+
+from secrets.auth import REDIS_HOST, REDIS_PORT, REDIS_DB_NUM
 
 LOAD_ORDER = 50
 
-redisdb = redis.StrictRedis(db=3)
+redisdb = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB_NUM)
 
 defaultdomain = 'settings-global'
 
@@ -53,6 +57,8 @@ def deldata(key, domain=defaultdomain, announce=True):
         print "[Settings] Key deleted: %s" % key
     redisdb.hdel(domain, key)
 
+
+#TODO: Implement key backup
 def delete_all_channel_keys(channel, domain=defaultdomain, announce=True, backup=True):
     if announce:
         print '[Settings] Deleting all keys for %s' % channel
@@ -67,11 +73,14 @@ def delete_all_channel_keys(channel, domain=defaultdomain, announce=True, backup
 def exists(key, domain=defaultdomain):
     return redisdb.hexists(domain, key)
 
+
 def numkeys(domain=defaultdomain):
     return redisdb.hlen(domain)
 
+
 def dumpkeys(domain=defaultdomain):
     return {k:dill.loads(v) for k,v in redisdb.hgetall(domain).items()}
+
 
 def setup(bot):
     return
