@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-import sys, os
+import sys
 sys.dont_write_bytecode = True
 
+import os
 import rpyc
 
 LOAD_ORDER = 1000
-
 
 sv_con = None
 
@@ -20,7 +20,8 @@ class MailHandler(object):
     @staticmethod
     def handle(bot, mailtype, data):
         try:
-            getattr(MailHandler, '_' + mailtype)(bot, data)
+            handler = getattr(MailHandler, '_' + mailtype)
+            handler(bot, data)
         except:
             MailHandler._unknown(bot, (mailtype, data))
 
@@ -57,6 +58,7 @@ class MailHandler(object):
 def setup(bot):
     connect(bot)
 
+
 def alert(event):
     check_connection(event.bot)
     check_mail(event.bot)
@@ -78,6 +80,7 @@ def check_connection(bot):
             # print 'supervisor server is down'
             pass
 
+
 def connect(bot):
     global sv_con
     # print 'connecting to bot'
@@ -87,6 +90,7 @@ def connect(bot):
     sv_con.root.init_bot(bot)
 
     # print 'connected'
+
 
 def check_mail(bot):
     mail = sv_con.root.get_mail()

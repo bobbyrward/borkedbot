@@ -2,10 +2,11 @@
 import sys
 sys.dont_write_bytecode = True
 
-import os, time, json, random, re, requests
+import re
+import requests
+import urllib2
 
 from HTMLParser import HTMLParser
-import urllib2
 
 
 LOAD_ORDER = 30
@@ -14,22 +15,22 @@ LOAD_ORDER = 30
 def setup(bot):
     pass
 
+
 def alert(event):
     # Sub alert
     if event.etype == 'twitchnotify':
         if event.channel in ['monkeys_forever', 'superjoe', 'kizzmett', 'moodota2', 'unsanitylive']:
+            msg = 'ヽ༼ຈل͜ຈ༽ﾉ RE-SUB HYPE! PRAISE %s' % event.data.split()[0].upper()
             if 'just subscribed!' in event.data:
                 extra = ''
                 if event.channel in ['monkeys_forever', 'kizzmett']:
                     # extra = ' | If you want an invite to the sub guild use !guildinvite (Make sure you have \"Allow guild invites from -> Anyone\" enabled)'
                     extra = ''
-
-                event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s%s' % (event.data.split()[0].upper(), extra))
-                event.bot.channelsubs.add(event.data.split()[0].lower())
+                event.bot.botsay(msg + extra)
 
             if 'subscribed for ' in event.data:
-                event.bot.botsay('ヽ༼ຈل͜ຈ༽ﾉ RE-SUB HYPE! PRAISE %s' % event.data.split()[0].upper())
-                event.bot.channelsubs.add(event.data.split()[0].lower())
+                event.bot.botsay(msg)
+            event.bot.channelsubs.add(event.data.split()[0].lower())
 
 
     #######################################
@@ -43,19 +44,18 @@ def alert(event):
     # http://youtube.com/get_video_info?video_id=n4D-N6aWIV4
 
     if event.etype in ['msg', 'action']:
-        if event.channel in [
-            'monkeys_forever', 
-            'unsanitylive', 
-            'pelmaleon', 
-            'mynameisamanda', 
-            'imayhaveborkedit', 
-            'barnyyy', 
-            'moodota2', 
-            'gixgaming', 
-            'kazkarontwo', 
-            'lamperkat', 
-            'f4ldota', 
-            'kizzmett']:
+        if event.channel in ['monkeys_forever', 
+                             'unsanitylive', 
+                             'pelmaleon', 
+                             'mynameisamanda', 
+                             'imayhaveborkedit', 
+                             'barnyyy', 
+                             'moodota2', 
+                             'gixgaming', 
+                             'kazkarontwo', 
+                             'lamperkat', 
+                             'f4ldota', 
+                             'kizzmett']:
             if ('youtube.com/watch?' in event.data or 'youtu.be/' in event.data) and not event.data.strip().startswith('!'):# and event.user != 'rime_':
                 print '[ExtraEvents] Found youtube link, looking up title'
 

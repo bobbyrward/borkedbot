@@ -1,12 +1,13 @@
-import sys, os, time, logging, rpyc
+import sys
 sys.dont_write_bytecode = True
 
+import logging
+import rpyc
 import supervisor
 
 from collections import deque
 from rpyc.utils.server import ThreadedServer
 
-sys.dont_write_bytecode = True
 logging.basicConfig()
 
 
@@ -51,7 +52,7 @@ class BorkedbotSupervisorService(rpyc.Service):
 
         if self.botchannel in self.sv_list:
             self.codebase.cprint('Deleting bot')
-            self.sv_list.pop(self.botchannel) # .do_something_else()?
+            self.sv_list.pop(self.botchannel)  # .do_something_else()?
             print
             self.bot = None
 
@@ -84,12 +85,13 @@ class BorkedbotSupervisorService(rpyc.Service):
         return False
 
     def send_mail(self, datatype, data, channel=None):
-        if channel is None: channel = self.botchannel
+        if channel is None: 
+            channel = self.botchannel
         self.sv_list[channel].mailqueue.append((datatype, data))
 
 
 
-def dump_object_attr_info(thing, level=1):
+def dump_object_attr_info(thing):
     print '%s.%s' % (thing.__class__.__module__, thing.__class__.__name__)
 
     for item in dir(thing):
@@ -100,7 +102,7 @@ def dump_object_attr_info(thing, level=1):
 
 if __name__ == '__main__':
     print 'creating server'
-    srvr = ThreadedServer(BorkedbotSupervisorService, port=29389, protocol_config = {'allow_all_attrs': True, 'allow_setattr': True, 'allow_delattr': True})
+    srvr = ThreadedServer(BorkedbotSupervisorService, port=29389, protocol_config={'allow_all_attrs': True, 'allow_setattr': True, 'allow_delattr': True})
 
     print 'starting server'
     try:

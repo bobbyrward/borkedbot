@@ -3,7 +3,8 @@ import sys
 sys.dont_write_bytecode = True
 
 import time
-import twitchapi, settings
+import twitchapi
+import settings
 
 LOAD_ORDER = 40
 
@@ -13,8 +14,8 @@ CHECK_THRESHOLD = settings.trygetset('hosting_check_threshold', 60)
 OFFLINE_THRESHOLD = settings.trygetset('hosting_offline_threshold', 300)
 
 def setup(bot):
-    settings.setdata('%s_is_hosting' % bot.channel.replace('#',''), False)
-    settings.setdata('%s_hosted_channel' % bot.channel.replace('#',''), '')
+    settings.setdata('%s_is_hosting' % bot.channel.replace('#', ''), False)
+    settings.setdata('%s_hosted_channel' % bot.channel.replace('#', ''), '')
 
 def alert(event):
     message = 'Only the channel owner and channel editors can use the /unhost command.'
@@ -24,8 +25,8 @@ def alert(event):
                 print "[Hosting] Not an editor, cannot unhost."
                 settings.setdata('%s_auto_unhost' % event.channel, False)
 
-        if event.etype in ['infomsg', 'jtvmsg']: # Should only need jtvmsg
-            nowhosting(event) # This needs to be called before the check goes
+        if event.etype in ['infomsg', 'jtvmsg']:  # Should only need jtvmsg
+            nowhosting(event)  # This needs to be called before the check goes
             # checkifhostonline(event) # This line might need to be outside the if check
 
         return

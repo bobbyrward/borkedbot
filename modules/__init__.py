@@ -1,7 +1,8 @@
 import sys
 sys.dont_write_bytecode = True
 
-import pkgutil, traceback
+import pkgutil
+import traceback
 
 __path__ = pkgutil.extend_path(__path__, __name__)
 _m_imports = []

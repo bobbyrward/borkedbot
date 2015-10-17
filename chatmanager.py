@@ -139,7 +139,6 @@ def _manage_modules():
                         _info("Error removing module %s" % mm)
 
 
-
 # This gets called after modules are imported to activate them
 def _init_modules(bot):
     setup_time = 0
@@ -180,7 +179,6 @@ def _init_module(m, bot):
     #print setup_result if setup_result is not None else 'Done in',
 
 
-
 # This is what gets called by the bot to distribute events to modules
 def event(channel, user, etype, data, bot, isop, extratags=[]):
     if etype not in ['msg', 'timer', 'action', 'botsay']:
@@ -210,8 +208,9 @@ def _process_event(event):
             # m.alert(event)
             threads.deferToThread(m.alert, event)
         except Exception as e:
-            print "[ChatManager] Alert error for %s: " % m.__name__
-            print traceback.format_exc()
+            if 'secret' not in m.__name__:
+                print "[ChatManager] Alert error for %s: " % m.__name__
+                print traceback.format_exc()
 
 
 def _debug(o, nl=True):
@@ -227,7 +226,6 @@ def _info(o, nl=True):
             print '[ChatManager] %s' % o
         else:
             print '[ChatManager] %s' % o,
-
 
 def _pr(xx):
     print xx
@@ -261,12 +259,3 @@ class IRCevent(object):
     def similar(ev1, *evx):
         et = ev1.etype.lower()
         return all(eti.etype.lower() == et for eti in evx)
-
-    #def __eq__(self, other):
-    #    return self.etype.lower() == other.etype.lower()
-    #
-    #def __ne__(self, other):
-    #    return self.etype.lower() != other.etype.lower()
-
-    #def __hash__(self):
-    #    return hash(self.channel) + hash(self.user)*10 + hash(self.etype)*100 + hash(self.data)*1000 + hash(self.isop)*10000

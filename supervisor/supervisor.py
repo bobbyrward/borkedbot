@@ -1,6 +1,10 @@
-import sys, os, time, math, random, re, redis, requests, json, rpyc
+import sys
 sys.dont_write_bytecode = True
 
+import redis
+import requests
+import json
+import rpyc
 
 '''
 This will basically be the manager/central communication server for python code
@@ -44,7 +48,7 @@ class BorkedbotSupervisorCodebase(object):
                 try:
                     self.supervisor.sv_list.get(ch)
                 except:
-                    self.cprint('Skipping channel',ch)
+                    self.cprint('Skipping channel', ch)
                     continue
                 self.supervisor.sv_list[ch].codebase.cprint('Sending mass chat message mail')
                 self.supervisor.sv_list[ch].reload_codebase()
@@ -64,7 +68,7 @@ class BorkedbotSupervisorCodebase(object):
                 try:
                     self.supervisor.sv_list.get(ch)
                 except:
-                    self.cprint('Skipping channel',ch)
+                    self.cprint('Skipping channel', ch)
                     continue
                 self.supervisor.sv_list[ch].codebase.cprint('Sending mass screen name update')
                 self.supervisor.sv_list[ch].reload_codebase()

@@ -2,6 +2,7 @@ import time
 
 DISABLE_MODULE = True
 
+
 class Timer(object):
     def __init__(self, name=None, startnow=False):
         self.name = name
@@ -37,7 +38,7 @@ class Timer(object):
     def getlap(self, lapnum):
         try:
             return self.laps[lapnum-1]
-        except Exception, e:
+        except Exception:
             return None
 
     def reset(self):
