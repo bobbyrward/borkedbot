@@ -309,25 +309,26 @@ class Borkedbot(irc.IRCClient):
         if tagdata:
             # check to see which kind of tags are sent buy looking for a specific trag
             if 'user-type' in tagdata:
-                del tagdata['emotes'] # Dont need this (yet?)
+                if not 'emote-sets' in tagdata:
+                    del tagdata['emotes'] # Dont need this (yet?)
 
-                usertags.update({line[1:].split('!')[0]: tagdata})
+                self.usertags.update({line[1:].split('!')[0]: tagdata})
 
             if 'msg-id' in tagdata:
                 pass # room state changes but with no data
 
             if 'slow' in tagdata:
-                roomtags['slow'] = tagdata['slow'] # I can change these to dict.update if 'slow' is ONLY sent with these types of messages
+                self.roomtags['slow'] = tagdata['slow'] # I can change these to dict.update if 'slow' is ONLY sent with these types of messages
 
             if 'r9k' in tagdata:
-                roomtags['r9k'] = tagdata['r9k']
+                self.roomtags['r9k'] = tagdata['r9k']
                 pass # set roomtags for slow, subs-only, broadcaster-lang, r9k (not sure if all are always sent)
 
             if 'subs-only' in tagdata:
-                roomtags['subs-only'] = tagdata['subs-only']
+                self.roomtags['subs-only'] = tagdata['subs-only']
 
             if 'broadcaster-lang' in tagdata:
-                roomtags['broadcaster-lang'] = tagdata['broadcaster-lang']
+                self.roomtags['broadcaster-lang'] = tagdata['broadcaster-lang']
 
             # The if stack is probably not the best way to deal with this but oh well
             # maybe regex the irc command type and update tags from that
