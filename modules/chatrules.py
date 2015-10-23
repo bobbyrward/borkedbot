@@ -702,7 +702,7 @@ def generate_message_commands(bot):
             # if message.lower().split(',')[1].strip().startswith('where'): return "%s, http://maps.google.com Kappa" % user
             # if message.lower().split(',')[1].strip().startswith('why'): return "%s, because you smell bad WutFace" % user
             # if message.lower().split(',')[1].strip().startswith('how'): return "%s, because you smell bad WutFace" % user
-            return "%s, %s"%(user, random.choice(data))
+            return "%s, %s" % (user, random.choice(data))
 
     coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'barnyyy'], data=magic8ball, repeatdelay=10))
 
@@ -750,7 +750,7 @@ def generate_message_commands(bot):
 
         return textstr.format(user, channel) #+ " | Friendly reminder that BTTV has a /uptime command." if args else ''
 
-    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
+    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda', 'gixgaming'], repeatdelay=15))
 
 
     ######################################################################
