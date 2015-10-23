@@ -165,11 +165,14 @@ def inspect_for_bad_link(event):
 
 def scan_link(link):
     try:
-        r = requests.head(link, headers={'User-agent': moderation.USER_AGENT})
+        r = requests.head(link, timeout=4, headers={'User-agent': moderation.USER_AGENT})
+
     except requests.exceptions.ConnectionError as e:
         if e.args[0][1].args[1] in ['getaddrinfo failed', 'Name or service not known']:
+            print "Alright that's not a real link"
             # This is not a real link
             return
+
     except Exception as e:
         print 'Something fucked up checking %s:' % link
         print e
@@ -183,7 +186,14 @@ def scan_link(link):
         return
 
     if r.is_redirect:
-        r2 = requests.head(link, allow_redirects=True)
+        try:
+            with requests.Session() as s:
+                s.max_redirects = 10
+                r2 = s.head(link, allow_redirects=True, timeout=4, headers={'User-agent': moderation.USER_AGENT})
+        except requests.exceptions.TooManyRedirects as e:
+            print 'Who honestly uses more than 10 redirects for something, really now.'
+            return
+
         loc = r.headers.get('location')
 
         for sl in moderation.SPAM_LIST:
@@ -205,13 +215,13 @@ def scan_link(link):
             # perhaps this should only return if it went through a link shortener
             return 'Redirect to download'
 
-    else:
-        # various if checks to make sure what we're about to do is sane
+    elif r.headers.get('content-type', '').startswith('text'): # preferably text/html but I don't know if that's always set
+        #TODO: various if checks to make sure what we're about to do is sane
 
         print '[Moderation-Scan] Inspecting page source'
 
         ## Meta redirect check
-        rget = requests.get(link, headers={'User-agent': moderation.USER_AGENT})
+        rget = requests.get(link, timeout=4, headers={'User-agent': moderation.USER_AGENT})
 
         # This should work and I don't know if I want to bring in BeautifulSoup just for this
         metamatch = re.search(r'\<meta.+?url\=(.+?)">', rget.text, re.IGNORECASE)
@@ -222,6 +232,8 @@ def scan_link(link):
             # I hope I don't have an infinite redirect issue, that'd be awkward.
             # All i'd need to do is add a recursion level arg to scan_link() and stop after X recursions
 
-
         # Other checks
         # check for links to exes and scrs and warn, maybe return a (ban_duration:int [-1 no ban, 0 ban, 1+ timeout duration], reason:str)
+    else:
+        print '[Moderation-Scan] Non text destination: %s' % r.headers.get('content-type')
+        print r.headers
