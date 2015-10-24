@@ -29,6 +29,7 @@ class Borkedbot(irc.IRCClient):
     channelsubs = set()
     userlist = []
     usertags = {}
+    roomtags = {}
 
     timertask = None
     timertick = 5
@@ -96,6 +97,7 @@ class Borkedbot(irc.IRCClient):
         self.send_event(None, None, 'serverjoin', None, self, None)
 
         self.sendLine('CAP REQ :twitch.tv/commands')
+        self.sendLine('CAP REQ :twitch.tv/tags')
 
         self.log("Signed on as %s.\n" % self.nickname)
         self.join(self.factory.channel)
@@ -220,10 +222,14 @@ class Borkedbot(irc.IRCClient):
     def irc_PONG(self, prefix, params):
         pass
 
-    def irc_unknown(self, prefix, command, params):
-        print 'No handler for irc command "%s": %s (:%s)' % (command, params, prefix)
+    def irc_unknown(self, prefix, command, params, tags=None):
+        print 'No handler for irc command "%s": %s (:%s) (%s)' % (command, params, prefix, tags)
 
 
+
+
+
+    ############################
 
     def botsay(self, msg, length=None):
         if length == None: length = self._max_line_length
@@ -236,7 +242,7 @@ class Borkedbot(irc.IRCClient):
                 self.say(self.factory.channel, msg.decode("utf-8"), length)
             except Exception, e:
                 print 'No that didn\'t work either, wtf how retarded is twisted/unicode'
-                
+
                 try:
                     self.say(self.factory.channel, msg.encode("utf-8"), length)
                 except Exception, e:
@@ -283,11 +289,81 @@ class Borkedbot(irc.IRCClient):
         print
 
     def lineReceived(self, line):
-        # _max_line_length = None # ?????
-        if self._debug_printraw: print line
+        if self._debug_printraw:
+            print line
+
+        if line.startswith('@'):
+            v3line = line
+
+            tags, line = v3line.split(' :', 1)
+            line = ':' + line
+
+            tagdata = {t.split('=')[0]:t.split('=')[1] for t in tags[1:].split(';')}
+
+            print
+            print tagdata
+            print line
+
+            try:
+                irccmdtype = line.split(' ')[1]
+            except:
+                pass
+
+            if irccmdtype == 'PRIVMSG':
+                del tagdata['emotes'] # Dont need this (yet?)
+                self.usertags.update({line[1:].split('!')[0]: tagdata})
+
+            elif irccmdtype == 'ROOMSTATE':
+                self.roomtags.update(tagdata)
+
+            elif irccmdtype == 'USERSTATE':
+                self.usertags.update({line.split('#')[1]: tagdata})
+
+            elif irccmdtype == 'GLOBALUSERSTATE':
+                pass # NYI
+
+            elif irccmdtype == 'NOTICE':
+                pass # {'msg-id': 'something-on/off'}
+
+            else:
+                print irccmdtype, tagdata
+
+        # It's either this line or the other commented part and a ton of overridden methods
         irc.IRCClient.lineReceived(self, line)
 
-    # TODO: Add a stdin reading thread maybe?
+'''
+        line = irc.lowDequote(line)
+        try:
+            prefix, command, params = irc.parsemsg(line)
+            if command in irc.numeric_to_symbolic:
+                command = irc.numeric_to_symbolic[command]
+            self._handleCommand(command, prefix, params, tags=tagdata)
+        except irc.IRCBadMessage:
+            irc.IRCClient.badMessage(self, v3line, *sys.exc_info())
+
+    def _handleCommand(self, command, prefix, params, tags=None):
+        method = None
+
+        if tags:
+            if (command.startswith('RPL') or command.startswith('ERR')):
+                print 'uh i dunno what to do here because it has tags I guess I just ignore them'
+                irc.IRCClient.handleCommand(self, command, prefix, params)
+                return
+            else:
+                method = getattr(self, "irc_%s" % command, None)
+        else:
+            irc.IRCClient.handleCommand(self, command, prefix, params)
+            return
+
+        try:
+            if method is not None:
+                method(prefix, params)
+            else:
+                self.irc_unknown(prefix, command, params)
+        except:
+            irc.log.deferr()
+'''
+
 
 class BotFactory(protocol.ClientFactory):
     protocol = Borkedbot
