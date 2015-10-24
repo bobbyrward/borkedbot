@@ -7,7 +7,7 @@ import requests
 from github3 import login
 from secrets.auth import GITHUB_GIST_KEY
 
-# DISABLE_MODULE = True
+DISABLE_MODULE = True
 LOAD_ORDER = 500
 
 

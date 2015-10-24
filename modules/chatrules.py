@@ -512,7 +512,7 @@ def generate_message_commands(bot):
         import twitchapi
         if args:
             sid = twitchapi.get_steam_id_from_twitch(args[0])
-            sid = 'http://steamcommunity.com/profiles/' + sid if sid else 'No steam account linked to %s.' % args[0]
+            sid = 'http://steamcommunity.com/profiles/%s' % sid if sid else 'No steam account linked to %s.' % args[0]
             return sid
 
     coms.append(command.Command('!twitch2steam', f, bot, True))
@@ -532,14 +532,14 @@ def generate_message_commands(bot):
     # Mod message_commands
     #
 
-    coms.append(command.SimpleCommand('Beep?', 'Boop!', bot, True, prependuser = False))
+    coms.append(command.SimpleCommand('Beep?', 'Boop!', bot, True, prependuser=False))
 
     coms.append(command.SimpleCommand(['!source', '!guts'], "BLEUGH https://github.com/imayhaveborkedit/borkedbot", bot, True, prependuser=True, repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand('!bursday', "Happy Bursday! http://www.youtube.com/watch?v=WCYzk67y_wc", bot, True))
 
-    coms.append(command.SimpleCommand('#!riot', 'ヽ༼ຈل͜ຈ༽ﾉ', bot, True, prependuser = False))
-    coms.append(command.SimpleCommand('#!shrug', '¯\_(ツ)_/¯', bot, True, prependuser = False))
+    coms.append(command.SimpleCommand('!riot', 'ヽ༼ຈل͜ຈ༽ﾉ', bot, True, prependuser=False))
+    coms.append(command.SimpleCommand('!shrug', '¯\_(ツ)_/¯', bot, True, prependuser=False))
 
 
     def f(channel, user, message, args, data, bot):
@@ -702,7 +702,7 @@ def generate_message_commands(bot):
             # if message.lower().split(',')[1].strip().startswith('where'): return "%s, http://maps.google.com Kappa" % user
             # if message.lower().split(',')[1].strip().startswith('why'): return "%s, because you smell bad WutFace" % user
             # if message.lower().split(',')[1].strip().startswith('how'): return "%s, because you smell bad WutFace" % user
-            return "%s, %s"%(user, random.choice(data))
+            return "%s, %s" % (user, random.choice(data))
 
     coms.append(command.Command('Borkedbot,', f, bot, chanblacklist=['monkeys_forever', 'barnyyy'], data=magic8ball, repeatdelay=10))
 
@@ -750,7 +750,7 @@ def generate_message_commands(bot):
 
         return textstr.format(user, channel) #+ " | Friendly reminder that BTTV has a /uptime command." if args else ''
 
-    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda'], repeatdelay=15))
+    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda', 'gixgaming'], repeatdelay=15))
 
 
     ######################################################################
@@ -782,7 +782,7 @@ def generate_message_commands(bot):
             else:
                 return
 
-        isupdate = args and args[0].lower() == 'update' and user in bot.oplist | {'imayhaveborkedit'}
+        isupdate = args and args[0].lower() == 'update' and bot.user_is_op(user) | {'imayhaveborkedit'}
 
         if args and 'update' in args[0].lower() and not isupdate:
             outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
@@ -1050,11 +1050,11 @@ def generate_message_commands(bot):
         if channel not in dota.enabled_channels:
             return
 
-        if user == 'bluepowervan' and user not in bot.oplist:
+        if user == 'bluepowervan' and not bot.user_is_op(user):
             bot.botsay('.timeout bluepowervan 3840')
             return "You know that doesn't work for you, stop trying."
 
-        if user not in bot.oplist and user != 'imayhaveborkedit':
+        if not bot.user_is_op(user) and user != 'imayhaveborkedit':
             return
 
         if args:
@@ -1174,7 +1174,7 @@ def generate_message_commands(bot):
         import twitchapi
         if user not in bot.channelsubs:
             print user, 'is not a sub'
-            if user != 'imayhaveborkedit' or user not in bot.oplist:
+            if user != 'imayhaveborkedit' or not bot.user_is_op(user):
                 return
 
         # return "please wait, bugs are being fixed"
@@ -1206,7 +1206,7 @@ def generate_message_commands(bot):
             if len(args) == 1:
                 targetsteamid = args[0]
                 targetuser = user
-            elif len(args) > 1 and user in bot.oplist:
+            elif len(args) > 1 and bot.user_is_op(user):
                 targetsteamid = args[1]
                 targetuser = args[0]
 
@@ -1508,7 +1508,7 @@ def generate_message_commands(bot):
         cursecount = int(settings.trygetset('superjoe_mediums_curse', 0))
         cursestring = "Oh noes!  The medium has died %s times on night 1."
 
-        if user in bot.oplist:
+        if bot.user_is_op(user):
             try:
                 if args:
                     watdo = args[0][0]
@@ -1533,7 +1533,7 @@ def generate_message_commands(bot):
         cursecount = int(settings.trygetset('superjoe_escorts_curse', 0))
         cursestring = "Oh noes!  The Escort has found the Serial Killer on the first night %s times."
 
-        if user in bot.oplist:
+        if bot.user_is_op(user):
             try:
                 if args:
                     watdo = args[0][0]

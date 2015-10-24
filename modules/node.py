@@ -5,6 +5,7 @@ import json
 import zerorpc
 import settings
 
+DISABLE_MODULE = True
 LOAD_ORDER = 36
 
 Error = zerorpc.RemoteError

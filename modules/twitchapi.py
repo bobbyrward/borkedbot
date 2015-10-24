@@ -3,6 +3,7 @@ sys.dont_write_bytecode = True
 
 import requests
 
+DISABLE_MODULE = True
 LOAD_ORDER = 80
 
 root = 'https://api.twitch.tv/kraken/'
@@ -58,3 +59,11 @@ def setup(bot):
 
 def alert(event):
     return
+
+
+###############
+## https://github.com/justintv/Twitch-API/tree/master/v3_resources
+## TODO: add exceptions
+
+# Channels
+

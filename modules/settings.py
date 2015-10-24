@@ -6,7 +6,9 @@ import dill
 import redis
 
 from secrets import auth
+reload(auth)
 
+DISABLE_MODULE = True
 LOAD_ORDER = 50
 
 redisdb = redis.StrictRedis(host=auth.REDIS_HOST, port=auth.REDIS_PORT, db=auth.REDIS_DB_NUM)
@@ -83,7 +85,7 @@ def dumpkeys(domain=defaultdomain):
 
 
 def setup(bot):
-    reload(auth)
+    pass
 
 def alert(event):
-    return
+    pass

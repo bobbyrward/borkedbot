@@ -6,8 +6,8 @@ import time
 import subprocess
 import random
 
+DISABLE_MODULE = True
 LOAD_ORDER = 70
-# DO_NOT_ALERT = True
 
 
 class OK(): pass                    # Everything is ok
@@ -100,10 +100,10 @@ class Command(object):
         if 'special' in self.groups and user != 'imayhaveborkedit':
             return SPECIAL_RESTRICTED
 
-        if self.opcom and user not in self.bot.oplist:
+        if self.opcom and not self.bot.user_is_op(user):
             return OP_RESTRICTED
 
-        if not self._checkdelay() and user not in self.bot.oplist:
+        if not self._checkdelay() and not self.bot.user_is_op(user):
             print "%s: Time Difference: %s, Delay: %s" % (self, time.time()-self.lastuse, self.repeatdelay)
             return DELAY_LOCKED
 
@@ -263,3 +263,5 @@ class Commander(object):
             return list()
         else:
             return a[1:]
+
+# The code to generate the commands readme goes here somewhere, with raw command documentation or not

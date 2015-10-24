@@ -3,6 +3,7 @@ sys.dont_write_bytecode = True
 
 import time
 
+DISABLE_MODULE = True
 LOAD_ORDER = 100
 
 def setup(bot):
