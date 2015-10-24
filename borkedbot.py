@@ -63,20 +63,23 @@ class Borkedbot(irc.IRCClient):
         return user in self.oplist | self.extrapos
 
     def user_is_op(self, user):
-        if user == bot.channel: 
+        if user == self.chan(): 
             return True
         if user in self.usertags:
-            return self.usertags[user]['user-type'] != '' # because [mod, global_mod, admin, staff] are all ops
+            data = self.usertags[user].get('user-type', None) # because [mod, global_mod, admin, staff] are all ops
+            return data is not '' if data is not None else None
 
     def user_is_sub(self, user):
-        if user == bot.channel: 
+        if user == self.chan(): 
             return True # I don't think this would ever not be the case, but I guess its not if they dont have a sub button
         if user in self.usertags:
-            return int(self.usertags[user]['subscriber']) # I dunno if I should leave these as 0/1 or bool() them
+            data = self.usertags[user].get('subscriber', None)
+            return bool(int(data)) if data else None
 
     def user_is_turbo(self, user):
         if user in self.usertags:
-            return int(self.usertags[user]['turbo']) # I dunno if I should leave these as 0/1 or bool() them
+            data = self.usertags[user].get('turbo', None)
+            return bool(int(data)) if data else None
 
     def timer(self):
         self.send_event(self.chan(), None, 'timer', time.time(), self, None)
@@ -183,6 +186,8 @@ class Borkedbot(irc.IRCClient):
             if not self.gotops:
                 self.log("Received initial list of ops")
                 self.gotops = True
+
+                self.usertags.update({u: {'user-type': 'mod'} for u in msg.split(': ')[1].split(', ')})
 
         self.send_event(self.chan(), user, 'notice', msg, self, user.split('.')[0] in self.oplist)
 
