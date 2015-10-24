@@ -6,8 +6,8 @@ import time
 import subprocess
 import random
 
+DISABLE_MODULE = True
 LOAD_ORDER = 70
-# DO_NOT_ALERT = True
 
 
 class OK(): pass                    # Everything is ok

@@ -3,6 +3,7 @@ sys.dont_write_bytecode = True
 
 import requests
 
+DISABLE_MODULE = True
 LOAD_ORDER = 80
 
 root = 'https://api.twitch.tv/kraken/'

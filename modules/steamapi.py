@@ -4,6 +4,7 @@ sys.dont_write_bytecode = True
 import requests, json, traceback
 from secrets.auth import STEAM_API_KEY
 
+DISABLE_MODULE = True
 LOAD_ORDER = 90
 
 # http://dev.dota2.com/showthread.php?t=58317
