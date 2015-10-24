@@ -63,14 +63,14 @@ class Borkedbot(irc.IRCClient):
         return user in self.oplist | self.extrapos
 
     def user_is_op(self, user):
-        if user == self.chan(): 
+        if user == self.chan():
             return True
         if user in self.usertags:
             data = self.usertags[user].get('user-type', None) # because [mod, global_mod, admin, staff] are all ops
             return data is not '' if data is not None else None
 
     def user_is_sub(self, user):
-        if user == self.chan(): 
+        if user == self.chan():
             return True # I don't think this would ever not be the case, but I guess its not if they dont have a sub button
         if user in self.usertags:
             data = self.usertags[user].get('subscriber', None)
@@ -160,7 +160,7 @@ class Borkedbot(irc.IRCClient):
 
     def action(self, user, channel, data):
         user = user.split("!")[0]
-        self.send_event(self.chan(channel), user, 'action', data, self, user in self.oplist)
+        self.send_event(self.chan(channel), user, 'action', data, self, self.user_is_op(user))
 
     def privmsg(self, user, channel, msg):
         fulluser = user
@@ -170,11 +170,11 @@ class Borkedbot(irc.IRCClient):
 
             if user == 'twitchnotify':
                 # print "!!Notification from twitch!! (%s): %s" % (channel, msg)
-                self.send_event(self.chan(channel), 'jtv', 'twitchnotify', msg, self, user in self.oplist)
+                self.send_event(self.chan(channel), 'jtv', 'twitchnotify', msg, self, self.user_is_op(user))
                 return
         else:
             # def event(channel, user, etype, data, bot, isop):
-            self.send_event(self.chan(channel), user, 'msg', msg, self, user in self.oplist)
+            self.send_event(self.chan(channel), user, 'msg', msg, self, self.user_is_op(user))
 
 
     def noticed(self, user, channel, msg):
@@ -189,7 +189,7 @@ class Borkedbot(irc.IRCClient):
 
                 self.usertags.update({u: {'user-type': 'mod'} for u in msg.split(': ')[1].split(', ')})
 
-        self.send_event(self.chan(), user, 'notice', msg, self, user.split('.')[0] in self.oplist)
+        self.send_event(self.chan(), user, 'notice', msg, self, self.user_is_op(user.split('.')[0]))
 
 
     def irc_CAP(self, prefix, params):
@@ -197,17 +197,17 @@ class Borkedbot(irc.IRCClient):
 
     def irc_CLEARCHAT(self, prefix, params):
         self.log("CLEARCHAT " + ' '.join(params))
-        self.send_event(self.chan(), params[1] if len(params) > 1 else None, 'clearchat', self.chan(params[0]), self, self.nickname in self.oplist)
+        self.send_event(self.chan(), params[1] if len(params) > 1 else None, 'clearchat', self.chan(params[0]), self, self.user_is_op(self.nickname))
 
     def irc_HOSTTARGET(self, prefix, params):
         if ' ' in params[1]: params.extend(params.pop().split()) # channel, target, number
 
         if params[1] == '-': # Exiting host mode
             # No need to log because the notice event will
-            self.send_event(self.chan(), None, 'hosting', None, self, self.nickname in self.oplist)
+            self.send_event(self.chan(), None, 'hosting', None, self, self.user_is_op(self.nickname))
         else:
             self.log('Hosting {} for {} viewers'.format(*params[1:]))
-            self.send_event(self.chan(), None, 'hosting', params[1], self, self.nickname in self.oplist, [params[2]])
+            self.send_event(self.chan(), None, 'hosting', params[1], self, self.user_is_op(self.nickname), [params[2]])
 
     def irc_RECONNECT(self, prefix, params):
         self.log('Twitch chat sever restarting in 30 seconds, disconnect imminent.')
@@ -270,7 +270,7 @@ class Borkedbot(irc.IRCClient):
                     print 'I give up'
                     return
 
-        self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.nickname in self.oplist)
+        self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.user_is_op(self.nickname))
 
 
     def ban(self, user, message=None):

@@ -12,7 +12,7 @@ def setup(bot):
 
 def alert(event):
     if event.etype in ['msg','action', 'botsay']:
-        log(event.user, event.channel, event.data, event.user in event.bot.oplist, event.etype == 'action')
+        log(event.user, event.channel, event.data, event.bot.user_is_op(event.user), event.etype == 'action')
 
 def formatdate():
     now = datetime.date.today()
@@ -20,7 +20,7 @@ def formatdate():
 
 def log(user, channel, msg, isop, isaction = False, logstdout = True):
     logpath = "/var/www/twitch/%s/chat/" % channel
-    if not os.path.isfile(logpath + "log.txt"): 
+    if not os.path.isfile(logpath + "log.txt"):
         print "Creating log file for " + channel
         if not os.path.isdir(logpath): os.makedirs(logpath)
 

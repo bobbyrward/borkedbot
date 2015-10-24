@@ -15,7 +15,7 @@ def setup(bot):
     reload(moderation)
 
 def alert(event):
-    if event.etype in ['msg', 'action'] and 'borkedbot' in event.bot.oplist and event.user not in event.bot.oplist:
+    if event.etype in ['msg', 'action'] and event.bot.user_is_op(event.bot.nickname) and not event.bot.user_is_op(event.user):
 
         # Spam check
         if check_for_option('spam', event.channel):
@@ -78,26 +78,25 @@ def ban(event, message=None, fakeban=False):
         if message:
             event.bot.botsay(message)
 
-        _delayed_timeout(event.bot, 0.1, event.user, 600)
-        _delayed_timeout(event.bot, 0.4, event.user, 600)
+        _delayed_timeout(event.bot, 0.2, event.user, 600)
 
         if fakeban:
-            _delayed_timeout(event.bot, 0.8, event.user, moderation.MAX_TIMEOUT_DURATION)
+            _delayed_timeout(event.bot, 0.6, event.user, moderation.MAX_TIMEOUT_DURATION)
         else:
-            _delayed_ban(event.bot, 0.8, event.user)
+            _delayed_ban(event.bot, 0.6, event.user)
 
-        # time.sleep(1) # If it doesn't work I might need this
+        time.sleep(1)
 
 
 def timeout(event, duration=600, message=None):
     with event.bot.unlock_ratelimit():
         if message:
             event.bot.botsay(message)
-        _delayed_timeout(event.bot, 0.1, event.user, duration)
-        _delayed_timeout(event.bot, 0.4, event.user, duration)
-        _delayed_timeout(event.bot, 0.8, event.user, duration)
+        _delayed_timeout(event.bot, 0.2, event.user, duration)
+        _delayed_timeout(event.bot, 0.6, event.user, duration)
 
-        # time.sleep(1)
+        time.sleep(1)
+
 
 def _delayed_ban(bot, delay, user):
     reactor.callLater(delay, bot.ban, user)

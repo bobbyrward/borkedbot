@@ -782,7 +782,7 @@ def generate_message_commands(bot):
             else:
                 return
 
-        isupdate = args and args[0].lower() == 'update' and user in bot.oplist | {'imayhaveborkedit'}
+        isupdate = args and args[0].lower() == 'update' and bot.user_is_op(user) | {'imayhaveborkedit'}
 
         if args and 'update' in args[0].lower() and not isupdate:
             outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
@@ -1050,11 +1050,11 @@ def generate_message_commands(bot):
         if channel not in dota.enabled_channels:
             return
 
-        if user == 'bluepowervan' and user not in bot.oplist:
+        if user == 'bluepowervan' and not bot.user_is_op(user):
             bot.botsay('.timeout bluepowervan 3840')
             return "You know that doesn't work for you, stop trying."
 
-        if user not in bot.oplist and user != 'imayhaveborkedit':
+        if not bot.user_is_op(user) and user != 'imayhaveborkedit':
             return
 
         if args:
@@ -1174,7 +1174,7 @@ def generate_message_commands(bot):
         import twitchapi
         if user not in bot.channelsubs:
             print user, 'is not a sub'
-            if user != 'imayhaveborkedit' or user not in bot.oplist:
+            if user != 'imayhaveborkedit' or not bot.user_is_op(user):
                 return
 
         # return "please wait, bugs are being fixed"
@@ -1206,7 +1206,7 @@ def generate_message_commands(bot):
             if len(args) == 1:
                 targetsteamid = args[0]
                 targetuser = user
-            elif len(args) > 1 and user in bot.oplist:
+            elif len(args) > 1 and bot.user_is_op(user):
                 targetsteamid = args[1]
                 targetuser = args[0]
 
@@ -1508,7 +1508,7 @@ def generate_message_commands(bot):
         cursecount = int(settings.trygetset('superjoe_mediums_curse', 0))
         cursestring = "Oh noes!  The medium has died %s times on night 1."
 
-        if user in bot.oplist:
+        if bot.user_is_op(user):
             try:
                 if args:
                     watdo = args[0][0]
@@ -1533,7 +1533,7 @@ def generate_message_commands(bot):
         cursecount = int(settings.trygetset('superjoe_escorts_curse', 0))
         cursestring = "Oh noes!  The Escort has found the Serial Killer on the first night %s times."
 
-        if user in bot.oplist:
+        if bot.user_is_op(user):
             try:
                 if args:
                     watdo = args[0][0]
