@@ -30,8 +30,6 @@ def alert(event):
 
             if 'subscribed for ' in event.data:
                 event.bot.botsay(msg)
-            event.bot.channelsubs.add(event.data.split()[0].lower())
-
 
     #######################################
     ## TODO:
