@@ -21,13 +21,10 @@ class Borkedbot(irc.IRCClient):
     lineRate = 2
     password = TWITCH_IRC_OAUTH_KEY
 
-    opsinchan = set()
-    oplist = set()
-    extrapos = set()
     gotops = False
 
-    channelsubs = set()
     userlist = []
+
     usertags = {}
     roomtags = {}
 
@@ -40,6 +37,10 @@ class Borkedbot(irc.IRCClient):
     def __init__(self):
         pass
 
+    @staticmethod
+    def reload_manager(self):
+        reload(chatmanager)
+
     @property
     def nickname(self):
         return self.factory.nickname
@@ -48,19 +49,8 @@ class Borkedbot(irc.IRCClient):
     def channel(self):
         return self.factory.channel
 
-    @property
-    def ops(self):
-        return self.oplist | self.extrapos
-
-    @property
-    def usercolors(self):
-        return {k: v['USERCOLOR'] for k, v in self.usertags.items()}
-
-    def usercolor(self, user):
-        return self.usertags.get(user.lower(), {'USERCOLOR':None}).get('USERCOLOR', None)
-
-    def isop(self, user):
-        return user in self.oplist | self.extrapos
+    def is_op(self):
+        return self.user_is_op(self.nickname)
 
     def user_is_op(self, user):
         if user == self.chan():
@@ -87,10 +77,6 @@ class Borkedbot(irc.IRCClient):
     def send_event(self, channel, user, etype, data, bot, isop, extratags=[]):
         del self
         chatmanager.event(**vars())
-
-    @staticmethod
-    def reload_manager(self):
-        reload(chatmanager)
 
     def log(self, txt):
         print '[Borkedbot] %s' % txt
@@ -120,7 +106,6 @@ class Borkedbot(irc.IRCClient):
 
         self.log("Signed on as %s.\n" % self.nickname)
         self.join(self.factory.channel)
-        self.oplist.add(self.chan())
 
         chatmanager.setup(self)
 
@@ -134,29 +119,11 @@ class Borkedbot(irc.IRCClient):
         self.update_mods()
 
     def receivedMOTD(self, motd):
-        print '\n'.join(['\n### MOTD ###', '# '.join(motd), '############\n'])
+        print '\n'.join(['\n### MOTD ###', '# ' + '\n# '.join(motd), '############\n'])
 
-    def modeChanged(self, user, channel, sett, modes, args):
-        # user channel           set  modes args
-        # jtv  #imayhaveborkedit True o     ('borkedbot',)
-
-        #print "Modes changed by %s in %s: %s%s for %s" % (user, channel, '+' if sett else '-', modes, list(args))
-
-        if sett and modes == 'o':
-            for u in args:
-                self.opsinchan.add(u)
-                self.send_event(self.chan(channel), user, 'op', u, self, True)
-
-        elif not sett and modes == 'o':
-            for u in args:
-                self.opsinchan.discard(u)
-                self.send_event(self.chan(channel), user, 'deop', u, self, True)
-
-        if self.opsinchan - self.oplist and self.gotops:
-            # This might be only for new mods now, need to check
-            self.log("WE HAVE A MOD DISCREPANCY: %s" % list(self.opsinchan - self.oplist))
-            self.extrapos = self.extrapos | (self.opsinchan - self.oplist)
-            self.update_mods()
+    # I'm fairly certain I don't need this any more with the tags enabled
+    # def modeChanged(self, user, channel, sett, modes, args):
+    #     pass
 
     def action(self, user, channel, data):
         user = user.split("!")[0]
@@ -182,7 +149,6 @@ class Borkedbot(irc.IRCClient):
         # self.log('Notice: ' + msg)
 
         if 'The moderators of this room are:' in msg:
-            self.oplist = set(msg.split(': ')[1].split(', ')) | {self.chan()}
             if not self.gotops:
                 self.log("Received initial list of ops")
                 self.gotops = True
@@ -191,23 +157,29 @@ class Borkedbot(irc.IRCClient):
 
         self.send_event(self.chan(), user, 'notice', msg, self, self.user_is_op(user.split('.')[0]))
 
+    def userJoined(self, user, channel):
+        pass # requires MEMBERSHIP
+
+    def userLeft(self, user, channel):
+        pass # requires MEMBERSHIP
+
 
     def irc_CAP(self, prefix, params):
         self.log('CAP %s' % ' '.join(params))
 
     def irc_CLEARCHAT(self, prefix, params):
         self.log("CLEARCHAT " + ' '.join(params))
-        self.send_event(self.chan(), params[1] if len(params) > 1 else None, 'clearchat', self.chan(params[0]), self, self.user_is_op(self.nickname))
+        self.send_event(self.chan(), params[1] if len(params) > 1 else None, 'clearchat', self.chan(params[0]), self, self.is_op())
 
     def irc_HOSTTARGET(self, prefix, params):
         if ' ' in params[1]: params.extend(params.pop().split()) # channel, target, number
 
         if params[1] == '-': # Exiting host mode
             # No need to log because the notice event will
-            self.send_event(self.chan(), None, 'hosting', None, self, self.user_is_op(self.nickname))
+            self.send_event(self.chan(), None, 'hosting', None, self, self.is_op())
         else:
             self.log('Hosting {} for {} viewers'.format(*params[1:]))
-            self.send_event(self.chan(), None, 'hosting', params[1], self, self.user_is_op(self.nickname), [params[2]])
+            self.send_event(self.chan(), None, 'hosting', params[1], self, self.is_op(), [params[2]])
 
     def irc_RECONNECT(self, prefix, params):
         self.log('Twitch chat sever restarting in 30 seconds, disconnect imminent.')
@@ -222,9 +194,6 @@ class Borkedbot(irc.IRCClient):
         return
         #self.log('Names list received.')
 
-
-    ### I need tags for these
-
     def irc_USERSTATE(self, prefix, params):
         self.log('USERSTATE %s' % params)
 
@@ -238,7 +207,6 @@ class Borkedbot(irc.IRCClient):
         # self.log('ROOMSTATE %s' % params)
         pass
 
-    ########################
 
     def irc_PONG(self, prefix, params):
         pass
@@ -247,10 +215,8 @@ class Borkedbot(irc.IRCClient):
         print 'No handler for irc command "%s": %s (:%s) (%s)' % (command, params, prefix, tags)
 
 
-
-
-
     ############################
+
 
     def botsay(self, msg, length=None):
         if length == None: length = self._max_line_length
@@ -270,7 +236,7 @@ class Borkedbot(irc.IRCClient):
                     print 'I give up'
                     return
 
-        self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.user_is_op(self.nickname))
+        self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.is_op())
 
 
     def ban(self, user, message=None):
@@ -284,25 +250,9 @@ class Borkedbot(irc.IRCClient):
             self.botsay(message)
 
 
-
     def chan(self, ch=None):
         c = ch or self.channel
         return c.replace('#','')
-
-    # def userJoined(self, user, channel):
-        # return
-        # self.userlist.append(user)
-        # self.userlist = list(set(self.userlist))
-        # self.send_event(self.chan(channel), None, 'join', user, self, user in self.oplist)
-
-    # def userLeft(self, user, channel):
-        # return
-        # try:
-            # self.userlist.remove(user)
-        # except:
-            # print "User not in list to part from (%s)" % user
-        # self.userlist = list(set(self.userlist))
-        # self.send_event(self.chan(channel), None, 'part', user, self, user in self.oplist)
 
     def quirkyMessage(self, s):
         print "\nSomething odd has happened:"
@@ -402,6 +352,7 @@ class BotFactory(protocol.ClientFactory):
         print "Connection failure at %s: %s" % (time.time(), reason)
         print "Could not connect, retrying..."
         connector.connect()
+
 
 if __name__ == "__main__":
     if len(sys.argv) is not 2:

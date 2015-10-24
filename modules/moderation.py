@@ -49,7 +49,7 @@ def alert(event):
 
         # Long message check
         if check_for_option('longmsg', event.channel):
-            if len(event.data) > moderation.LONG_MESSAGE_LENGTH and event.user not in event.bot.oplist:
+            if len(event.data) > moderation.LONG_MESSAGE_LENGTH:
                 print '[Moderation] Clearing long message from %s' % event.user
                 timeout(event, 10, "That's way too much text for chat dude.")
 

@@ -30,86 +30,6 @@ magic8ball = ["it is certain.",
     "no, you fucking mongoloid.",
     "go suck a dick."]
 
-salem_townies = {
-    'bodyguard' : ('Bodyguard', 'Town Protective',
-        'Protect one person from death each night. If your target is attacked both you and your attacker will die instead. Your counterattack ignores night immunity. (One bulletproof vest)'),
-    'doctor' : ('Doctor', 'Town Protective',
-        'Heal one person each night, preventing them from dying. You will know if your target is attacked. (One self heal)'),
-    'escort' : ('Escort', 'Town Support',
-        'Distract someone each night. Prevents them from acting. If you target a Serial Killer they will attack you instead.'),
-    'investigator' : ('Investigator', 'Town Investigative',
-        'Investigate one person each night for a clue to their role. Framed players will appear to be a Framer.'),
-    'jailor' : ('Jailor', 'Town Killing',
-        'You may choose one person during the day to jail for the night. You anonymously speak to '+
-        'and can choose to execute your prisoner. Prisoner is roleblocked an immune. (many caveats, see wiki)'),
-    'lookout' : ('Lookout', 'Town Investigative',
-        'Watch one person at night to see who visits them. Ignores detection immunity.'),
-    'mayor' : ('Mayor', 'Town Support',
-        'Gain 3 votes when you reveal yourself as Mayor. Once revealed you cannot be healed by a Doctor.'),
-    'medium' : ('Medium', 'Town Support',
-        'Speak with all dead people (anonymously) at night. If dead, you can choose one living person during the day and speak to them that night. (Some caveats, see wiki)'),
-    'retributionist' : ('Retributionist', 'Town Support',
-        'You may revive a dead town aligned member (no Mafia/neutral). Cannot revive people who have left the game. The town will get a message when your target is revived.'),
-    'sheriff' : ('Sheriff', 'Town Investigative',
-        'Check one person each night for suspicious activity. You will know if your target is Mafia or a Serial Killer. Cannot deduce detect-immune roles (Godfather, Arsonist).'),
-    'spy' : ('Spy', 'Town Investigative',
-        'Listen in on the Mafia at night, and hear whispers. You will know who the Mafia visit at night. Retains spy abilities while dead.'),
-    'transporter' : ('Transporter', 'Town Support',
-        'Choose two people to transport at night. You can transport yourself. Targets will know if they are swapped. Immune to Witch\'s control.'),
-    'veteran' : ('Veteran', 'Town Killing',
-        'Decide if you will go on alert and kill anyone who visits you. You are invunerable while alert at night. Cannot be roleblocked. '+
-        'You have 3 alerts. Doctors can save attackers. Being transported kills the Transporter but the swap still happens.'),
-    'vigilante' : ('Vigilante', 'Town Killing',
-        'Choose to take justice into your own hands and shoot someone. You have three shots. Cannot shoot the first night. '+
-        'If you shoot a town aligned player you will commit sudoku from guilt. Cannot kill Night Immune players.')}
-
-salem_mafia = {
-    'blackmailer' : ('Blackmailer', 'Mafia Support',
-        'Choose one person each night to blackmail. Target cannot talk during the day. During Judgement, blackmailed target\'s message will be changed to "I am blackmailed."'),
-    'consigliere' : ('Consigliere', 'Mafia Support',
-        'Check one person for their exact role each night. You will get their exact role, unlike the sheriff.'),
-    'consort' : ('Consort', 'Mafia Support',
-        'Distract someone each night. Prevents them from acting. You are immune to roleblocking. If you target a Serial Killer they will attack you instead.'),
-    'disguiser' : ('Disguiser', 'Mafia Deception',
-        'Choose a dying target to disguise yourself as. If your target dies you swap names, houses, and avatars. You only have 3 disguises.'),
-    'framer' : ('Framer', 'Mafia Deception',
-        'Choose one person to frame each night. Investigators will see framed targets as Framer. Sheriffs will see framed targets as Mafia.'),
-    'godfather' : ('Godfather', 'Mafia Killing',
-        'Kill someone each night. You can\'t be killed at night. You will appear to be a town member to the Sheriff. If you do not designate a target, the Mafioso may target anyone.'),
-    'janitor' : ('Janitor', 'Mafia Deception',
-        'Choose a dying person to clean each night. If your target dies at night their role and last will not be shown to the town, and only you will see them. You only have 3 cleanings.'),
-    'mafioso' : ('Mafioso', 'Mafia Killing',
-        'Carry out the Godfather\'s orders. If the Godfather designates a target, you will kill them. If Godfather is dead or did not choose to kill someone you can kill whoever you want. ')}
-
-salem_neutrals = {
-    'amnesiac' : ('Amnesiac', 'Neutral Benign',
-        'Remember who you were by selecting a graveyard role. Choosing a role reveals it to the town. You can select a role cleaned by a Janitor, '+
-        'but you cannot select a Unique role (Godfather, Mayor, etc...). You win if you complete your role\' goal or surivive to the end.'),
-    'arsonist' : ('Arsonist', 'Neutral Killing',
-        'Douse someone in gasoline or ignite all doused targets. Targets will know they are doused in gasoline. If you don\'t act at night you will clean yourself of gas. '+
-        'Death from fire can\'t be prevented by healing or night immunities. You cannot affect jailed targets. Try not to light yourself on fire.'),
-    'executioner' : ('Executioner', 'Neutral Evil',
-        'Trick the Town into lynching your target. Your target is always a Town member. If your target is killed at night you will become a Jester that morning. '+
-        'You cannot be killed at night (retained after target dies, but lost if you turn into a Jester). You win if your target is lynched (while you\'re alive?) before the game ends.'),
-    'jester' : ('Jester', 'Neutral Evil',
-        'Trick the Town into lynching you. If you are lynched, you may kill one of the GUILTY voters the following night. '+
-        'This goes through any night immunity, however a transporter can swap your target with somebody else and get them killed instead.'),
-    'serial killer' : ('Serial Killer', 'Neutral Killing',
-        'Kill someone each night. If you are role blocked you will attack the blocker instead (Escort, Consort, and Jailor). You can not be killed at night.'),
-    'survivor' : ('Survivor', 'Neutral Benign',
-        'Put on a bulletproof vest at night, protecting yourself from attacks. You can only use the bulletproof vest 4 times. '+
-        'Your vest will be destroyed regardless if you are attacked or not. You cannot protect yourself from the Arsonist\'s ignite, Jailor\'s execution, or Jester\'s haunt.'),
-    'witch' : ('Witch', 'Neutral Evil',
-        'Control someone each night. You can only control targetable actions such as detection and killing. You can force people to target themselves. '+
-        'Your victim will know they are being controlled. You are immune to roleblocking. You win if you live to see the town lose.'),
-    'werewolf' : ('Werewolf', 'Neutral Killing',
-        'Every Full Moon, transform into a werewolf.  You can target a player\'s home, killing the occupant and anyone who visits, '+
-        'or you can stay at home and kill anyone who visits you. Your attack ignores Night Immunity. Mechanically, you function almost identically to '+
-        'the Serial Killer. You cannot attack yourself.')
-
-    }
-
-salem_roles = dict(salem_townies.items() + salem_mafia.items() + salem_neutrals.items())
 
 message_commands = []
 joinpart_commands = []
@@ -810,12 +730,12 @@ def generate_message_commands(bot):
             if new_mmr_s == 0: new_mmr_s = 'None'
             if new_mmr_p == 0: new_mmr_p = 'None'
 
-            if int(mmr_s_change) != 0: 
+            if int(mmr_s_change) != 0:
                 mmr_s_change = ' (%s%s)' % ('+' if int(mmr_s_change) > 0 else '', mmr_s_change)
             else:
                 mmr_s_change = ''
-            
-            if int(mmr_p_change) != 0: 
+
+            if int(mmr_p_change) != 0:
                 mmr_p_change = ' (%s%s)' % ('+' if int(mmr_p_change) > 0 else '', mmr_p_change)
             else:
                 mmr_p_change = ''
@@ -1172,7 +1092,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         import twitchapi
-        if user not in bot.channelsubs:
+        if not bot.user_is_sub(user):
             print user, 'is not a sub'
             if user != 'imayhaveborkedit' or not bot.user_is_op(user):
                 return
@@ -1343,7 +1263,7 @@ def generate_message_commands(bot):
         import random
         places = ["Superjoe Land.", "Superjoe's dirty hovel.", "Superjoe's shining kingdom.", "Superjoe's murky swamp.", "Superjoe's haunted house.",
         "Superjoe's secret cave under monkeys_forever's house.", "Superjoe's bathtub.", "Superjoe's slave dungeon.", "Superjoe's deflated bouncy castle.",
-        "Superjoe's vault of broken promises and intangible dreams.", "Superjoe's corn field."]
+        "Superjoe's vault of broken promises and intangible dreams.", "Superjoe's corn field.", "Superjoe's questionable abode."]
 
         random.shuffle(places)
 
@@ -1351,239 +1271,13 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!time', f, bot, channels=['superjoe'], repeatdelay=15))
 
-    def f(channel, user, message, args, data, bot):
-        try:
-            args[0]
-        except:
-            return '%s: You need to give me a name!  Please type !registersalem salemusername' % user
-
-        if user == 'superjoe':
-            return "Come on superjoe, everyone knows who you are."
-        elif user == 'imayhaveborkedit' and len(args) == 2:
-            user = args[1]
-
-        import cPickle, time
-        username = args[0].replace('"', '')
-
-        # Load names
-        nameDB = None
-        with open('/var/www/twitch/superjoe/salem/namemap', 'rb') as ndb:
-            nameDB = cPickle.load(ndb)
-            nameDB[user] = username
-
-        # Load subs
-        sublist = []
-        with open('/var/www/twitch/superjoe/salem/subs', 'rb') as sl:
-            sublist = cPickle.load(sl)
-            sublist.extend(bot.channelsubs)
-            sublist = list(set(sublist))
-
-        # Easy way to empty a file
-        open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
-
-        # Rewrite the file
-        with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
-            fi.write('<html>\n<link rel="stylesheet" type="text/css" href="main.css">\n<body>\n')
-            fi.write("<h1>Superjoe Town of Salem chat names</h1>\n<h5>Last update: %s</h5>\n\n" % time.asctime())
-
-            fi.write("<p>Name Format:<br />Twitch name: Salem name</p>\n")
-            fi.write("<p>superjoe: SuperJoe</p>\n\n")
-
-            normals = []
-            subs = []
-
-            for u in nameDB.keys():
-                (subs if u in sublist else normals).append(u)
-
-            fi.write('<h2>Subs (%s)</h2>\n' % len(subs))
-            fi.write('<ul>\n')
-
-            for d in sorted(subs):
-                if bot.usercolors.has_key(d):
-                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
-                else:
-                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
-
-            fi.write('\n</ul>\n\n')
-
-            fi.write('<h2>Non-Subs (%s)</h2>\n' % len(normals))
-
-            for d in sorted(normals):
-                # fi.write('<li>%s: %s</li>\n'%(d, nameDB[d]))
-                if bot.usercolors.has_key(d):
-                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
-                else:
-                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
-
-            fi.write('\n</ul>\n')
-
-            fi.write("</body></html>")
-
-        with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
-            cPickle.dump(nameDB, fi2)
-
-        with open('/var/www/twitch/superjoe/salem/subs', 'wb') as sl:
-            cPickle.dump(sublist, sl)
-
-        return "\"%s\" registered for %s" % (username, user)
-
-    coms.append(command.Command('!registersalem', f, bot, channels=['superjoe'], groups=['salem']))
-
-    def f(channel, user, message, args, data, bot):
-        import cPickle, time
-
-        try: username = args[0]
-        except: username = None
-
-        remname = None
-        nameDB = None
-        sublist = []
-
-        with open('/var/www/twitch/superjoe/salem/namemap', 'rb') as ndb:
-            nameDB = cPickle.load(ndb)
-            remname = nameDB.pop(username, None)
-
-        with open('/var/www/twitch/superjoe/salem/subs', 'rb') as sl:
-            sublist = cPickle.load(sl)
-            sublist.extend(bot.channelsubs)
-            sublist = list(set(sublist))
-
-        open('/var/www/twitch/superjoe/salem/index.html', 'w').close()
-
-        with open('/var/www/twitch/superjoe/salem/index.html', 'r+') as fi:
-            fi.write('<html>\n<link rel="stylesheet" type="text/css" href="main.css">\n<body>\n')
-            fi.write("<h1>Superjoe Town of Salem chat names</h1>\n<h5>Last update: %s</h5>\n\n" % time.asctime())
-
-            fi.write("<p>Name Format:<br />Twitch name: Salem name</p>\n")
-            fi.write("<p>superjoe: SuperJoe</p>\n\n")
-
-            normals = []
-            subs = []
-
-            for u in nameDB.keys():
-                (subs if u in sublist else normals).append(u)
-
-            fi.write('<h2>Subs (%s)</h2>\n' % len(subs))
-            fi.write('<ul>\n')
-
-            for d in sorted(subs):
-                # fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
-                if bot.usercolors.has_key(d):
-                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
-                else:
-                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
-
-            fi.write('\n</ul>\n\n')
-
-            fi.write('<h2>Non-Subs (%s)</h2>\n' % len(normals))
-
-            for d in sorted(normals):
-                # fi.write('<li>%s: %s</li>\n'%(d, nameDB[d]))
-                if bot.usercolors.has_key(d):
-                    fi.write('<li><b><span style="color:%s">%s</span></b>: %s</li>\n' % (bot.usercolors[d], d, nameDB[d]))
-                else:
-                    fi.write('<li>%s: %s</li>\n' % (d, nameDB[d]))
-
-            fi.write('\n</ul>\n')
-
-            fi.write("</body></html>")
-
-        with open('/var/www/twitch/superjoe/salem/namemap', 'wb') as fi2:
-            cPickle.dump(nameDB, fi2)
-
-        with open('/var/www/twitch/superjoe/salem/subs', 'wb') as sl:
-            cPickle.dump(sublist, sl)
-
-        if remname: return "Removed %s from name list." % username
-        else: return "%s not found." % username
-
-    coms.append(command.Command('#!unregistersalem', f, bot, True, channels=['superjoe'], groups=['salem']))
-
-    ## Salem role curses
-
-    # Medium
-
-    def f(channel, user, message, args, data, bot):
-        import settings
-        cursecount = int(settings.trygetset('superjoe_mediums_curse', 0))
-        cursestring = "Oh noes!  The medium has died %s times on night 1."
-
-        if bot.user_is_op(user):
-            try:
-                if args:
-                    watdo = args[0][0]
-                    if watdo in ['+','-']:
-                        cursecount += int(args[0][1:])
-                    else:
-                        cursecount = int(args[0][1:])
-            except: pass
-            else:
-                settings.setdata('superjoe_mediums_curse', cursecount)
-        elif args:
-            cursestring += '  (Only mods can change the count)'
-
-        return cursestring % cursecount
-
-    coms.append(command.Command(['!mediumscurse', '!mediumcurse'], f, bot, channels=['superjoe'], groups=['salem'], repeatdelay=10))
-
-    # Escort
-
-    def f(channel, user, message, args, data, bot):
-        import settings
-        cursecount = int(settings.trygetset('superjoe_escorts_curse', 0))
-        cursestring = "Oh noes!  The Escort has found the Serial Killer on the first night %s times."
-
-        if bot.user_is_op(user):
-            try:
-                if args:
-                    watdo = args[0][0]
-                    if watdo in ['+','-']:
-                        cursecount += int(args[0])
-                    else:
-                        cursecount = int(args[0])
-            except: pass
-            else:
-                settings.setdata('superjoe_escorts_curse', cursecount)
-        elif args:
-            cursestring += '  (Only mods can change the count)'
-
-        return  cursestring % cursecount
-    coms.append(command.Command(['!escortscurse', '!escortcurse'], f, bot, channels=['superjoe'], groups=['salem'], repeatdelay=10))
-
-    ####################
-
-    coms.append(command.SimpleCommand(['!salem', '!salemhelp', '!saleminfo'],
-        "Play Town of Salem here: http://www.blankmediagames.com/TownOfSalem/ Make an account, "+
-        "add 'SuperJoe' as a friend, and type \"!registersalem accountname\" here in chat.  "+
-        "Registering in chat isn't required but it helps Superjoe keep track of who's who.  "+
-        "Subs get priority but everyone else gets invited afterwards.",
-        bot, channels=['superjoe'], groups=['salem'], repeatdelay=6, prependuser=False, targeted=True))
-
-    coms.append(command.SimpleCommand('!salemnames', 'http://doc.asdfxyz.de:81/twitch/superjoe/salem/',
-        bot, channels=['superjoe'], groups=['salem'], repeatdelay=8, targeted=True))
-
-    def f(channel, user, message, args, data, bot):
-        if not len(args) or 'wiki' in args[0]:
-            return "%s: http://town-of-salem.wikia.com/wiki/Roles" % user
-
-        import difflib
-
-        searchterm = difflib.get_close_matches(args[0].lower(), data.keys(), 1)
-
-        if searchterm:
-            return "%s (%s): %s" % data[searchterm[0].lower()]
-        else:
-            return "No match for \"%s\"" % args[0]
-
-    coms.append(command.Command(['!salemrole', '!salemroles'], f, bot, channels=['superjoe'], data=salem_roles, groups=['salem'], repeatdelay=4))
-
-    # Kizzmett ##########
 
     # Tom ##############
 
     coms.append(command.SimpleCommand('!plugs', 'Links! http://www.facebook.com/unsanitylive | http://twitter.com/unsanitylive | ' +
         'Like/Follow/Subscribe/whatever you want, that\'s where you can find Tom!',
         bot, channels=['unsanitylive'], prependuser=False, repeatdelay=10))
+
 
     # Moo
 
@@ -1628,7 +1322,7 @@ def generate_message_commands(bot):
         import time
 
         if not args:
-            return "You know you're supposed to give me names to unban right?"
+            return "You know you're supposed to give me names to unban right?  Maybe you were looking for bttv /massunban"
 
         sleeptime = 0.4
 
@@ -1643,37 +1337,6 @@ def generate_message_commands(bot):
             time.sleep(sleeptime)
 
     coms.append(command.Command('!massunban', f, bot, repeatdelay=30, groups=me_and_broadcaster))
-
-
-#    def f(channel, user, message, args, data, bot):
-#        import steamapi
-#        data = steamapi.GetTournamentPrizePool(2733)
-#
-#        moneys = data['result']['prize_pool']
-#
-#        prizes = {
-#            1600001: 'Valve fixes their shit',
-#            100000000: 'Half Life 3 Released'
-#        }
-#
-#        remaining = None
-#        for prize in sorted(prizes.keys()):
-#            if moneys < prize:
-#                nextprize = prizes[prize]
-#                remaining = prize - moneys
-#                break
-#
-#        if moneys == 1600000:
-#            remaining = False
-#            nextprize = 'Valve pls fix ur shit'
-#
-#        if remaining:
-#            return 'Current TI5 prize pool: ${:,} -- {} in ${:,}'.format(moneys, nextprize, remaining)
-#        else:
-#            return 'Current TI5 prize pool: ${:,} -- {}'.format(moneys, nextprize)
-#
-#    coms.append(command.Command('!prizepool', f, bot, True, repeatdelay=30))
-
 
     def f(channel, user, message, args, data, bot):
         import twitchapi, datetime, dateutil.parser
@@ -1759,13 +1422,13 @@ def generate_message_commands(bot):
             try:
                 dice, sides = args[0].lower().split('d')
 
-            
+
                 dice = int(dice)
                 sides = int(sides)
                 rolls = []
             except:
                 return 'Hmmm, you borked something.  Example: !roll 2d10'
-            
+
             for x in range(dice):
                 rolls.append(random.randrange(1, sides))
 
