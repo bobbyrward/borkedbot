@@ -512,7 +512,7 @@ def generate_message_commands(bot):
         import twitchapi
         if args:
             sid = twitchapi.get_steam_id_from_twitch(args[0])
-            sid = 'http://steamcommunity.com/profiles/' + sid if sid else 'No steam account linked to %s.' % args[0]
+            sid = 'http://steamcommunity.com/profiles/%s' % sid if sid else 'No steam account linked to %s.' % args[0]
             return sid
 
     coms.append(command.Command('!twitch2steam', f, bot, True))
@@ -532,14 +532,14 @@ def generate_message_commands(bot):
     # Mod message_commands
     #
 
-    coms.append(command.SimpleCommand('Beep?', 'Boop!', bot, True, prependuser = False))
+    coms.append(command.SimpleCommand('Beep?', 'Boop!', bot, True, prependuser=False))
 
     coms.append(command.SimpleCommand(['!source', '!guts'], "BLEUGH https://github.com/imayhaveborkedit/borkedbot", bot, True, prependuser=True, repeatdelay=10, targeted=True))
 
     coms.append(command.SimpleCommand('!bursday', "Happy Bursday! http://www.youtube.com/watch?v=WCYzk67y_wc", bot, True))
 
-    coms.append(command.SimpleCommand('#!riot', 'ヽ༼ຈل͜ຈ༽ﾉ', bot, True, prependuser = False))
-    coms.append(command.SimpleCommand('#!shrug', '¯\_(ツ)_/¯', bot, True, prependuser = False))
+    coms.append(command.SimpleCommand('!riot', 'ヽ༼ຈل͜ຈ༽ﾉ', bot, True, prependuser=False))
+    coms.append(command.SimpleCommand('!shrug', '¯\_(ツ)_/¯', bot, True, prependuser=False))
 
 
     def f(channel, user, message, args, data, bot):

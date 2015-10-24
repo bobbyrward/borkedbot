@@ -263,3 +263,5 @@ class Commander(object):
             return list()
         else:
             return a[1:]
+
+# The code to generate the commands readme goes here somewhere, with raw command documentation or not

@@ -58,3 +58,11 @@ def setup(bot):
 
 def alert(event):
     return
+
+
+###############
+## https://github.com/justintv/Twitch-API/tree/master/v3_resources
+## TODO: add exceptions
+
+# Channels
+
