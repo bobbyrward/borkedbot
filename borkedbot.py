@@ -62,6 +62,22 @@ class Borkedbot(irc.IRCClient):
     def isop(self, user):
         return user in self.oplist | self.extrapos
 
+    def user_is_op(self, user):
+        if user == bot.channel: 
+            return True
+        if user in self.usertags:
+            return self.usertags[user]['user-type'] != '' # because [mod, global_mod, admin, staff] are all ops
+
+    def user_is_sub(self, user):
+        if user == bot.channel: 
+            return True # I don't think this would ever not be the case, but I guess its not if they dont have a sub button
+        if user in self.usertags:
+            return int(self.usertags[user]['subscriber']) # I dunno if I should leave these as 0/1 or bool() them
+
+    def user_is_turbo(self, user):
+        if user in self.usertags:
+            return int(self.usertags[user]['turbo']) # I dunno if I should leave these as 0/1 or bool() them
+
     def timer(self):
         self.send_event(self.chan(), None, 'timer', time.time(), self, None)
 
@@ -300,9 +316,9 @@ class Borkedbot(irc.IRCClient):
 
             tagdata = {t.split('=')[0]:t.split('=')[1] for t in tags[1:].split(';')}
 
-            print
-            print tagdata
-            print line
+            # print
+            # print tagdata
+            # print line
 
             try:
                 irccmdtype = line.split(' ')[1]
