@@ -299,43 +299,36 @@ class Borkedbot(irc.IRCClient):
             line = ':' + line
 
             tagdata = {t.split('=')[0]:t.split('=')[1] for t in tags[1:].split(';')}
+
             print
             print tagdata
             print line
-        else:
-            tagdata = None
 
+            try:
+                irccmdtype = line.split(' ')[1]
+            except:
+                pass
 
-        if tagdata:
-            # check to see which kind of tags are sent buy looking for a specific trag
-            if 'user-type' in tagdata:
-                if not 'emote-sets' in tagdata:
-                    del tagdata['emotes'] # Dont need this (yet?)
-
+            if irccmdtype == 'PRIVMSG':
+                del tagdata['emotes'] # Dont need this (yet?)
                 self.usertags.update({line[1:].split('!')[0]: tagdata})
 
-            if 'msg-id' in tagdata:
-                pass # room state changes but with no data
+            elif irccmdtype == 'ROOMSTATE':
+                self.roomtags.update(tagdata)
 
-            if 'slow' in tagdata:
-                self.roomtags['slow'] = tagdata['slow'] # I can change these to dict.update if 'slow' is ONLY sent with these types of messages
+            elif irccmdtype == 'USERSTATE':
+                self.usertags.update({line.split('#')[1]: tagdata})
 
-            if 'r9k' in tagdata:
-                self.roomtags['r9k'] = tagdata['r9k']
-                pass # set roomtags for slow, subs-only, broadcaster-lang, r9k (not sure if all are always sent)
+            elif irccmdtype == 'GLOBALUSERSTATE':
+                pass # NYI
 
-            if 'subs-only' in tagdata:
-                self.roomtags['subs-only'] = tagdata['subs-only']
+            elif irccmdtype == 'NOTICE':
+                pass # {'msg-id': 'something-on/off'}
 
-            if 'broadcaster-lang' in tagdata:
-                self.roomtags['broadcaster-lang'] = tagdata['broadcaster-lang']
+            else:
+                print irccmdtype, tagdata
 
-            # The if stack is probably not the best way to deal with this but oh well
-            # maybe regex the irc command type and update tags from that
-            # orrrrr line.split(' ')[1]
-
-
-        # It's either this line or the other commented part
+        # It's either this line or the other commented part and a ton of overridden methods
         irc.IRCClient.lineReceived(self, line)
 
 '''
