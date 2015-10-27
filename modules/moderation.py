@@ -25,11 +25,11 @@ def alert(event):
                     watdo = get_moderation_time(spam, moderation.SPAM_LIST, 'fakebans' in moderation.CHANNEL_RULES[event.channel])
                     if watdo:
                         print '[Moderation] Timing %s out for %ss for spam' % (event.user, watdo)
-                        timeout(event, watdo, 'Spam is bad and you should feel bad.')
+                        timeout(event, watdo)
                         return
                     else:
                         print '[Moderation] Banning %s for spam' % event.user
-                        ban(event, 'Spam is bad and you should feel bad.')
+                        ban(event)
                         return
 
         # Copypasta check
@@ -65,8 +65,11 @@ def alert(event):
 
 
 def check_for_option(option, channel):
-    return channel in moderation.CHANNEL_RULES and (option in moderation.CHANNEL_RULES[channel] or 'all' in moderation.CHANNEL_RULES[channel]) and 'none' not in moderation.CHANNEL_RULES[channel]
-
+    if channel in moderation.CHANNEL_RULES:
+        if option in moderation.CHANNEL_RULES[channel] or 'all' in moderation.CHANNEL_RULES[channel]:
+            if '!' + option not in moderation.CHANNEL_RULES[channel]:
+                return True
+    return False
 
 def get_moderation_time(spam, table, fakebans=False):
     watdo = table[spam]
