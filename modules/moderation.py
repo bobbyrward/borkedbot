@@ -5,6 +5,8 @@ sys.dont_write_bytecode = True
 import re
 import time
 import requests
+import timer
+# import supervisor
 
 from secrets import moderation
 from twisted.internet import reactor
@@ -81,12 +83,12 @@ def ban(event, message=None, fakeban=False):
         if message:
             event.bot.botsay(message)
 
-        _delayed_timeout(event.bot, 0.2, event.user, 600)
+        _delayed_timeout(event.bot, 0.4, event.user, 600)
 
         if fakeban:
-            _delayed_timeout(event.bot, 0.6, event.user, moderation.MAX_TIMEOUT_DURATION)
+            _delayed_timeout(event.bot, 0.9, event.user, moderation.MAX_TIMEOUT_DURATION)
         else:
-            _delayed_ban(event.bot, 0.6, event.user)
+            _delayed_ban(event.bot, 0.9, event.user)
 
         time.sleep(1)
 
@@ -95,8 +97,8 @@ def timeout(event, duration=600, message=None):
     with event.bot.unlock_ratelimit():
         if message:
             event.bot.botsay(message)
-        _delayed_timeout(event.bot, 0.2, event.user, duration)
-        _delayed_timeout(event.bot, 0.6, event.user, duration)
+        _delayed_timeout(event.bot, 0.4, event.user, duration)
+        _delayed_timeout(event.bot, 0.9, event.user, duration)
 
         time.sleep(1)
 
@@ -147,7 +149,12 @@ def inspect_for_bad_link(event):
                 print '[Moderation-Scan] Link is whitelisted'
                 continue
 
+            tim = timer.Timer('link scanner', True)
             badlink = scan_link(l)
+
+            tim.stop()
+            print '[Moderation-Scan] Link scanned in %sms' % tim.runtime() * 1000
+
             if badlink:
                 print '[Moderation-Scan] Bad link detected (%s)' % badlink
 
@@ -160,14 +167,18 @@ def inspect_for_bad_link(event):
 
                     ban(event, bl_warning)
 
-                elif check_for_option('inspect-warning', event.channel):
+                if check_for_option('inspect-warning', event.channel):
                     event.bot.botsay('I would advise against clicking that link. (%s)' % badlink)
+
+                if check_for_option('inspect-propagate', event.channel):
+                    pass
+
                 break
 
 
 def scan_link(link):
     try:
-        r = requests.head(link, timeout=4, headers={'User-agent': moderation.USER_AGENT})
+        r = requests.head(link, timeout=7, headers={'User-agent': moderation.USER_AGENT})
 
     except requests.exceptions.ConnectionError as e:
         if e.args[0][1].args[1] in ['getaddrinfo failed', 'Name or service not known']:
@@ -191,7 +202,7 @@ def scan_link(link):
         try:
             with requests.Session() as s:
                 s.max_redirects = 10
-                r2 = s.head(link, allow_redirects=True, timeout=4, headers={'User-agent': moderation.USER_AGENT})
+                r2 = s.head(link, allow_redirects=True, timeout=7, headers={'User-agent': moderation.USER_AGENT})
         except requests.exceptions.TooManyRedirects as e:
             print 'Who honestly uses more than 10 redirects for something, really now.'
             return
@@ -223,7 +234,7 @@ def scan_link(link):
         print '[Moderation-Scan] Inspecting page source'
 
         ## Meta redirect check
-        rget = requests.get(link, timeout=4, headers={'User-agent': moderation.USER_AGENT})
+        rget = requests.get(link, timeout=7, headers={'User-agent': moderation.USER_AGENT})
 
         # This should work and I don't know if I want to bring in BeautifulSoup just for this
         metamatch = re.search(r'\<meta.+?url\=(.+?)">', rget.text, re.IGNORECASE)
