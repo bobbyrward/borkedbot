@@ -11,6 +11,9 @@ from HTMLParser import HTMLParser
 
 LOAD_ORDER = 30
 
+sub_alert_channel_list = ['monkeys_forever', 'superjoe', 'kizzmett', 'moodota2', 'unsanitylive']
+youtube_title_channel_list = ['monkeys_forever', 'unsanitylive', 'pelmaleon', 'mynameisamanda', 'imayhaveborkedit', 'barnyyy', 
+                              'moodota2', 'gixgaming', 'kazkarontwo', 'lamperkat', 'f4ldota', 'kizzmett']
 
 def setup(bot):
     pass
@@ -19,7 +22,7 @@ def setup(bot):
 def alert(event):
     # Sub alert
     if event.etype == 'twitchnotify':
-        if event.channel in ['monkeys_forever', 'superjoe', 'kizzmett', 'moodota2', 'unsanitylive']:
+        if event.channel in sub_alert_channel_list:
             msg = 'ヽ༼ຈل͜ຈ༽ﾉ RE-SUB HYPE! PRAISE %s' % event.data.split()[0].upper()
             if 'just subscribed!' in event.data:
                 extra = ''
@@ -42,18 +45,7 @@ def alert(event):
     # http://youtube.com/get_video_info?video_id=n4D-N6aWIV4
 
     if event.etype in ['msg', 'action']:
-        if event.channel in ['monkeys_forever', 
-                             'unsanitylive', 
-                             'pelmaleon', 
-                             'mynameisamanda', 
-                             'imayhaveborkedit', 
-                             'barnyyy', 
-                             'moodota2', 
-                             'gixgaming', 
-                             'kazkarontwo', 
-                             'lamperkat', 
-                             'f4ldota', 
-                             'kizzmett']:
+        if event.channel in youtube_title_channel_list:
             if ('youtube.com/watch?' in event.data or 'youtu.be/' in event.data) and not event.data.strip().startswith('!'):# and event.user != 'rime_':
                 print '[ExtraEvents] Found youtube link, looking up title'
 
