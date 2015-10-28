@@ -153,7 +153,7 @@ def inspect_for_bad_link(event):
             badlink = scan_link(l)
 
             tim.stop()
-            print '[Moderation-Scan] Link scanned in %sms' % tim.runtime() * 1000
+            print '[Moderation-Scan] Link scanned in %sms' % (tim.runtime() * 1000)
 
             if badlink:
                 print '[Moderation-Scan] Bad link detected (%s)' % badlink
