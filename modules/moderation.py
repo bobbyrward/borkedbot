@@ -237,13 +237,20 @@ def scan_link(link):
         rget = requests.get(link, timeout=7, headers={'User-agent': moderation.USER_AGENT})
 
         # This should work and I don't know if I want to bring in BeautifulSoup just for this
-        metamatch = re.search(r'\<meta.+?url\=(.+?)">', rget.text, re.IGNORECASE)
+        metamatch = re.search(moderation.SPECIAL_REGEX['meta'], rget.text)
 
         if metamatch:
             print '[Moderation-Scan] Scanning meta redirect to "%s"' % metamatch.groups()[0]
             return scan_link(metamatch.groups()[0])
             # I hope I don't have an infinite redirect issue, that'd be awkward.
             # All i'd need to do is add a recursion level arg to scan_link() and stop after X recursions
+
+        # this one seems to use a timed js redirect, i might just blacklist this link in the future
+        if 'xaa.su' in rget.url.lower():
+            match_xaasu = re.search(moderation.SPECIAL_REGEX['xaa.su'], rget.text)
+            if match_xaasu:
+                print '[Moderation-Scan] xaa.su redirect found: %s' % match_xaasu.groups()[0]
+                return scan_link(str(match_xaasu.groups()[0]))
 
         # Other checks
         # check for links to exes and scrs and warn, maybe return a (ban_duration:int [-1 no ban, 0 ban, 1+ timeout duration], reason:str)
