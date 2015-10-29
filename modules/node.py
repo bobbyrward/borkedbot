@@ -88,6 +88,11 @@ def get_replay_dir(channel):
 
 ########
 
+def get_mmr_for_dotaid(dotaid):
+    with ZRPC() as zrpc:
+        return zrpc.getmmrfordotaid(dotaid)
+    
+
 def updateMMR(channel, chid, autolaunch=True):
     with ZRPC() as zrpc:
         if autolaunch:

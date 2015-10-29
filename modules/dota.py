@@ -45,9 +45,7 @@ def steamToDota(steamid):
 
 def update_channels():
     global enabled_channels
-    # print "[Dota] Updating enabled channels"
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
-    # os.system('touch %s' % os.path.abspath(__file__))
 
 def enable_channel(channel, dotaid, mmr=False):
     dotaid = steamToDota(determineSteamid(dotaid))
@@ -364,6 +362,39 @@ def getmatchMMRstring(channel, dotaid):
 
     return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
 
+def get_match_mmr_string(channel):
+    oldmmr = get_mmr_for_channel(channel)
+    newmmr = fetch_mmr_for_channel(channel, True)
+
+    if not any(newmmr):
+        return '[MMR Error: No data]'
+
+    outputstring = "Updated MMR: %s"
+    solostr = 'Solo: %s'
+    partystr = 'Party: %s'
+
+    solommrupdate = oldmmr[0] and newmmr[0]
+    partymmrupdate = oldmmr[1] and newmmr[1]
+
+    if solommrupdate:
+        solodiff = newmmr[0] - oldmmr[0]
+        if solodiff >= 0:
+            solodiff = '+' + solodiff
+        solostr += ' (%s)' % solodiff
+
+    if partymmrupdate:
+        partydiff = newmmr[1] - oldmmr[1]
+        if partydiff >= 0:
+            partydiff = '+' + partydiff
+        partystr += ' (%s)' % partydiff
+
+    if solommrupdate and partymmrupdate:
+        return outputstring % (solostr + ' | ' + partystr)
+    elif solommrupdate:
+        return outputstring % solostr
+    else:
+        return outputstring % partystr
+
 
 def getUserDotaData(channel, datapath = '/var/www/twitch/%s/data'):
     with open(datapath % channel, 'r') as d:
@@ -377,6 +408,42 @@ def updateMMR(channel):
         raise TypeError("No id on record")
 
     return node.updateMMR(channel, dotaid)
+
+def read_mmr_for_channel(channel):
+    with open('/var/www/twitch/%s/data' % channel, 'r') as d:
+        dotadata = json.loads(d.readline())
+
+    try:
+        slotdata = [s['stat'] for s in dotadata['slots'] if s['stat']]
+        slotids = [s['stat_id'] for s in slotdata]
+        if not 1 in slotids:
+            return # no mmr displayed
+    except:
+        # I'll need to redo these
+        if dotadata['result'] == 15:
+            return '[MMR Error: Private profile?]'
+        if dotadata['result'] == 2:
+            return '[MMR Error]'
+
+    data = {item['stat_id']: item['stat_score'] for item in slotdata}
+
+    return (data[1], data[2])
+
+
+def fetch_mmr_for_channel(channel, save=False):
+    data = fetch_mmr_for_dotaid(settings.getdata('%s_dota_id' % channel))
+    if save:
+        settings.setdata('%s_last_mmr' % channel, data)
+    return data
+
+def fetch_mmr_for_dotaid(dotaid):
+    return tuple(node.get_mmr_for_dotaid(dotaid))
+
+def get_mmr_for_channel(channel):
+    try:
+        return settings.getdata('%s_last_mmr' % channel)
+    except:
+        return (None, None)
 
 
 def determineSteamid(steamthing):
