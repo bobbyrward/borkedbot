@@ -334,13 +334,13 @@ def get_match_mmr_string(channel):
     if solommrupdate:
         solodiff = newmmr[0] - oldmmr[0]
         if solodiff >= 0:
-            solodiff = '+' + solodiff
+            solodiff = '+' + str(solodiff)
         solostr += ' (%s)' % solodiff
 
     if partymmrupdate:
         partydiff = newmmr[1] - oldmmr[1]
         if partydiff >= 0:
-            partydiff = '+' + partydiff
+            partydiff = '+' + str(partydiff)
         partystr += ' (%s)' % partydiff
 
     if solommrupdate and partymmrupdate:
