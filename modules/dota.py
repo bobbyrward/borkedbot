@@ -310,57 +310,12 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
 
 
-    finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + getmatchMMRstring(channel, dotaid) if getmmr else '') + (' -- ' + notableplayerdata if notableplayerdata else '')
+    finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + get_match_mmr_string(channel) if getmmr else '') + (' -- ' + notableplayerdata if notableplayerdata else '')
 
     if splitlongnotable:
         pass
 
     return finaloutput
-
-
-def getmatchMMRstring(channel, dotaid):
-    return '[MMR function currently broken thanks valve]'
-
-    outputstring = "Updated MMR: Solo: %s | Party: %s "
-
-    print "[Dota-MMR] Updating mmr"
-
-    with open('/var/www/twitch/%s/data' % channel, 'r') as d:
-        olddotadata = json.loads(d.readline())
-
-    wentok = updateMMR(channel)
-    if not wentok:
-        print "[Dota-MMR] SOMETHING MAY HAVE GONE HORRIBLY WRONG GETTING MMR"
-        return '[MMR Error: Something broke, try again later]'
-
-    with open('/var/www/twitch/%s/data' % channel, 'r') as d:
-        dotadata = json.loads(d.readline())
-
-    try:
-        dotadata['game_account_client']
-    except:
-        if dotadata['result'] == 15:
-            return '[MMR Error: Private profile?]'
-        if dotadata['result'] == 2:
-            return '[MMR Error]'
-
-    old_mmr_s = str(olddotadata['game_account_client']['solo_competitive_rank'])
-    old_mmr_p = str(olddotadata['game_account_client']['competitive_rank'])
-
-    new_mmr_s = str(dotadata['game_account_client']['solo_competitive_rank'])
-    new_mmr_p = str(dotadata['game_account_client']['competitive_rank'])
-
-    if None in [old_mmr_s, old_mmr_p, new_mmr_s, new_mmr_p]:
-        mmr_s_change = str(int(new_mmr_s or 0) - int(old_mmr_s or 0))
-        mmr_p_change = str(int(new_mmr_p or 0) - int(old_mmr_p or 0))
-    else:
-        mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
-        mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
-
-    if int(mmr_s_change) >= 0: mmr_s_change = '+' + mmr_s_change
-    if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
-
-    return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
 
 def get_match_mmr_string(channel):
     oldmmr = get_mmr_for_channel(channel)
