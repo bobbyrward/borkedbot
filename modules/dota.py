@@ -328,8 +328,8 @@ def get_match_mmr_string(channel):
     solostr = 'Solo: %s'
     partystr = 'Party: %s'
 
-    solommrupdate = oldmmr[0] and newmmr[0]
-    partymmrupdate = oldmmr[1] and newmmr[1]
+    solommrupdate = all([oldmmr[0] and newmmr[0]]) and oldmmr[0] != newmmr[0]
+    partymmrupdate = all([oldmmr[1] and newmmr[1]]) and oldmmr[1] != newmmr[1]
 
     if solommrupdate:
         solodiff = newmmr[0] - oldmmr[0]
