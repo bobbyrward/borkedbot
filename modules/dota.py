@@ -343,12 +343,14 @@ def get_match_mmr_string(channel):
             partydiff = '+' + str(partydiff)
         partystr += ' (%s)' % partydiff
 
-    if solommrupdate and partymmrupdate:
+    if all(newmmr):
         return outputstring % (solostr + ' | ' + partystr)
-    elif solommrupdate:
+    elif newmm[0]:
         return outputstring % solostr
-    else:
+    elif newmmr[1]:
         return outputstring % partystr
+    else:
+        return ''
 
 
 def getUserDotaData(channel, datapath = '/var/www/twitch/%s/data'):
