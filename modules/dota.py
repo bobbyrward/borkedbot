@@ -337,18 +337,22 @@ def get_match_mmr_string(channel):
             solodiff = '+' + str(solodiff)
         solostr += ' (%s)' % solodiff
 
+    solostr = solostr % newmmr[0]
+
     if partymmrupdate:
         partydiff = newmmr[1] - oldmmr[1]
         if partydiff >= 0:
             partydiff = '+' + str(partydiff)
         partystr += ' (%s)' % partydiff
 
+    partystr = partystr % newmmr[1]
+
     if all(newmmr):
         return outputstring % (solostr + ' | ' + partystr)
     elif newmmr[0]:
-        return outputstring % solostr % newmmr[0]
+        return outputstring %
     elif newmmr[1]:
-        return outputstring % partystr % newmmr[1]
+        return outputstring %
     else:
         return ''
 
