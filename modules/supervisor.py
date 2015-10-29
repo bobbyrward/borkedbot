@@ -99,3 +99,5 @@ def check_mail(bot):
 
     MailHandler.handle(bot, mail[0], mail[1])
 
+def send_mail(bot, x):
+    pass

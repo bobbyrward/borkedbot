@@ -141,7 +141,7 @@ def inspect_for_bad_link(event):
     foundlinks = list(set(foundlinks))
 
     if foundlinks:
-        print '[Moderation-Scan] Found: %s in %4.4fms' % (str(foundlinks), (time.time() - t0)*1000)
+        print '[Moderation-Scan] Found: %s in %.4fms' % (str(foundlinks), (time.time() - t0)*1000)
         for l in foundlinks:
             if not (l.startswith('http://') or l.startswith('https://')): l = 'http://' + l
 
@@ -153,7 +153,7 @@ def inspect_for_bad_link(event):
             badlink = scan_link(l)
 
             tim.stop()
-            print '[Moderation-Scan] Link scanned in %sms' % (tim.runtime() * 1000)
+            print '[Moderation-Scan] Link scanned in %.4f ms' % (tim.runtime() * 1000)
 
             if badlink:
                 print '[Moderation-Scan] Bad link detected (%s)' % badlink
