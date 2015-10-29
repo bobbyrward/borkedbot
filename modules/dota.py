@@ -350,9 +350,9 @@ def get_match_mmr_string(channel):
     if all(newmmr):
         return outputstring % (solostr + ' | ' + partystr)
     elif newmmr[0]:
-        return outputstring
+        return outputstring % solostr
     elif newmmr[1]:
-        return outputstring
+        return outputstring % partystr
     else:
         return ''
 
