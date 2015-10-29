@@ -690,74 +690,25 @@ def generate_message_commands(bot):
             print 'Channel not enabled for dota'
             return
 
-        return '[MMR function currently broken thanks valve]'
-
         if channel in dota.enabled_channels.keys() and not dota.enabled_channels[channel][1]:
             if user == channel:
                 rs = '''Hi %s, I can provide accurate MMR and automatically announce \
-                games when they are finished with mmr change and totals.  \
-                All that is required is that you add me on steam and that your dota profile isn't private.  \
+                games when they are finished with mmr change and totals. \
+                All that is required is that you display your mmr on your profile card in dota. \
                 Type "!mmrsetup" to get started (broadcaster only command).''' % channel
                 return rs
             else:
                 return
 
-        isupdate = args and args[0].lower() == 'update' and bot.user_is_op(user) | {'imayhaveborkedit'}
+        mmrdata = dota.fetch_mmr_for_channel(channel)
 
-        if args and 'update' in args[0].lower() and not isupdate:
-            outputstring = "Solo: %s | Party: %s  (Did not update, you're not a mod!)"
-        else:
-            outputstring = "Solo: %s | Party: %s"
-
-        if isupdate:
-            print "Updating mmr"
-
-            olddotadata = dota.getUserDotaData(channel)
-
-            wentok = dota.updateMMR(channel)
-
-            dotadata = dota.getUserDotaData(channel)
-
-            old_mmr_s = str(olddotadata['game_account_client']['solo_competitive_rank'] or 0)
-            old_mmr_p = str(olddotadata['game_account_client']['competitive_rank'] or 0)
-
-            new_mmr_s = str(dotadata['game_account_client']['solo_competitive_rank'] or 0)
-            new_mmr_p = str(dotadata['game_account_client']['competitive_rank'] or 0)
-
-            mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
-            mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
-
-            if new_mmr_s == 0: new_mmr_s = 'None'
-            if new_mmr_p == 0: new_mmr_p = 'None'
-
-            if int(mmr_s_change) != 0:
-                mmr_s_change = ' (%s%s)' % ('+' if int(mmr_s_change) > 0 else '', mmr_s_change)
+        if not any(mmrdata):
+            if user == channel:
+                return "%s: If you want this command to work you have to display your mmr on your profile card now." % user
             else:
-                mmr_s_change = ''
+                return 'No MMR data available.'
 
-            if int(mmr_p_change) != 0:
-                mmr_p_change = ' (%s%s)' % ('+' if int(mmr_p_change) > 0 else '', mmr_p_change)
-            else:
-                mmr_p_change = ''
-
-            return outputstring % ('%s%s' % (new_mmr_s, mmr_s_change), '%s%s' % (new_mmr_p, mmr_p_change))
-
-        else:
-            dotadata = dota.getUserDotaData(channel)
-
-            try:
-                mmr = dotadata['game_account_client']['solo_competitive_rank']
-                mmrp = dotadata['game_account_client']['competitive_rank']
-            except:
-                print '[Dota-MMR] Error getting mmr fields for %s, might be first time setup' % channel
-                wentok = dota.updateMMR(channel)
-                dotadata = dota.getUserDotaData(channel)
-
-                mmr = dotadata['game_account_client']['solo_competitive_rank']
-                mmrp = dotadata['game_account_client']['competitive_rank']
-
-            # ???
-            return outputstring % (mmr,mmrp)
+        return 'Solo: %s | Party: %s' % mmrdata
 
     coms.append(command.Command('!mmr', f, bot, repeatdelay=20))
 

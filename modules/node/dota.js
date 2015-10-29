@@ -1,16 +1,17 @@
 var steam = require("steam"),
     util = require("util"),
     fs = require("fs"),
-    http = require('http'),
+    crypto = require("crypto"),
     dota2 = require("dota2"),
-    bot = new steam.SteamClient(),
-    Dota2 = new dota2.Dota2Client(bot, true),
-    zerorpc = require("zerorpc"),
 
-    clienthellos = 0,
-    clienthellolimit = 10,
-    relogs = 0,
-    reloglimit = 10,
+    zerorpc = require("zerorpc"),
+    request = require('request'),
+    FeedParser = require('feedparser'),
+
+    steamClient = new steam.SteamClient(),
+    steamUser = new steam.SteamUser(steamClient),
+    steamFriends = new steam.SteamFriends(steamClient),
+    Dota2 = new dota2.Dota2Client(steamClient, true),
 
     adminids = ['76561198030495011'],
     chatkeymap = {},
@@ -22,109 +23,112 @@ var steam = require("steam"),
     steam_rss_datas = [],
     dota_rss_datas = [];
 
+    
+// Load config
+global.config = require("./config");    
 
 /* Steam logic */
-var onSteamLogOn = function onSteamLogOn(){
-        util.log("Logged on.");
+var onSteamLogOn = function onSteamLogOn(logonResp) {
+        if (logonResp.eresult == steam.EResult.OK) {
+            steamFriends.setPersonaState(steam.EPersonaState.Busy); // to display your steamClient's status as "Online"
+            steamFriends.setPersonaName("Borkedbot [Maintenance]"); // to change its nickname
+            util.log("Logged on.");
+            Dota2.launch();
+            Dota2.on("ready", function() {
+                console.log("Node-dota2 ready.");
+            });
+            Dota2.on("unready", function onUnready() {
+                console.log("Node-dota2 unready.");
+            });
 
-        bot.setPersonaState(steam.EPersonaState.Online);
-        Dota2.launch();
+            Dota2.on("chatMessage", function(channel, personaName, message) {
+                util.log([channel, personaName, message].join(", "));
+            });
 
-        Dota2.on("ready", function() {
-            util.log("Node-dota2 ready.");
-        });
+            Dota2.on("guildInviteData", function(guildId, guildName, inviter) {
+                // Dota2.setGuildAccountRole(guildId, 75028261, 3);
+                 util.log('Got guild invite to "' + guildName + '" by ' + inviter + ' ('+guildId+')');
+            });
+            
+            Dota2.on("profileData", function(accountID, profileData) {
+                util.log("Got data for " + accountID);
+            });
 
-        Dota2.on("hello", function() {
-            // clienthellos += 1;
-            // if (clienthellos > clienthellolimit) {
-            //     util.log("Too many hellos, restarting doto");
-            //     Dota2.exit();
-            //     Dota2.launch();
-            //     clienthellos = 0;
-            // }
-        });
+            Dota2.on("profileCardData", function(accountID, profileCardData) {
+                util.log("Got profile card data for " + accountID);
+                // console.log(JSON.stringify(profileCardData));
+            });
 
-        Dota2.on("unready", function onUnready(){
-            util.log("Node-dota2 unready.");
-        });
+            Dota2.on("practiceLobbyCreateResponse", function(lobbyresponse, id) {
+                if (id == '76561198153108180') {
+                    // clienthellos += 1;
+                    // if (clienthellos > clienthellolimit) {
+                        // util.log("Too many lobbies, restarting doto");
+                        // Dota2.exit();
+                        // Dota2.launch();
+                        // clienthellos = 0;
+                        // relogs += 1;
+                        // if (relogs > reloglimit) {
+                            // process.exit();
+                        // }
+                    // }
+                    return;
+                };
 
-        Dota2.on("chatMessage", function(channel, personaName, message) {
-            util.log([channel, personaName, message].join(", "));
-        });
+                util.log("Lobby something'd ");
+                console.log("id: ", id);
+                console.log("Response: ", util.inspect(lobbyresponse));
+            });
 
-        Dota2.on("guildInvite", function(guildId, guildName, inviter, guildInviteDataObject){
-            // Dota2.setGuildAccountRole(guildId, 75028261, 3);
-            util.log('Got guild invite to "' + guildName + '" by ' + inviter + ' ('+guildId+')');
-        });
+            Dota2.on("practiceLobbyJoinResponse", function(result, response){
+                console.log('MAYBE THIS IS WHAT I WANT');
+                // Dota2.joinChat(response.channelName, dota2.DOTAChatChannelType_t.DOTAChannelType_Lobby);
+            });
 
-        Dota2.on("profileData", function(accountID, profileData) {
-            util.log("Got data for " + accountID);
-            // util.log(profileData);
-        });
+            Dota2.on("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
+                util.log('Got matchmaking stats');
+                //util.log("Wait times:\n")
+                //util.log(waitTimesByGroup)
+                //util.log("Players searching:\n")
+                //util.log(searchingPlayersByGroup)
+            });
 
-        Dota2.on("practiceLobbyCreateResponse", function(lobbyresponse, id) {
-            if (id == '76561198153108180') {
-                clienthellos += 1;
-                if (clienthellos > clienthellolimit) {
-                    util.log("Too many lobbies, restarting doto");
-                    Dota2.exit();
-                    Dota2.launch();
-                    clienthellos = 0;
-                    relogs += 1;
-                    if (relogs > reloglimit) {
-                        process.exit();
-                    }
-                }
-                return;
-            };
 
-            util.log("Lobby something'd ");
-            console.log("id: ", id);
-            console.log("Response: ", util.inspect(lobbyresponse));
-        });
 
-        Dota2.on("practiceLobbyJoinResponse", function(result, response){
-            console.log('MAYBE THIS IS WHAT I WANT');
-            // Dota2.joinChat(response.channelName, dota2.DOTAChatChannelType_t.DOTAChannelType_Lobby);
-        });
+            Dota2.on('error', function(err) {
+                console.error("dota: Help something borked ", err);
+            });
 
-        Dota2.on("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
-            util.log('Got matchmaking stats');
-            //util.log("Wait times:\n")
-            //util.log(waitTimesByGroup)
-            //util.log("Players searching:\n")
-            //util.log(searchingPlayersByGroup)
-        });
-
-        Dota2.on('error', function(err) {
-            util.error("dota: Help something borked ", err);
-        });
-
-        Dota2.on("unhandled", function(kMsg) {
-            util.log("UNHANDLED MESSAGE " + kMsg);
-        });
-    },
-    onSteamSentry = function onSteamSentry(sentry) {
-        util.log("Received sentry.");
-        require('fs').writeFileSync('sentry', sentry);
+            Dota2.on("unhandled", function(kMsg) {
+                util.log("UNHANDLED MESSAGE " + kMsg);
+            });
+        }
     },
     onSteamServers = function onSteamServers(servers) {
         util.log("Received servers.");
         fs.writeFile('servers', JSON.stringify(servers));
     },
-    onWebSessionID = function onWebSessionID(webSessionID) {
-        util.log("Received web session id.");
-        // steamTrade.sessionID = webSessionID;
-        bot.webLogOn(function onWebLogonSetTradeCookies(cookies) {
-            util.log("Received cookies.");
-            for (var i = 0; i < cookies.length; i++) {
-                // steamTrade.setCookie(cookies[i]);
-            }
-        });
+    onSteamLogOff = function onSteamLogOff(eresult) {
+        util.log("steam is derp and logged off");
+        console.log(arguments);
+        Dota2.exit();
+        relogs = 0;
+
+        setTimeout(steamUser.logOn(logOnDetails), 5000);
+    },
+    onSteamError = function onSteamError(err) {
+        console.error("steam: help something borked ", err);
+        if (err.eresult == 34) {
+            util.log("we got logged out");
+            Dota2.exit();
+        };
+        setTimeout(steamUser.logOn(logOnDetails), 5000);
     },
     onMessage = function onMessage(source, message, type, chatter) {
         // respond to both chat room and private messages
-        util.log('Received message');
+        // util.log('Received message');
+        // console.log(arguments);
+        return;
 
         var chattypes = {};
         for (var key in steam.EChatEntryType){
@@ -136,11 +140,11 @@ var onSteamLogOn = function onSteamLogOn(){
 
         // move over to switch eventually
         if (lmessage == 'test') {
-            bot.sendMessage(source, 'Yes hello this is test');
+            steamClient.sendMessage(source, 'Yes hello this is test');
         }
 
         if (lmessage == 'help') {
-            bot.sendMessage(source, 'I\'m working on it!');
+            steamClient.sendMessage(source, 'I\'m working on it!');
         }
 
         if (lmessage.indexOf('link twitch') > -1) {}
@@ -148,21 +152,21 @@ var onSteamLogOn = function onSteamLogOn(){
 
         if (lmessage.indexOf('enable mmr') > -1) {
             if (lmessage.split(' ')[2] == undefined) {
-                bot.sendMessage(source, 'You need to give me your twitch channel (enable mmr your_twitch_channel)');
+                steamClient.sendMessage(source, 'You need to give me your twitch channel (enable mmr your_twitch_channel)');
                 return;
             }
 
             randomkey = (Math.random()+Math.random()).toString(36).substr(2,6);
             chatkeymap[lmessage.split(' ')[2]] = [randomkey, source];
 
-            bot.sendMessage(source, "Verification key generated for twitch channel \"" + lmessage.split(' ')[2] + "\".  "
+            steamClient.sendMessage(source, "Verification key generated for twitch channel \"" + lmessage.split(' ')[2] + "\".  "
                 + "Please use the following command in your chat to complete the verification: !mmrsetup verify " + randomkey);
         }
 
         if (adminids.indexOf(source) > -1) {
             // Commands
             if (lmessage.indexOf('verify dump') > -1) {
-                bot.sendMessage(source, JSON.stringify(chatkeymap));
+                steamClient.sendMessage(source, JSON.stringify(chatkeymap));
             }
         }
     },
@@ -170,13 +174,13 @@ var onSteamLogOn = function onSteamLogOn(){
         util.log(steamID + ':' + relation);
         if (relation == steam.EFriendRelationship.PendingInvitee){
             util.log("Got friend request from " + steamID);
-            bot.addFriend(steamID);
+            steamClient.addFriend(steamID);
 
             if (steamID in pendingenables) {
-                bot.sendMessage(steamID, "Twitch user " + pendingenables[steamID] + " has requested to enable mmr data features for this account.  " +
+                steamClient.sendMessage(steamID, "Twitch user " + pendingenables[steamID] + " has requested to enable mmr data features for this account.  " +
                     "If you have received this message in error, or have no idea what this is, simply ignore this message or block this bot.");
 
-                bot.sendMessage(steamID, "To generate a verification code, please type this: enable mmr your_twitch_channel");
+                steamClient.sendMessage(steamID, "To generate a verification code, please type this: enable mmr your_twitch_channel");
             };
         }
         // send message to verify or whatever?
@@ -189,7 +193,7 @@ var onSteamLogOn = function onSteamLogOn(){
         delete otherargs[0];
         delete otherargs[1];
 
-        // util.log('Dota status: ' + steamid + ' - ' + userstatusstring + ' - ' + JSON.stringify(otherargs));
+        util.log('Dota status: ' + steamid + ' - ' + userstatusstring + ' - ' + JSON.stringify(otherargs));
         if (userstate !== '#DOTA_RP_PLAYING_AS') {
             util.log('Dota status: ' + steamid + ' - ' + userstatusstring);
             delete dotauserplayingas[steamid];
@@ -199,47 +203,70 @@ var onSteamLogOn = function onSteamLogOn(){
 
         dotauserstatus[steamid] = userstate;
 
-    },
-    onSteamError = function onSteamError(err) {
-        util.error("steam: Help something borked ", err);
-        if (err.eresult == 34) {
-            util.log("we got logged out");
-            Dota2.exit();
-        };
-    },
-    onSteamLogoff = function onSteamLogoff() {
-        util.log("steam is derp and logged off");
-        console.log(arguments);
-        Dota2.exit();
-        relogs = 0;
-
-        setTimeout(bot.logOn(logOnDetails), 5000);
     };
 
+steamUser.on('updateMachineAuth', function(sentry, callback) {
+        fs.writeFileSync('sentry', sentry.bytes)
+        util.log("sentryfile saved");
+    callback({ sha_file: crypto.createHash('sha1').update(sentry.bytes).digest() });
+});
 
-global.config = require("./config");
 
 // Login, only passing authCode if it exists
 var logOnDetails = {
-    "accountName": config.steam_user,
-    "password": config.steam_pass,
+    "account_name": global.config.steam_user,
+    "password": global.config.steam_pass,
 };
-
-if (config.steam_guard_code) logOnDetails.authCode = config.steam_guard_code;
-
+// if (global.config.steam_guard_code) logOnDetails.authCode = global.config.steam_guard_code;
 var sentry = fs.readFileSync('sentry');
-if (sentry.length) logOnDetails.shaSentryfile = sentry;
+if (sentry.length) logOnDetails.sha_sentryfile = sentry;
 
-bot.logOn(logOnDetails);
-bot.on("loggedOn", onSteamLogOn)
-    .on('loggedOff', onSteamLogoff)
-    .on('sentry', onSteamSentry)
-    .on('servers', onSteamServers)
-    .on('webSessionID', onWebSessionID)
-    .on('message', onMessage)
-    .on('richPresence', onRichPresence)
-    .on('friend', onFriend)
-    .on('error', onSteamError);
+steamClient.connect();
+steamClient.on('connected', function() { steamUser.logOn(logOnDetails); });
+steamClient.on('logOnResponse', onSteamLogOn);
+steamClient.on('loggedOff', onSteamLogOff);
+steamClient.on('error', onSteamError);
+steamClient.on('servers', onSteamServers);
+steamClient.on('message', onMessage);
+steamClient.on('richPresence', onRichPresence);
+steamClient.on('friend', onFriend);
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+// var zrpcserver = new zerorpc.Server({});
 
 var zrpcserver = new zerorpc.Server({
 
@@ -272,7 +299,7 @@ var zrpcserver = new zerorpc.Server({
 
     status: function(reply) {
         reply = arguments[arguments.length - 1];
-        reply(null, [bot.loggedOn, Dota2._gcReady]);
+        reply(null, [steamClient.loggedOn, Dota2._gcReady]);
     },
     launchdota: function(reply) {
         reply = arguments[arguments.length - 1];
@@ -306,7 +333,7 @@ var zrpcserver = new zerorpc.Server({
     },
     getmmstats: function(reply) {
         reply = arguments[arguments.length - 1];
-        Dota2.matchmakingStatsRequest();
+        Dota2.requestMatchmakingStats();
 
         Dota2.once("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
             var mmdata = {};
@@ -329,7 +356,7 @@ var zrpcserver = new zerorpc.Server({
             reply("GC unready")
         }
 
-        Dota2.matchDetailsRequest(matchid, function(err, response){
+        Dota2.requestMatchDetails(matchid, function(err, response){
             if (err){
                 console.log(err);
                 reply("You probably ran out of requests, see console.")
@@ -408,13 +435,43 @@ var zrpcserver = new zerorpc.Server({
         };
 
         util.log("ZRPC: Updating mmr for " + channel);
+        // console.log(arguments);
 
-        Dota2.profileRequest(dotaid, true, function(err, body){
+        Dota2.requestProfileCard(Number(dotaid), true, function(err, body){
             fs.writeFileSync(util.format('/var/www/twitch/%s/data', channel), JSON.stringify(body));
             util.log(util.format('Wrote data for %s', channel));
             reply(null, true);
         });
     },
+
+    getmmrfordotaid: function(dotaid, reply) {
+        reply = arguments[arguments.length - 1];
+        dotaid = typeof dotaid !== 'function' ? dotaid : null;
+
+        if (!dotaid) {
+            reply("Bad arguments");
+            return;
+        }
+
+        if (!Dota2._gcReady) {
+            reply(null, false);
+            return;
+        }
+
+        util.log("ZRPC: Fetching mmr for " + dotaid);
+
+        Dota2.requestProfileCard(Number(dotaid), function(err, body){
+            util.log(util.format('Got data for %s', dotaid));
+            var data = {};
+            body.slots.forEach(function(item) {
+                if (item.stat) {
+                    data[item.stat.stat_id] = item.stat.stat_score;
+                } 
+            });
+            reply(null, [data[1], data[2]]);
+        });
+    },
+
     verifycheck: function(channel, vkey, reply) {
         reply = arguments[arguments.length - 1];
 
@@ -752,11 +809,11 @@ var zrpcserver = new zerorpc.Server({
         };
 
         if (typeof h_id == 'number') {
-            Dota2.findSourceTVGames({start:gameoffset, heroid:h_id}, function(resp) {
+            Dota2.requestSourceTVGames({start:gameoffset, heroid:h_id}, function(resp) {
                 reply(null, resp);
             });
         } else {
-            Dota2.findSourceTVGames({start:gameoffset}, function(resp) {
+            Dota2.requestSourceTVGames({start:gameoffset}, function(resp) {
                 reply(null, resp);
             });
         };
@@ -810,32 +867,55 @@ var zrpcserver = new zerorpc.Server({
     }
 });
 
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
 zrpcserver.on("error", function(err) {
     console.error("RPC server error: ", err);
 });
 
 zrpcserver.bind("tcp://0.0.0.0:29390");
+console.log('Starting zrpc server');
 
 process.on('error', function(err) {
-    console.error("Help something borked: ", err);
+    console.error("Process error: ", err);
 });
-
-
-//
-// RSS stuff
-//
-
-var request = require('request'),
-    FeedParser = require('feedparser');
 
 
 function done(err) {
     if (err) {
-        console.log('WE HAVE ERROR');
+        console.log('WE HAVE RSS ERROR');
         // console.log(err, err.stack);
         console.log(JSON.stringify(err));
     }
-}
+};
 
 function get_steam_news_rss(entries) {
     entries = typeof entries == 'number' ? entries : 1;
@@ -874,7 +954,7 @@ function get_steam_news_rss(entries) {
         // And boom goes the dynamite
         res.pipe(feedparser);
     });
-}
+};
 
 function get_dota_rss(entries) {
     entries = typeof entries == 'number' ? entries : 1;
@@ -913,12 +993,11 @@ function get_dota_rss(entries) {
         // And boom goes the dynamite
         res.pipe(feedparser);
     });
-}
-
+};
 
 function do_rss_updates() {
     try {
-        util.log('Grabbing RSS data');
+        // util.log('Grabbing RSS data');
         get_steam_news_rss(10);
         get_dota_rss(10);
     } catch (ex) {
@@ -927,62 +1006,9 @@ function do_rss_updates() {
 };
 do_rss_updates();
 
-var rssEvent = setInterval(do_rss_updates, 30000);
+var rssEvent = setInterval(do_rss_updates, 20000);
 rssEvent.unref();
 
-
-//
-//
-//
-
-/*
-
-Steam friend status enum:
-
-    None              = 0;
-    Blocked           = 1;
-    PendingInvitee    = 2; obsolete "renamed to RequestRecipient"
-    RequestRecipient  = 2;
-    Friend            = 3;
-    RequestInitiator  = 4;
-    PendingInviter    = 4;  obsolete "renamed to RequestInitiator"
-    Ignored           = 5;
-    IgnoredFriend     = 6;
-    SuggestedFriend   = 7;
-    Max               = 8;
-
-
-Dota matchmaking regions
-
-    ['USWest',               matchgroup: 0
-    'USEast',               matchgroup: 1
-    'Europe',               matchgroup: 2
-    'Singapore',            matchgroup: 3
-    'Shanghai',             matchgroup: 4
-    'Brazil',               matchgroup: 5
-    'Korea',                matchgroup: 6
-    'Austria',              matchgroup: 8
-    'Stockholm',            matchgroup: 7
-    'Australia',            matchgroup: 9
-    'SouthAfrica',          matchgroup: 10
-    'PerfectWorldTelecom',  matchgroup: 11
-    'PerfectWorldUnicom',   matchgroup: 12
-    'Dubai',                matchgroup: 13
-    'Chile',                matchgroup: 14
-    'Peru']                 matchgroup: 15
-
-
-https://github.com/DoctorMcKay/node-steamcommunity
-
-request.post('http://steamcommunity.com/groups/group_url/announcements', {form: {
-    sessionID: g_sessionID,
-    action: 'post',
-    headline: 'Announcement Title',
-    body: "Announcement content"
-}});
-
-
-*/
 
 var DOTA_RP_STATUSES = {
     "closing"                            : "Closing",
@@ -1034,3 +1060,54 @@ var DOTA_RP_STATUSES = {
                  'Dubai',
                  'Chile',
                  'Peru'];
+
+
+/*
+
+Steam friend status enum:
+
+    None              = 0;
+    Blocked           = 1;
+    PendingInvitee    = 2; obsolete "renamed to RequestRecipient"
+    RequestRecipient  = 2;
+    Friend            = 3;
+    RequestInitiator  = 4;
+    PendingInviter    = 4;  obsolete "renamed to RequestInitiator"
+    Ignored           = 5;
+    IgnoredFriend     = 6;
+    SuggestedFriend   = 7;
+    Max               = 8;
+
+
+Dota matchmaking regions
+
+    ['USWest',               matchgroup: 0
+    'USEast',               matchgroup: 1
+    'Europe',               matchgroup: 2
+    'Singapore',            matchgroup: 3
+    'Shanghai',             matchgroup: 4
+    'Brazil',               matchgroup: 5
+    'Korea',                matchgroup: 6
+    'Austria',              matchgroup: 8
+    'Stockholm',            matchgroup: 7
+    'Australia',            matchgroup: 9
+    'SouthAfrica',          matchgroup: 10
+    'PerfectWorldTelecom',  matchgroup: 11
+    'PerfectWorldUnicom',   matchgroup: 12
+    'Dubai',                matchgroup: 13
+    'Chile',                matchgroup: 14
+    'Peru']                 matchgroup: 15
+
+
+https://github.com/DoctorMcKay/node-steamcommunity
+
+request.post('http://steamcommunity.com/groups/group_url/announcements', {form: {
+    sessionID: g_sessionID,
+    action: 'post',
+    headline: 'Announcement Title',
+    body: "Announcement content"
+}});
+
+
+*/
+

@@ -107,5 +107,9 @@ testfile
 
 modules/test
 modules/node-test
+modules/node/config.js
+modules/node/sentry
+modules/node/servers
+modules/node/node_modules/
 modules/skype/*
 secrets/*.py
