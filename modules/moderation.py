@@ -216,6 +216,8 @@ def scan_link(link):
         # I don't care about this stuff for the things above
         print '[Moderation-Scan] Redirect destination status:', r2.status_code, r2.reason
         print '[Moderation-Scan] Redirect history:', [x.url for x in r2.history]
+        if r2.url != r2.history[-1].url:
+            print '[Moderation-Scan] Destination:', r2.url
         print r2.headers
 
         # 'content-disposition': 'attachment; filename="Screenshot###.scr"

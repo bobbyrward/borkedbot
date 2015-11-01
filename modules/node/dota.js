@@ -461,6 +461,7 @@ var zrpcserver = new zerorpc.Server({
         util.log("ZRPC: Fetching mmr for " + dotaid);
 
         Dota2.requestProfileCard(Number(dotaid), function(err, body){
+            console.log(JSON.stringify(body));
             util.log(util.format('Got data for %s', dotaid));
             var data = {};
             body.slots.forEach(function(item) {
