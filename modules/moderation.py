@@ -209,16 +209,15 @@ def scan_link(link):
 
         loc = r.headers.get('location')
 
-        for sl in moderation.SPAM_LIST:
-            if sl in loc:
-                return 'Redirect to spam'
-
-        # I don't care about this stuff for the things above
         print '[Moderation-Scan] Redirect destination status:', r2.status_code, r2.reason
         print '[Moderation-Scan] Redirect history:', [x.url for x in r2.history]
         if r2.url != r2.history[-1].url:
             print '[Moderation-Scan] Destination:', r2.url
         print r2.headers
+
+        for sl in moderation.SPAM_LIST:
+            if sl in loc:
+                return 'Redirect to spam'
 
         # 'content-disposition': 'attachment; filename="Screenshot###.scr"
         if r2.headers.get('content-disposition', '').startswith('attachment;'):
