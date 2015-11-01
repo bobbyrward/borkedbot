@@ -708,7 +708,12 @@ def generate_message_commands(bot):
             else:
                 return 'No MMR data available.'
 
-        return 'Solo: %s | Party: %s' % mmrdata
+        if all(mmrdata):
+            return 'Solo: %s | Party: %s' % mmrdata
+        elif mmrdata[0]:
+            return 'Solo: %s' % mmrdata[0]
+        elif mmrdata[1]:
+            return 'Party: %s' % mmrdata[1]
 
     coms.append(command.Command('!mmr', f, bot, repeatdelay=20))
 
@@ -1357,7 +1362,6 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!crosschat', f, bot, True))
 
-
     # def f(channel, user, message, args, data, bot):
     #     if args:
     #         if args[0] == 'start':
@@ -1388,6 +1392,30 @@ def generate_message_commands(bot):
         else:
             return '%s: 1d6 -> %s' % (user, random.randint(1,6))
     coms.append(command.Command('!roll', f, bot, True))
+
+
+    def f(channel, user, message, args, data, bot):
+        import node, dota, twitchapi
+
+        linked_id = twitchapi.get_steam_id_from_twitch(user)
+        if not linked_id:
+            return 'I dunno!'
+
+        tsid = dota.determineSteamid(linked_id)
+
+        smmr, pmmr = node.get_mmr_for_dotaid(dota.steamToDota(tsid))
+
+        if smmr:
+            return '%s: %s!' % (user, smmr)
+        elif pmmr:
+            return '%s: %s!' % (user, pmmr)
+        else:
+            return 'I dunno!'
+
+    coms.append(command.Command('!mymmr', f, bot, repeatdelay=1))
+
+
+
 
 
     ######################################################################

@@ -324,7 +324,7 @@ def get_match_mmr_string(channel):
     if not any(newmmr):
         return '[MMR Error: No data]'
 
-    outputstring = "Updated MMR: %s"
+    outputstring = "MMR: %s"
     solostr = 'Solo: %s'
     partystr = 'Party: %s'
 
