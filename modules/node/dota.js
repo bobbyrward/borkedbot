@@ -802,7 +802,9 @@ var zrpcserver = new zerorpc.Server({
         reply = arguments[arguments.length - 1];
 
         gameoffset = typeof gameoffset == 'number' ? gameoffset : null;
-        // h_id = typeof h_id == 'number' ? h_id : null;
+        h_id = typeof h_id == 'number' ? h_id : null;
+
+        console.log(arguments);
 
         if (!Dota2._gcReady) {
             reply('GC unready');
