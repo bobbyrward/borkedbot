@@ -141,7 +141,7 @@ def inspect_for_bad_link(event):
     foundlinks = list(set(foundlinks))
 
     if foundlinks:
-        print '[Moderation-Scan] Found: %s in %4.4fms' % (str(foundlinks), (time.time() - t0)*1000)
+        print '[Moderation-Scan] Found: %s in %.4fms' % (str(foundlinks), (time.time() - t0)*1000)
         for l in foundlinks:
             if not (l.startswith('http://') or l.startswith('https://')): l = 'http://' + l
 
@@ -153,7 +153,7 @@ def inspect_for_bad_link(event):
             badlink = scan_link(l)
 
             tim.stop()
-            print '[Moderation-Scan] Link scanned in %sms' % (tim.runtime() * 1000)
+            print '[Moderation-Scan] Link scanned in %.4f ms' % (tim.runtime() * 1000)
 
             if badlink:
                 print '[Moderation-Scan] Bad link detected (%s)' % badlink
@@ -209,14 +209,15 @@ def scan_link(link):
 
         loc = r.headers.get('location')
 
+        print '[Moderation-Scan] Redirect destination status:', r2.status_code, r2.reason
+        print '[Moderation-Scan] Redirect history:', [x.url for x in r2.history]
+        if r2.url != r2.history[-1].url:
+            print '[Moderation-Scan] Destination:', r2.url
+        print r2.headers
+
         for sl in moderation.SPAM_LIST:
             if sl in loc:
                 return 'Redirect to spam'
-
-        # I don't care about this stuff for the things above
-        print '[Moderation-Scan] Redirect destination status:', r2.status_code, r2.reason
-        print '[Moderation-Scan] Redirect history:', [x.url for x in r2.history]
-        print r2.headers
 
         # 'content-disposition': 'attachment; filename="Screenshot###.scr"
         if r2.headers.get('content-disposition', '').startswith('attachment;'):

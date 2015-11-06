@@ -45,9 +45,7 @@ def steamToDota(steamid):
 
 def update_channels():
     global enabled_channels
-    # print "[Dota] Updating enabled channels"
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
-    # os.system('touch %s' % os.path.abspath(__file__))
 
 def enable_channel(channel, dotaid, mmr=False):
     dotaid = steamToDota(determineSteamid(dotaid))
@@ -312,57 +310,51 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
 
 
-    finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + getmatchMMRstring(channel, dotaid) if getmmr else '') + (' -- ' + notableplayerdata if notableplayerdata else '')
+    finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + get_match_mmr_string(channel) if getmmr else '') + (' -- ' + notableplayerdata if notableplayerdata else '')
 
     if splitlongnotable:
         pass
 
     return finaloutput
 
+def get_match_mmr_string(channel):
+    oldmmr = get_mmr_for_channel(channel)
+    newmmr = fetch_mmr_for_channel(channel, True)
 
-def getmatchMMRstring(channel, dotaid):
-    return '[MMR function currently broken thanks valve]'
+    if not any(newmmr):
+        return '[MMR Error: No data]'
 
-    outputstring = "Updated MMR: Solo: %s | Party: %s "
+    outputstring = "MMR: %s"
+    solostr = 'Solo: %s'
+    partystr = 'Party: %s'
 
-    print "[Dota-MMR] Updating mmr"
+    solommrupdate = all([oldmmr[0] and newmmr[0]]) and oldmmr[0] != newmmr[0]
+    partymmrupdate = all([oldmmr[1] and newmmr[1]]) and oldmmr[1] != newmmr[1]
 
-    with open('/var/www/twitch/%s/data' % channel, 'r') as d:
-        olddotadata = json.loads(d.readline())
+    # if solommrupdate:
+        # solodiff = newmmr[0] - oldmmr[0]
+        # if solodiff >= 0:
+            # solodiff = '+' + str(solodiff)
+        # solostr += ' (%s)' % solodiff
 
-    wentok = updateMMR(channel)
-    if not wentok:
-        print "[Dota-MMR] SOMETHING MAY HAVE GONE HORRIBLY WRONG GETTING MMR"
-        return '[MMR Error: Something broke, try again later]'
+    solostr = solostr % newmmr[0]
 
-    with open('/var/www/twitch/%s/data' % channel, 'r') as d:
-        dotadata = json.loads(d.readline())
+    # if partymmrupdate:
+        # partydiff = newmmr[1] - oldmmr[1]
+        # if partydiff >= 0:
+            # partydiff = '+' + str(partydiff)
+        # partystr += ' (%s)' % partydiff
 
-    try:
-        dotadata['game_account_client']
-    except:
-        if dotadata['result'] == 15:
-            return '[MMR Error: Private profile?]'
-        if dotadata['result'] == 2:
-            return '[MMR Error]'
+    partystr = partystr % newmmr[1]
 
-    old_mmr_s = str(olddotadata['game_account_client']['solo_competitive_rank'])
-    old_mmr_p = str(olddotadata['game_account_client']['competitive_rank'])
-
-    new_mmr_s = str(dotadata['game_account_client']['solo_competitive_rank'])
-    new_mmr_p = str(dotadata['game_account_client']['competitive_rank'])
-
-    if None in [old_mmr_s, old_mmr_p, new_mmr_s, new_mmr_p]:
-        mmr_s_change = str(int(new_mmr_s or 0) - int(old_mmr_s or 0))
-        mmr_p_change = str(int(new_mmr_p or 0) - int(old_mmr_p or 0))
+    if all(newmmr):
+        return outputstring % (solostr + ' | ' + partystr)
+    elif newmmr[0]:
+        return outputstring % solostr
+    elif newmmr[1]:
+        return outputstring % partystr
     else:
-        mmr_s_change = str(int(new_mmr_s) - int(old_mmr_s))
-        mmr_p_change = str(int(new_mmr_p) - int(old_mmr_p))
-
-    if int(mmr_s_change) >= 0: mmr_s_change = '+' + mmr_s_change
-    if int(mmr_p_change) >= 0: mmr_p_change = '+' + mmr_p_change
-
-    return outputstring % ('%s (%s)' % (new_mmr_s, mmr_s_change), '%s (%s)' % (new_mmr_p, mmr_p_change))
+        return ''
 
 
 def getUserDotaData(channel, datapath = '/var/www/twitch/%s/data'):
@@ -377,6 +369,42 @@ def updateMMR(channel):
         raise TypeError("No id on record")
 
     return node.updateMMR(channel, dotaid)
+
+def read_mmr_for_channel(channel):
+    with open('/var/www/twitch/%s/data' % channel, 'r') as d:
+        dotadata = json.loads(d.readline())
+
+    try:
+        slotdata = [s['stat'] for s in dotadata['slots'] if s['stat']]
+        slotids = [s['stat_id'] for s in slotdata]
+        if not 1 in slotids:
+            return # no mmr displayed
+    except:
+        # I'll need to redo these
+        if dotadata['result'] == 15:
+            return '[MMR Error: Private profile?]'
+        if dotadata['result'] == 2:
+            return '[MMR Error]'
+
+    data = {item['stat_id']: item['stat_score'] for item in slotdata}
+
+    return (data[1], data[2])
+
+
+def fetch_mmr_for_channel(channel, save=False):
+    data = fetch_mmr_for_dotaid(settings.getdata('%s_dota_id' % channel))
+    if save:
+        settings.setdata('%s_last_mmr' % channel, data)
+    return data
+
+def fetch_mmr_for_dotaid(dotaid):
+    return tuple(node.get_mmr_for_dotaid(dotaid))
+
+def get_mmr_for_channel(channel):
+    try:
+        return settings.getdata('%s_last_mmr' % channel)
+    except:
+        return (None, None)
 
 
 def determineSteamid(steamthing):
@@ -425,27 +453,18 @@ def determineSteamid(steamthing):
 
 
 def getSourceTVLiveGameForPlayer(targetdotaid, heroid=None):
-    totalgames = node.get_source_tv_games(heroid=heroid)['numTotalGames']
+    totalgames = node.get_source_tv_games(heroid=heroid)['num_games']
 
-    for pagenum in range(0, int(round(float(totalgames)/6))):
-        games = node.get_source_tv_games(pagenum, heroid)['games']
+    for pagenum in range(0, 1):
+        games = node.get_source_tv_games(heroid=heroid)['game_list']
 
         for game in games:
-            try:
-                game['goodPlayers']
-                game['badPlayers']
-            except Exception, e:
-                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT (Radiant: %s, Dire: %s)" % (len(game.get('goodPlayers', [])), len(game.get('badPlayers', [])))
-                continue
-
-            players = []
-            players.extend(game['goodPlayers'])
-            players.extend(game['badPlayers'])
+            players = game['players']
             notable_players_found = []
             target_found = False
 
             for player in players:
-                if steamToDota(player['steamId']) == long(targetdotaid):
+                if long(player['account_id']) == long(targetdotaid):
                     return game
 
 def dec2ip(addr):
@@ -468,45 +487,36 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
 
 
     if heroid:
-        if pages > 17: pages = 17
+        if pages > 10: pages = 10
 
         print '[Dota-Notable] Searching using heroid %s' % heroid
 
 
     for pagenum in range(0, pages):
         # print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
-        games = node.get_source_tv_games(pagenum, heroid)['games']
+        games = node.get_source_tv_games(heroid=heroid)['game_list']
         # print 'received game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
         for game in games:
-            try:
-                game['goodPlayers']
-                game['badPlayers']
-            except Exception, e:
-                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT (Radiant: %s, Dire: %s)" % (len(game.get('goodPlayers', [])), len(game.get('badPlayers', [])))
-                continue
-
-            players = []
-            players.extend(game['goodPlayers'])
-            players.extend(game['badPlayers'])
+            players = game['players']
             notable_players_found = []
             target_found = False
 
             for player in players:
-                if steamToDota(player['steamId']) in notable_players:
-                    print '[Dota-Notable] %s (%s)' % (player['name'], notable_players[steamToDota(player['steamId'])])
+                if player['account_id'] in notable_players:
+                    print '[Dota-Notable] %s (%s)' % ('', notable_players[player['account_id']])
 
                     try:
-                        playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
+                        playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['hero_id'])][0])
                     except:
                         playerhero = POSITION_COLORS[players.index(player)]
 
-                    if long(steamToDota(player['steamId'])) != long(targetdotaid):
-                        notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
+                    if long(player['account_id']) != long(targetdotaid):
+                        notable_players_found.append((notable_players[player['account_id']], playerhero))
                     # else:
                         # print '[Dota-Notable] Discounting target player'
 
-                if steamToDota(player['steamId']) == long(targetdotaid):
+                if player['account_id'] == long(targetdotaid):
                     print '[Dota-Notable] found target player'
                     target_found = True
 
