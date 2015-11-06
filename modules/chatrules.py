@@ -710,12 +710,12 @@ def generate_message_commands(bot):
 
         if all(mmrdata):
             return 'Solo: %s | Party: %s' % mmrdata
-        elif mmrdata[0]:
+        elif mmrdata[0] is not None:
             return 'Solo: %s' % mmrdata[0]
-        elif mmrdata[1]:
+        elif mmrdata[1] is not None:
             return 'Party: %s' % mmrdata[1]
 
-    coms.append(command.Command('!mmr', f, bot, repeatdelay=20))
+    coms.append(command.Command('!mmr', f, bot, repeatdelay=10))
 
     def f(channel, user, message, args, data, bot): #TODO: rework this since the bot can't add people
         import dota, node, settings
@@ -919,7 +919,7 @@ def generate_message_commands(bot):
     coms.append(command.Command('!dotaconfig', f, bot, groups=me_and_broadcaster, repeatdelay=5))
 
     def f(channel, user, message, args, data, bot):
-        return "Currently broken due to Source 2.  Will be fixed Soon™."
+        # return "Currently broken due to Source 2.  Will be fixed Soon™."
 
         import dota, settings, node
 
@@ -936,7 +936,7 @@ def generate_message_commands(bot):
         if args:
             pages = int(args[0])
         else:
-            pages = 33
+            pages = 9
 
         playerid = settings.getdata('%s_dota_id' % channel)
 
@@ -945,7 +945,7 @@ def generate_message_commands(bot):
         else:
             playerheroid = None
 
-        if pages > 17 and playerheroid: pages = 17
+        if pages > 9 and playerheroid: pages = 9
         players = dota.searchForNotablePlayers(playerid, pages, playerheroid)
 
         if players is None:
@@ -1177,11 +1177,6 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!songrequest', 'This aint no nightbot stream', bot, channels=['monkeys_forever'], repeatdelay=10))
 
-    coms.append(command.SimpleCommand('!background',
-        "It's a bug with the TI2 animated background.  Launch option: \"-dashboard international_2012\" "+
-        "Console command: \"dota_embers 0\"  Then close, open, and close your console, and play a game.",
-        bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
-
     coms.append(command.SimpleCommand(['!fountainhooks', '!pudgefail', '!pudgefails'], 'rip root http://www.youtube.com/watch?v=7ba9nCot71w&hd=1',
         bot, channels=['monkeys_forever'], repeatdelay=10, targeted=True))
 
@@ -1399,18 +1394,18 @@ def generate_message_commands(bot):
 
         linked_id = twitchapi.get_steam_id_from_twitch(user)
         if not linked_id:
-            return 'I dunno!'
+            return 'I dunno! Link your steam and twitch accounts!'
 
         tsid = dota.determineSteamid(linked_id)
 
         smmr, pmmr = node.get_mmr_for_dotaid(dota.steamToDota(tsid))
 
-        if smmr:
+        if smmr is not None:
             return '%s: %s!' % (user, smmr)
-        elif pmmr:
+        elif pmmr is not None:
             return '%s: %s!' % (user, pmmr)
         else:
-            return 'I dunno!'
+            return 'I dunno! Stop hiding your mmr!'
 
     coms.append(command.Command('!mymmr', f, bot, repeatdelay=1))
 

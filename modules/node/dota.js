@@ -23,15 +23,15 @@ var steam = require("steam"),
     steam_rss_datas = [],
     dota_rss_datas = [];
 
-    
+
 // Load config
-global.config = require("./config");    
+global.config = require("./config");
 
 /* Steam logic */
 var onSteamLogOn = function onSteamLogOn(logonResp) {
         if (logonResp.eresult == steam.EResult.OK) {
             steamFriends.setPersonaState(steam.EPersonaState.Busy); // to display your steamClient's status as "Online"
-            steamFriends.setPersonaName("Borkedbot [Maintenance]"); // to change its nickname
+            steamFriends.setPersonaName("Borkedbot [Testing]"); // to change its nickname
             util.log("Logged on.");
             Dota2.launch();
             Dota2.on("ready", function() {
@@ -49,7 +49,7 @@ var onSteamLogOn = function onSteamLogOn(logonResp) {
                 // Dota2.setGuildAccountRole(guildId, 75028261, 3);
                  util.log('Got guild invite to "' + guildName + '" by ' + inviter + ' ('+guildId+')');
             });
-            
+
             Dota2.on("profileData", function(accountID, profileData) {
                 util.log("Got data for " + accountID);
             });
@@ -93,7 +93,10 @@ var onSteamLogOn = function onSteamLogOn(logonResp) {
                 //util.log(searchingPlayersByGroup)
             });
 
-
+            Dota2.on("newSourceTVGamesData", function(games_data){
+                // console.log("Yay new source tv games data");
+                // console.log(games_data);
+            });
 
             Dota2.on('error', function(err) {
                 console.error("dota: Help something borked ", err);
@@ -114,7 +117,7 @@ var onSteamLogOn = function onSteamLogOn(logonResp) {
         Dota2.exit();
         relogs = 0;
 
-        setTimeout(steamUser.logOn(logOnDetails), 5000);
+        setTimeout(steamClient.connect(), 5000);
     },
     onSteamError = function onSteamError(err) {
         console.error("steam: help something borked ", err);
@@ -122,7 +125,7 @@ var onSteamLogOn = function onSteamLogOn(logonResp) {
             util.log("we got logged out");
             Dota2.exit();
         };
-        setTimeout(steamUser.logOn(logOnDetails), 5000);
+        setTimeout(steamClient.connect(), 5000);
     },
     onMessage = function onMessage(source, message, type, chatter) {
         // respond to both chat room and private messages
@@ -212,7 +215,6 @@ steamUser.on('updateMachineAuth', function(sentry, callback) {
 });
 
 
-// Login, only passing authCode if it exists
 var logOnDetails = {
     "account_name": global.config.steam_user,
     "password": global.config.steam_pass,
@@ -232,26 +234,6 @@ steamClient.on('richPresence', onRichPresence);
 steamClient.on('friend', onFriend);
 
 
-
-
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -263,10 +245,6 @@ steamClient.on('friend', onFriend);
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-// var zrpcserver = new zerorpc.Server({});
 
 var zrpcserver = new zerorpc.Server({
 
@@ -467,7 +445,7 @@ var zrpcserver = new zerorpc.Server({
             body.slots.forEach(function(item) {
                 if (item.stat) {
                     data[item.stat.stat_id] = item.stat.stat_score;
-                } 
+                }
             });
             reply(null, [data[1], data[2]]);
         });
@@ -798,28 +776,34 @@ var zrpcserver = new zerorpc.Server({
         SourceTV
     */
 
-    getsourcetvgames: function(gameoffset, h_id, reply) {
+    getsourcetvgames: function(searchkey, leagueid, heroid, startgame, gamelistindex, lobbyids, reply) {
         reply = arguments[arguments.length - 1];
 
-        gameoffset = typeof gameoffset == 'number' ? gameoffset : null;
-        h_id = typeof h_id == 'number' ? h_id : null;
-
-        console.log(arguments);
+        searchkey = typeof searchkey == 'string' ? searchkey : '';
+        leagueid = typeof leagueid == 'number' ? leagueid : 0;
+        heroid = typeof heroid == 'number' ? heroid : 0;
+        startgame = typeof startgame == 'number' ? startgame : 0;
+        gamelistindex = typeof gamelistindex == 'number' ? gamelistindex : 0;
+        lobbyids = typeof lobbyids == 'object' ? lobbyids : [];
 
         if (!Dota2._gcReady) {
             reply('GC unready');
             return;
         };
 
-        if (typeof h_id == 'number') {
-            Dota2.requestSourceTVGames({start:gameoffset, heroid:h_id}, function(resp) {
-                reply(null, resp);
-            });
-        } else {
-            Dota2.requestSourceTVGames({start:gameoffset}, function(resp) {
-                reply(null, resp);
-            });
-        };
+        Dota2.newRequestSourceTVGames({
+            search_key: searchkey,
+            league_id: leagueid,
+            hero_id: heroid,
+            start_game: startgame,
+            game_list_index: gamelistindex,
+            lobby_ids: lobbyids
+        });
+
+        Dota2.once('newSourceTVGamesData', function(gamedata) {
+            console.log('Got game data');
+            reply(null, JSON.stringify(gamedata));
+        });
     },
 
     /*
@@ -882,22 +866,6 @@ var zrpcserver = new zerorpc.Server({
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////
-
-
 
 
 zrpcserver.on("error", function(err) {
@@ -912,25 +880,20 @@ process.on('error', function(err) {
 });
 
 
-function done(err) {
-    if (err) {
-        console.log('WE HAVE RSS ERROR');
-        // console.log(err, err.stack);
-        console.log(JSON.stringify(err));
-    }
+function rss_error(err) {
+    // if (err) console.log(util.format('RSS error: %s (%s)', err.message, JSON.stringify(err)));
 };
 
 function get_steam_news_rss(entries) {
     entries = typeof entries == 'number' ? entries : 1;
 
-    var feedparser = new FeedParser();
-    steam_rss_datas = [];
+    var feedparser = new FeedParser(),
+        steam_rss_datas = [];
 
-    feedparser.on('error', done);
-    feedparser.on('end', done);
+    feedparser.on('error', rss_error);
+    feedparser.on('end', rss_error);
 
     feedparser.on('readable', function() {
-        // console.log('ready to read');
         setTimeout(function(e){
             for (var i = 0; i < e; i++) {
                 var rsss = feedparser.read();
@@ -949,12 +912,9 @@ function get_steam_news_rss(entries) {
 
     req.setMaxListeners(50);
 
-    // Define our handlers
-    req.on('error', done);
+    req.on('error', rss_error);
     req.on('response', function(res) {
-        // console.log('HONK');
         if (res.statusCode != 200) return this.emit('error', new Error('Bad status code'));
-        // And boom goes the dynamite
         res.pipe(feedparser);
     });
 };
@@ -962,14 +922,13 @@ function get_steam_news_rss(entries) {
 function get_dota_rss(entries) {
     entries = typeof entries == 'number' ? entries : 1;
 
-    var feedparser = new FeedParser();
-    dota_rss_datas = [];
+    var feedparser = new FeedParser(),
+        dota_rss_datas = [];
 
-    feedparser.on('error', done);
-    feedparser.on('end', done);
+    feedparser.on('error', rss_error);
+    feedparser.on('end', rss_error);
 
     feedparser.on('readable', function() {
-        // console.log('ready to read');
         setTimeout(function(e){
             for (var i = 0; i < e; i++) {
                 var rsss = feedparser.read();
@@ -988,12 +947,9 @@ function get_dota_rss(entries) {
 
     req.setMaxListeners(50);
 
-    // Define our handlers
-    req.on('error', done);
+    req.on('error', rss_error);
     req.on('response', function(res) {
-        // console.log('HONK');
         if (res.statusCode != 200) return this.emit('error', new Error('Bad status code'));
-        // And boom goes the dynamite
         res.pipe(feedparser);
     });
 };

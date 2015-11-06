@@ -91,7 +91,7 @@ def get_replay_dir(channel):
 def get_mmr_for_dotaid(dotaid):
     with ZRPC() as zrpc:
         return zrpc.getmmrfordotaid(dotaid)
-    
+
 
 def updateMMR(channel, chid, autolaunch=True):
     with ZRPC() as zrpc:
@@ -168,7 +168,7 @@ def config_lobby(
     fill_with_bots = None, allow_spectating = None, pass_key = None, series_type = None,
     radiant_series_wins = None, dire_series_wins = None, allchat = None):
     # This doesn't work yet
-    
+
     # with ZRPC() as zrpc:
     args = {k:v for k,v in locals().items() if v is not None}
     return False
@@ -237,9 +237,22 @@ def kick_from_guild(guildid, targetid):
 
 ########
 
-def get_source_tv_games(page=0, heroid=None): # max page is 33
+def get_source_tv_games(**gcargs):
+    """
+    Args:
+        searchkey (str): Unknown
+        leagueid (int): Blah
+        heroid (int): Hero id
+        startgame (int): Unknown, [0,10,20...90]
+        gamelistindex (int): List version?
+        lobbyids (list): Unknown    
+    """
+
+    args = {'searchkey': '', 'leagueid': 0, 'heroid': 0, 'startgame': 0, 'gamelistindex': 0, 'lobbyids': []}
+    args.update({k:gcargs[k] for k in gcargs if k in args})
+
     with ZRPC() as zrpc:
-        return zrpc.getsourcetvgames(page*6, heroid)
+        return json.loads(zrpc.getsourcetvgames(args['searchkey'], args['leagueid'], args['heroid'], args['startgame'], args['gamelistindex'], args['lobbyids']))
 
 def get_user_status(steamid):
     with ZRPC() as zrpc:

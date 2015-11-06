@@ -331,19 +331,19 @@ def get_match_mmr_string(channel):
     solommrupdate = all([oldmmr[0] and newmmr[0]]) and oldmmr[0] != newmmr[0]
     partymmrupdate = all([oldmmr[1] and newmmr[1]]) and oldmmr[1] != newmmr[1]
 
-    if solommrupdate:
-        solodiff = newmmr[0] - oldmmr[0]
-        if solodiff >= 0:
-            solodiff = '+' + str(solodiff)
-        solostr += ' (%s)' % solodiff
+    # if solommrupdate:
+        # solodiff = newmmr[0] - oldmmr[0]
+        # if solodiff >= 0:
+            # solodiff = '+' + str(solodiff)
+        # solostr += ' (%s)' % solodiff
 
     solostr = solostr % newmmr[0]
 
-    if partymmrupdate:
-        partydiff = newmmr[1] - oldmmr[1]
-        if partydiff >= 0:
-            partydiff = '+' + str(partydiff)
-        partystr += ' (%s)' % partydiff
+    # if partymmrupdate:
+        # partydiff = newmmr[1] - oldmmr[1]
+        # if partydiff >= 0:
+            # partydiff = '+' + str(partydiff)
+        # partystr += ' (%s)' % partydiff
 
     partystr = partystr % newmmr[1]
 
@@ -453,27 +453,18 @@ def determineSteamid(steamthing):
 
 
 def getSourceTVLiveGameForPlayer(targetdotaid, heroid=None):
-    totalgames = node.get_source_tv_games(heroid=heroid)['numTotalGames']
+    totalgames = node.get_source_tv_games(heroid=heroid)['num_games']
 
-    for pagenum in range(0, int(round(float(totalgames)/6))):
-        games = node.get_source_tv_games(pagenum, heroid)['games']
+    for pagenum in range(0, 1):
+        games = node.get_source_tv_games(heroid=heroid)['game_list']
 
         for game in games:
-            try:
-                game['goodPlayers']
-                game['badPlayers']
-            except Exception, e:
-                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT (Radiant: %s, Dire: %s)" % (len(game.get('goodPlayers', [])), len(game.get('badPlayers', [])))
-                continue
-
-            players = []
-            players.extend(game['goodPlayers'])
-            players.extend(game['badPlayers'])
+            players = game['players']
             notable_players_found = []
             target_found = False
 
             for player in players:
-                if steamToDota(player['steamId']) == long(targetdotaid):
+                if long(player['account_id']) == long(targetdotaid):
                     return game
 
 def dec2ip(addr):
@@ -496,45 +487,36 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
 
 
     if heroid:
-        if pages > 17: pages = 17
+        if pages > 10: pages = 10
 
         print '[Dota-Notable] Searching using heroid %s' % heroid
 
 
     for pagenum in range(0, pages):
         # print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
-        games = node.get_source_tv_games(pagenum, heroid)['games']
+        games = node.get_source_tv_games(heroid=heroid)['game_list']
         # print 'received game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
         for game in games:
-            try:
-                game['goodPlayers']
-                game['badPlayers']
-            except Exception, e:
-                print "MALFORMED GAME DATA, DO SOMETHING ABOUT IT (Radiant: %s, Dire: %s)" % (len(game.get('goodPlayers', [])), len(game.get('badPlayers', [])))
-                continue
-
-            players = []
-            players.extend(game['goodPlayers'])
-            players.extend(game['badPlayers'])
+            players = game['players']
             notable_players_found = []
             target_found = False
 
             for player in players:
-                if steamToDota(player['steamId']) in notable_players:
-                    print '[Dota-Notable] %s (%s)' % (player['name'], notable_players[steamToDota(player['steamId'])])
+                if player['account_id'] in notable_players:
+                    print '[Dota-Notable] %s (%s)' % ('', notable_players[player['account_id']])
 
                     try:
-                        playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['heroId'])][0])
+                        playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['hero_id'])][0])
                     except:
                         playerhero = POSITION_COLORS[players.index(player)]
 
-                    if long(steamToDota(player['steamId'])) != long(targetdotaid):
-                        notable_players_found.append((notable_players[steamToDota(player['steamId'])], playerhero))
+                    if long(player['account_id']) != long(targetdotaid):
+                        notable_players_found.append((notable_players[player['account_id']], playerhero))
                     # else:
                         # print '[Dota-Notable] Discounting target player'
 
-                if steamToDota(player['steamId']) == long(targetdotaid):
+                if player['account_id'] == long(targetdotaid):
                     print '[Dota-Notable] found target player'
                     target_found = True
 
