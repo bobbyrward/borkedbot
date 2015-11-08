@@ -396,32 +396,6 @@ var zrpcserver = new zerorpc.Server({
         MMR functions
     */
 
-    updatemmr: function(channel, dotaid, reply) {
-        reply = arguments[arguments.length - 1];
-
-        channel = typeof channel !== 'function' ? channel : null;
-        dotaid = typeof dotaid !== 'function' ? dotaid : null;
-
-        if (!(channel && dotaid)) {
-            reply("Bad arguments");
-            return;
-        };
-
-        if (!Dota2._gcReady) {
-            reply(null, false);
-            return;
-        };
-
-        util.log("ZRPC: Updating mmr for " + channel);
-        // console.log(arguments);
-
-        Dota2.requestProfileCard(Number(dotaid), true, function(err, body){
-            fs.writeFileSync(util.format('/var/www/twitch/%s/data', channel), JSON.stringify(body));
-            util.log(util.format('Wrote data for %s', channel));
-            reply(null, true);
-        });
-    },
-
     getmmrfordotaid: function(dotaid, reply) {
         reply = arguments[arguments.length - 1];
         dotaid = typeof dotaid !== 'function' ? dotaid : null;

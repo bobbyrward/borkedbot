@@ -213,6 +213,7 @@ def scan_link(link):
         print '[Moderation-Scan] Redirect history:', [x.url for x in r2.history]
         if r2.url != r2.history[-1].url:
             print '[Moderation-Scan] Destination:', r2.url
+            loc = r2.url
         print r2.headers
 
         for sl in moderation.SPAM_LIST:
@@ -223,11 +224,14 @@ def scan_link(link):
         if r2.headers.get('content-disposition', '').startswith('attachment;'):
             if re.search('filename\=.+?\.scr', r2.headers.get('content-disposition'), re.IGNORECASE):
                 return '.scr download'
+        elif re.search(moderation.SPECIAL_REGEX['dropbox_scr'], loc):
+            return '.scr download'
 
 
         if r2.headers.get('transfer-encoding') == 'chunked':
+            pass
             # perhaps this should only return if it went through a link shortener
-            return 'Redirect to download'
+            # return 'Redirect to download'
 
     elif r.headers.get('content-type', '').startswith('text'): # preferably text/html but I don't know if that's always set
         #TODO: various if checks to make sure what we're about to do is sane

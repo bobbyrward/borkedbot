@@ -47,26 +47,21 @@ def update_channels():
     global enabled_channels
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
-def enable_channel(channel, dotaid, mmr=False):
-    dotaid = steamToDota(determineSteamid(dotaid))
+def enable_channel(channel, dotaid, mmr=True):
     en_chans = settings.getdata('dota_enabled_channels')
 
     settings.setdata('dota_enabled_channels', list(set(en_chans + [channel])))
     settings.trygetset('%s_common_name' % channel, channel)
     settings.setdata('%s_mmr_enabled' % channel, mmr)
-
-    settings.setdata('%s' % channel, dotaToSteam(dotaid), domain='steamids')
     settings.setdata('%s_dota_id' % channel, dotaid)
-
     update_channels()
 
 
 def disable_channel(channel, mmr=False):
     en_chans = settings.getdata('dota_enabled_channels')
     settings.setdata('dota_enabled_channels', list(set(en_chans) - set([channel])))
-    settings.setdata('%s_mmr_enabled' % channel, not mmr)
-
-    # update_channels() # ?
+    settings.setdata('%s_mmr_enabled' % channel, mmr)
+    update_channels()
 
 
 def getHeroes():
@@ -80,6 +75,48 @@ def getHeroIddict(localname=True):
 
 def getHeroNamedict(localname=True):
     return {h['id']:str(h['localized_name' if localname else 'name']) for h in getHeroes()['result']['heroes']}
+
+def determineSteamid(steamthing):
+    steamthing = str(steamthing)
+
+    if steamthing.startswith('STEAM_'):
+        sx,sy,sz = steamthing.split('_')[1].split(':')
+        maybesteamid = (int(sz)*2+int(sy)) + STEAM_TO_DOTA_CONSTANT
+
+    elif 'steamcommunity.com/profiles/' in steamthing:
+        maybesteamid = [x for x in steamthing.split('/') if x][-1]
+
+    elif 'steamcommunity.com/id/' in steamthing:
+        try:
+            result = steamapi.ResolveVanityURL([x for x in steamthing.split('/') if x][-1])['response']
+        except:
+            return False
+
+        if result['success'] == 1:
+            maybesteamid = result['steamid']
+        else:
+            maybesteamid = None
+    else:
+        import re
+        match = re.match(r'^\d*$', steamthing)
+        if match:
+            if long(match.string) < STEAM_TO_DOTA_CONSTANT:
+                maybesteamid  = long(match.string) + STEAM_TO_DOTA_CONSTANT
+            else:
+                maybesteamid = match.string
+        else:
+            try:
+                result = steamapi.ResolveVanityURL(steamthing)['response']
+            except:
+                return False
+
+            if result['success'] == 1:
+                maybesteamid = result['steamid']
+            else:
+                maybesteamid = None
+
+    print '[Dota] Determined that steamid for %s is %s' % (steamthing, maybesteamid)
+    return int(maybesteamid)
 
 
 def setup(bot):
@@ -119,7 +156,7 @@ def alert(event):
                 print '[Dota-Error] RSS check failure: %s (%s)' % (e,type(e))
 
 
-            # This is disabled until node-dota2 is fixed
+            # This is disabled until sourcetv stuff is fixed
             # try:
                 # nblurb = notablePlayerBlurb(event.channel)
                 # if nblurb:
@@ -357,40 +394,6 @@ def get_match_mmr_string(channel):
         return ''
 
 
-def getUserDotaData(channel, datapath = '/var/www/twitch/%s/data'):
-    with open(datapath % channel, 'r') as d:
-        return json.loads(d.readline())
-
-
-def updateMMR(channel):
-    try:
-        dotaid = str(settings.getdata('%s_dota_id' % channel))
-    except:
-        raise TypeError("No id on record")
-
-    return node.updateMMR(channel, dotaid)
-
-def read_mmr_for_channel(channel):
-    with open('/var/www/twitch/%s/data' % channel, 'r') as d:
-        dotadata = json.loads(d.readline())
-
-    try:
-        slotdata = [s['stat'] for s in dotadata['slots'] if s['stat']]
-        slotids = [s['stat_id'] for s in slotdata]
-        if not 1 in slotids:
-            return # no mmr displayed
-    except:
-        # I'll need to redo these
-        if dotadata['result'] == 15:
-            return '[MMR Error: Private profile?]'
-        if dotadata['result'] == 2:
-            return '[MMR Error]'
-
-    data = {item['stat_id']: item['stat_score'] for item in slotdata}
-
-    return (data[1], data[2])
-
-
 def fetch_mmr_for_channel(channel, save=False):
     data = fetch_mmr_for_dotaid(settings.getdata('%s_dota_id' % channel))
     if save:
@@ -406,50 +409,6 @@ def get_mmr_for_channel(channel):
     except:
         return (None, None)
 
-
-def determineSteamid(steamthing):
-    # print '[Dota] Determining steamid for input: %s' % steamthing
-
-    steamthing = str(steamthing)
-
-    if steamthing.startswith('STEAM_'):
-        sx,sy,sz = steamthing.split('_')[1].split(':')
-        maybesteamid = (int(sz)*2+int(sy)) + STEAM_TO_DOTA_CONSTANT
-
-    elif 'steamcommunity.com/profiles/' in steamthing:
-        maybesteamid = [x for x in steamthing.split('/') if x][-1] # oh I hope this works
-
-    elif 'steamcommunity.com/id/' in steamthing:
-        try:
-            result = steamapi.ResolveVanityURL([x for x in steamthing.split('/') if x][-1])['response']
-        except:
-            return False
-
-        if result['success'] == 1:
-            maybesteamid = result['steamid']
-        else:
-            maybesteamid = None
-    else:
-        import re
-        match = re.match('^\d*$', steamthing)
-        if match:
-            if long(match.string) < STEAM_TO_DOTA_CONSTANT:
-                maybesteamid  = long(match.string) + STEAM_TO_DOTA_CONSTANT
-            else:
-                maybesteamid = match.string
-        else:
-            try:
-                result = steamapi.ResolveVanityURL(steamthing)['response']
-            except:
-                return False
-
-            if result['success'] == 1:
-                maybesteamid = result['steamid']
-            else:
-                maybesteamid = None
-
-    print '[Dota] Determined that steamid for %s is %s' % (steamthing, maybesteamid)
-    return int(maybesteamid)
 
 
 def getSourceTVLiveGameForPlayer(targetdotaid, heroid=None):
