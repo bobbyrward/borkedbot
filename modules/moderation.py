@@ -227,6 +227,8 @@ def scan_link(link):
         elif re.search(moderation.SPECIAL_REGEX['dropbox_scr'], loc):
             return '.scr download'
 
+        if loc.endswith('.scr') and r2.headers.get('content-type', '').startswith('application'):
+            return '.scr download'
 
         if r2.headers.get('transfer-encoding') == 'chunked':
             pass
