@@ -23,16 +23,17 @@ def alert(event):
     # Sub alert
     if event.etype == 'twitchnotify':
         if event.channel in sub_alert_channel_list:
-            msg = 'ヽ༼ຈل͜ຈ༽ﾉ RE-SUB HYPE! PRAISE %s' % event.data.split()[0].upper()
+            sub_msg = 'ヽ༼ຈل͜ຈ༽ﾉ SUB HYPE! PRAISE %s' % event.data.split()[0].upper()
+            resub_msg = 'ヽ༼ຈل͜ຈ༽ﾉ RE-SUB HYPE! PRAISE %s' % event.data.split()[0].upper()
             if 'just subscribed!' in event.data:
                 extra = ''
                 if event.channel in ['monkeys_forever', 'kizzmett']:
                     # extra = ' | If you want an invite to the sub guild use !guildinvite (Make sure you have \"Allow guild invites from -> Anyone\" enabled)'
                     extra = ''
-                event.bot.botsay(msg + extra)
+                event.bot.botsay(sub_msg + extra)
 
             if 'subscribed for ' in event.data:
-                event.bot.botsay(msg)
+                event.bot.botsay(resub_msg)
 
     #######################################
     ## TODO:
