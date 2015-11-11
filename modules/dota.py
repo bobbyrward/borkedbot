@@ -47,15 +47,18 @@ def update_channels():
     global enabled_channels
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
-def enable_channel(channel, dotaid, mmr=True):
+def enable_channel(channel, dotaid, mmr=True, returntrueifnotnotable=False):
     en_chans = settings.getdata('dota_enabled_channels')
 
     settings.setdata('dota_enabled_channels', list(set(en_chans + [channel])))
     settings.trygetset('%s_common_name' % channel, channel)
     settings.setdata('%s_mmr_enabled' % channel, mmr)
     settings.setdata('%s_dota_id' % channel, dotaid)
-    update_channels()
 
+    update_channels()
+    if notifyifnotnotable:
+        if dotaid not in settings.getdata('dota_notable_players'):
+            return True
 
 def disable_channel(channel, mmr=False):
     en_chans = settings.getdata('dota_enabled_channels')

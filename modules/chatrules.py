@@ -726,7 +726,7 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot): #TODO: rework this since the bot can't add people
         import dota, node, settings, twitchapi
 
-        return "I'm in the middle of rewriting this command. Don't worry it's almost done."
+        # return "I'm in the middle of rewriting this command. Don't worry it's almost done."
 
         if user not in [channel, 'imayhaveborkedit']:
             return
@@ -737,7 +737,7 @@ def generate_message_commands(bot):
                 helpstr += 'Otherwise you need to supply a steam account, or dota id, or something like that.'
                 return helpstr
             else:
-                linked_id = twitchapi.get_steam_id_from_twitch(args[0])
+                linked_id = args[0]
                 if not linked_id:
                     return "I can't use that.  Give me something else."
         else:
@@ -752,9 +752,12 @@ def generate_message_commands(bot):
         if channel in en_chans:
             return "You already set this up.  Ask imayhaveborkedit if you have a question."
 
-        dota.enable_channel(channel, dota.steamToDota(ch_sid))
+        notablecheck = dota.enable_channel(channel, dota.steamToDota(ch_sid), True, True)
 
-        return "Ok, that should be it.  If you encounter any bugs or issues, let imayhaveborkedit know."
+        if notablecheck:
+            return "All that's left is to add this one to the notable players list, then thats it.  Let imayhaveborkedit know of any bugs or issues, and remember to mod the bot."
+        else:
+            return "Ok, that should be it.  Let imayhaveborkedit know of any bugs or issues, and remember to mod the bot."
 
     coms.append(command.Command('!mmrsetup', f, bot, groups=me_and_broadcaster, repeatdelay=5))
 
@@ -841,6 +844,8 @@ def generate_message_commands(bot):
         else:
             pages = 9
 
+        pages = 1 # I can remove this when its fixed
+
         playerid = settings.getdata('%s_dota_id' % channel)
 
         if node.get_user_status(dota.dotaToSteam(playerid)) == '#DOTA_RP_PLAYING_AS':
@@ -882,13 +887,14 @@ def generate_message_commands(bot):
     coms.append(command.Command('!nel', f, bot, repeatdelay=50))
 
     def f(channel, user, message, args, data, bot):
-        if channel not in ['monkeys_forever', 'moodota2']: return
-
         namemap = {
             'monkeys_forever': 'monkeys-forever',
             'moodota2': 'Moo',
-            'gixgaming': 'giX'
+            'gixgaming': 'giX',
+            'bloodynine_': 'Bloody Nine',
         }
+
+        if channel not in namemap: return
 
         import json, requests, time, datetime, dateutil, dateutil.tz, dateutil.relativedelta
         lburl = "http://www.dota2.com/webapi/ILeaderboard/GetDivisionLeaderboard/v0001?division=americas"
@@ -923,7 +929,7 @@ def generate_message_commands(bot):
         else:
             return minstr.format(channel, rank, mmr, reldelta).replace('rank 1 ', 'ヽ༼ຈل͜ຈ༽ﾉ rank 1 ヽ༼ຈل͜ຈ༽ﾉ ')
 
-    coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, repeatdelay=25))
+    coms.append(command.Command(['!leaderboard', '!leaderboards'], f, bot, repeatdelay=15))
 
     def f(channel, user, message, args, data, bot):
         if args:
@@ -1123,7 +1129,8 @@ def generate_message_commands(bot):
     # Tom ##############
 
     coms.append(command.SimpleCommand('!plugs', 'Links! http://www.facebook.com/unsanitylive | http://twitter.com/unsanitylive | ' +
-        'http://steamcommunity.com/groups/Unsanitylive | Like/Follow/Subscribe/whatever you want, that\'s where you can find Tom!',
+        'http://steamcommunity.com/groups/Unsanitylive | https://www.speq.me/unsanitylive/ | ' +
+        'Like/Follow/Subscribe/whatever you want, that\'s where you can find Tom!',
         bot, channels=['unsanitylive'], prependuser=False, repeatdelay=10))
 
     # Moo #############
