@@ -676,7 +676,7 @@ def generate_message_commands(bot):
 
         return textstr.format(user, channel) #+ " | Friendly reminder that BTTV has a /uptime command." if args else ''
 
-    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda', 'gixgaming'], repeatdelay=15))
+    coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda', 'gixgaming', 'bloodynine_'], repeatdelay=15))
 
 
     ######################################################################
@@ -1140,6 +1140,10 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand('!announcer', 'Weeaboo Onodera+Kongou waifu announcer > http://saylith.github.io/harem-announcer/',
        bot, channels=['moodota2'], targeted=True, repeatdelay=15))
 
+    # B9 ###############################
+
+    # coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'],
+    #     "https://www.youtube.com/playlist?list=PLCUELUXNSjikxw-Utn8E_XrdjDLNm13IO", bot, channels=['bloodynine_'], repeatdelay=10))
 
     ######################################################################
     #
