@@ -18,19 +18,20 @@ except:
 
 
 class Borkedbot(irc.IRCClient):
-    lineRate = 2
     password = TWITCH_IRC_OAUTH_KEY
 
-    gotops = False
+    mod_linerate = 1
+    normal_linerate = 2
+    override_linerate = None
 
     userlist = []
-
     usertags = {}
     roomtags = {}
 
     timertask = None
     timertick = 5
 
+    gotops = False
     _max_line_length = None
     _debug_printraw = False
 
@@ -40,6 +41,15 @@ class Borkedbot(irc.IRCClient):
     @staticmethod
     def reload_manager(self):
         reload(chatmanager)
+
+    @property
+    def lineRate(self):
+        if self.override_linerate:
+            return override_linerate
+        elif self.is_op():
+            return self.mod_linerate
+        else:
+            return self.normal_linerate
 
     @property
     def nickname(self):

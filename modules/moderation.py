@@ -14,10 +14,11 @@ from twisted.internet import reactor
 LOAD_ORDER = 110
 
 def setup(bot):
-    reload(moderation)
+    pass
 
 def alert(event):
     if event.etype in ['msg', 'action'] and event.bot.user_is_op(event.bot.nickname) and not event.bot.user_is_op(event.user):
+        reload(moderation)
 
         # Spam check
         if check_for_option('spam', event.channel):
@@ -231,7 +232,7 @@ def scan_link(link):
             return '.scr download'
 
         if r2.headers.get('transfer-encoding') == 'chunked':
-            pass
+            print '[Moderation-Scan] Most likely a download, but I have no good solution for this.' 
             # perhaps this should only return if it went through a link shortener
             # return 'Redirect to download'
 
@@ -261,6 +262,10 @@ def scan_link(link):
 
         # Other checks
         # check for links to exes and scrs and warn, maybe return a (ban_duration:int [-1 no ban, 0 ban, 1+ timeout duration], reason:str)
-    else:
+    elif 'content-type' in r.headers:
         print '[Moderation-Scan] Non text destination: %s' % r.headers.get('content-type')
+        print r.headers
+
+    else:
+        print '[Moderation-Scan] No content-type sent'
         print r.headers
