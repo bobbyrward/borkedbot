@@ -419,51 +419,31 @@ def get_mmr_for_channel(channel):
 
 
 def getSourceTVLiveGameForPlayer(targetdotaid, heroid=None):
-    totalgames = node.get_source_tv_games(heroid=heroid)['num_games']
+    pages = node.get_source_tv_games(heroid=heroid, pages=10)
 
-    for pagenum in range(0, 1):
-        games = node.get_source_tv_games(heroid=heroid)['game_list']
-
-        for game in games:
-            players = game['players']
-            notable_players_found = []
-            target_found = False
-
-            for player in players:
+    for page in pages:
+        for game in page['game_list']:
+            for player in game['players']:
                 if long(player['account_id']) == long(targetdotaid):
                     return game
 
-def dec2ip(addr):
-    binnum = '{0:b}'.format(int(addr)).zfill(32)
-    pall = [binnum[i:i+8] for i in xrange(0, len(binnum), 8)]
-    return '.'.join([str(int(p,2)) for p in pall])
 
-def get_console_connect_code(dotaid):
-    ddata = getSourceTVLiveGameForPlayer(dotaid)
-    return 'connect_hltv ' + dec2ip(ddata['sourceTvPublicAddr']) + ':' + str(ddata['sourceTvPort'])
-
-    #TODO: Figure out how the console command and "Watch game" (NotifyClientSignon 0/1/2) are different
-
-
-def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
+def searchForNotablePlayers(targetdotaid, pages=10, heroid=None):
     # Needs check for if in a game (maybe need a status indicator for richPresence)
     t0 = time.time()
     herodata = getHeroes()
     notable_players = settings.getdata('dota_notable_players')
-
 
     if heroid:
         if pages > 10: pages = 10
 
         print '[Dota-Notable] Searching using heroid %s' % heroid
 
+    pages = node.get_source_tv_games(heroid=heroid, pages=pages)
 
-    for pagenum in range(0, pages):
-        # print 'searching page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
-        games = node.get_source_tv_games(heroid=heroid)['game_list']
-        # print 'received game page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
+    for page in pages:
+        for game in page['game_list']:
 
-        for game in games:
             players = game['players']
             notable_players_found = []
             target_found = False
@@ -479,8 +459,6 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
 
                     if long(player['account_id']) != long(targetdotaid):
                         notable_players_found.append((notable_players[player['account_id']], playerhero))
-                    # else:
-                        # print '[Dota-Notable] Discounting target player'
 
                 if player['account_id'] == long(targetdotaid):
                     print '[Dota-Notable] found target player'
@@ -495,9 +473,6 @@ def searchForNotablePlayers(targetdotaid, pages=4, heroid=None):
                     print '[Dota-Notable] No notable players.'
 
                 return notable_players_found
-            # print 'searched game %s, T+%4.4fms' % (games.index(game), (time.time()-t0)*1000)
-
-        print '[Dota-Notable] searched page %s, T+%4.4fms' % (pagenum, (time.time()-t0)*1000)
 
 
 def getNotableCheckReady(channel):
@@ -545,9 +520,9 @@ def notablePlayerBlurb(channel, pages=33):
             settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 60.0, announce=False)
 
 
+# TODO: Fix this with that other playerinfo protobuf message to get names since they're not sent anymore
 def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
     herodata = getHeroes()
-    # herodict = {h['id']:str(h['localized_name']) for h in herodata['result']['heroes']}
     herodict = getHeroNamedict()
     herodict[0] = "Unknown hero"
 

@@ -1,17 +1,13 @@
 import sys
 sys.dont_write_bytecode = True
 
+import time
 import json
 import zerorpc
 import settings
 
-DISABLE_MODULE = True
+# DISABLE_MODULE = True
 LOAD_ORDER = 36
-
-Error = zerorpc.RemoteError
-
-# zrpc = zerorpc.Client()
-# zrpc.connect('tcp://127.0.0.1:29390')
 
 
 def setup(bot):
@@ -23,22 +19,16 @@ def alert(event):
 
 class ZRPC(object):
     def __init__(self):
-        # print 'creating client'
         self.zrpc = zerorpc.Client()
 
     def __enter__(self):
-        # print 'connecting'
         self.zrpc.connect('tcp://127.0.0.1:29390')
         return self.zrpc if self.zrpc else None
 
     def __exit__(self, etype, evalue, tb):
         if etype is not None:
             print 'Node error:', evalue, '(%s)' % etype
-
-
-        # print 'closing'
         self.zrpc.close()
-        # print 'returning'
 
 ######################################################################
 
@@ -245,14 +235,38 @@ def get_source_tv_games(**gcargs):
         heroid (int): Hero id
         startgame (int): Unknown, [0,10,20...90]
         gamelistindex (int): List version?
-        lobbyids (list): Unknown    
+        lobbyids (list): Unknown
+
+        pages (int): Alias for (startgame - 1) * 10
     """
 
     args = {'searchkey': '', 'leagueid': 0, 'heroid': 0, 'startgame': 0, 'gamelistindex': 0, 'lobbyids': []}
+    
+    if 'pages' in gcargs and 1 <= gcargs['pages'] <= 10:
+        args['startgame'] = 10 * (gcargs['pages'] - 1)
+        del gcargs['pages']
+
     args.update({k:gcargs[k] for k in gcargs if k in args})
 
     with ZRPC() as zrpc:
-        return json.loads(zrpc.getsourcetvgames(args['searchkey'], args['leagueid'], args['heroid'], args['startgame'], args['gamelistindex'], args['lobbyids']))
+        retries = 0
+        while True:
+            try:
+                if args['startgame'] > 0:
+                    return [json.loads(x) for x in zrpc.getsourcetvgames(
+                        args['searchkey'], args['leagueid'], args['heroid'], args['startgame'], args['gamelistindex'], args['lobbyids'])]
+                else:
+                    return [json.loads(zrpc.getsourcetvgames(
+                        args['searchkey'], args['leagueid'], args['heroid'], args['startgame'], args['gamelistindex'], args['lobbyids']))]
+            except zerorpc.RemoteError as e:
+                if e.message == 'Search running':
+                    time.sleep(0.2)
+                    retries += 1
+                    if retries > 25:
+                        raise Exception('Took too long.')
+                else:
+                    raise e
+
 
 def get_user_status(steamid):
     with ZRPC() as zrpc:
