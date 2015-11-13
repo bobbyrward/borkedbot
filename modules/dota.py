@@ -56,7 +56,7 @@ def enable_channel(channel, dotaid, mmr=True, returntrueifnotnotable=False):
     settings.setdata('%s_dota_id' % channel, dotaid)
 
     update_channels()
-    if notifyifnotnotable:
+    if returntrueifnotnotable:
         if dotaid not in settings.getdata('dota_notable_players'):
             return True
 
