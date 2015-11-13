@@ -21,7 +21,9 @@ var steam = require("steam"),
     dotauserplayingas = {},
 
     steam_rss_datas = [],
-    dota_rss_datas = [];
+    dota_rss_datas = [],
+
+    zrpc_sourcetvgames_request_locked = false;
 
 
 // Load config
@@ -270,6 +272,7 @@ var zrpcserver = new zerorpc.Server({
         reply = arguments[arguments.length - 1];
         reply(null, eval(incom));
     },
+
 
     /*
         General functions
@@ -753,6 +756,11 @@ var zrpcserver = new zerorpc.Server({
     getsourcetvgames: function(searchkey, leagueid, heroid, startgame, gamelistindex, lobbyids, reply) {
         reply = arguments[arguments.length - 1];
 
+        if (zrpc_sourcetvgames_request_locked) {
+            reply("Search running");
+            return;
+        }
+
         searchkey = typeof searchkey == 'string' ? searchkey : '';
         leagueid = typeof leagueid == 'number' ? leagueid : 0;
         heroid = typeof heroid == 'number' ? heroid : 0;
@@ -760,10 +768,51 @@ var zrpcserver = new zerorpc.Server({
         gamelistindex = typeof gamelistindex == 'number' ? gamelistindex : 0;
         lobbyids = typeof lobbyids == 'object' ? lobbyids : [];
 
+        var totalresponses = (startgame/10) + 1,
+            receivedgames = 0;
+
+        if (lobbyids) {
+            totalresponses++;
+        }
+
         if (!Dota2._gcReady) {
             reply('GC unready');
             return;
         };
+
+        zrpc_sourcetvgames_request_locked = true;
+        util.log("Expecting", totalresponses, "responses.");
+
+        if (totalresponses > 1) {
+            var stvdata = function(gamedata) {
+                for (var i = gamedata.game_list.length - 1; i >= 0; i--) {
+                    gamedata.game_list[i].lobby_id = ""+gamedata.game_list[i].lobby_id
+                    gamedata.game_list[i].server_steam_id = ""+gamedata.game_list[i].server_steam_id
+                }
+
+                receivedgames++;
+                util.log("Received game", receivedgames);
+                reply(null, JSON.stringify(gamedata), receivedgames < totalresponses);
+
+                if (receivedgames == totalresponses) {
+                    util.log("Removing games listener.");
+                    Dota2.removeListener('newSourceTVGamesData', stvdata);
+                    zrpc_sourcetvgames_request_locked = false;
+                }
+            };
+            Dota2.on('newSourceTVGamesData', stvdata);
+
+        } else {
+            Dota2.once('newSourceTVGamesData', function(gamedata) {
+                    for (var i = gamedata.game_list.length - 1; i >= 0; i--) {
+                        gamedata.game_list[i].lobby_id = ""+gamedata.game_list[i].lobby_id
+                        gamedata.game_list[i].server_steam_id = ""+gamedata.game_list[i].server_steam_id
+                    }
+                    util.log("Received game data.");
+                    reply(null, JSON.stringify(gamedata));
+                    zrpc_sourcetvgames_request_locked = false;
+            });
+        }
 
         Dota2.newRequestSourceTVGames({
             search_key: searchkey,
@@ -773,19 +822,7 @@ var zrpcserver = new zerorpc.Server({
             game_list_index: gamelistindex,
             lobby_ids: lobbyids
         });
-
-        Dota2.once('newSourceTVGamesData', function(gamedata) {
-            console.log('Got game data');
-            reply(null, JSON.stringify(gamedata));
-        });
     },
-
-    /*
-        RSS stuff
-    */
-
-
-
 
     /*
         Exiting stuff

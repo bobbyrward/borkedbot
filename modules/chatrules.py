@@ -825,8 +825,6 @@ def generate_message_commands(bot):
     coms.append(command.Command('!dotaconfig', f, bot, groups=me_and_broadcaster, repeatdelay=5))
 
     def f(channel, user, message, args, data, bot):
-        # return "Currently broken due to Source 2.  Will be fixed Soon™."
-
         import dota, settings, node
 
         if channel not in dota.enabled_channels:
@@ -840,11 +838,15 @@ def generate_message_commands(bot):
             return
 
         if args:
-            pages = int(args[0])
+            try:
+                if not 1 <= int(args[0]) <= 10:
+                    pages = 10
+                else:
+                    pages = int(args[0])
+            except:
+                pages = 10
         else:
-            pages = 9
-
-        pages = 1 # I can remove this when its fixed
+            pages = 10
 
         playerid = settings.getdata('%s_dota_id' % channel)
 
@@ -1154,10 +1156,10 @@ def generate_message_commands(bot):
         return # I need to figure out how to get the right watch_server command
         import dota, settings
         try:
-            ccom = dota.get_console_connect_code(settings.getdata('%s_dota_id' % channel))
+            ccom = getSourceTVLiveGameForPlayer(settings.getdata('%s_dota_id' % channel))['server_steam_id']
         except:
             return "Game not found (or some other error)"
-        return 'Console command (Might result in a Bad relay password error, working on that): ' + ccom
+        return 'Put this in your dota console: %s' % ccom
 
     coms.append(command.Command('!watchgame', f, bot, groups=me_only_group))
 
