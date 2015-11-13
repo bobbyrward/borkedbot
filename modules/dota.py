@@ -282,7 +282,6 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
     separate_notable_message = False
 
     if notableplayers:
-        # print "notable player lookup requested"
         notable_players = settings.getdata('dota_notable_players')
         notable_players_found = []
 
@@ -290,9 +289,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
             notable_players.pop(dotaid)
 
         for p in matchdata['result']['players']:
-            # print 'looking up %s' % p['account_id']
             if p['account_id'] in notable_players:
-                # print '[Dota-Notable] Found notable player %s' % notable_players[p['account_id']]
                 playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(p['hero_id'])][0]) # p['heroId'] ?
 
                 if int(p['account_id']) != int(dotaid):
@@ -324,31 +321,38 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
     d_gpm = playerdata['gold_per_min']
     d_xpm = playerdata['xp_per_min']
 
-    if matchdata['result']['radiant_win'] ^ (d_team == 'Radiant'):
-        d_victory = 'Defeat'
-    else:
-        d_victory = 'Victory'
+    d_victory = matchdata['result']['radiant_win'] ^ (d_team != 'Radiant')
 
     print "[Dota] Skipped %s matches" % skippedmatches
 
     if skippedmatches == -1:
         matchskipstr = '(Previous match) '
     elif skippedmatches < -1:
-        matchskipstr = '(%s games ago) ' % skippedmatches * -1
+        matchskipstr = '(%s games ago) ' % (skippedmatches * -1)
     elif skippedmatches > 1:
         matchskipstr = '(%s skipped) ' % skippedmatches
     else:
         matchskipstr = ''
 
+    if playerdata['leaver_status'] in [2, 3]:
+        winstatus = 'abandoned'
+    elif playerdata['leaver_status'] == 4:
+        winstatus = 'afk abandoned'
+    elif playerdata['leaver_status'] in [5, 6]:
+        winstatus = 'failed to connect to'
+    elif d_victory:
+        winstatus = 'won'
+    else:
+        winstatus = 'lost'
+
     matchoutput = "%s%s has %s a game.  http://www.dotabuff.com/matches/%s" % (
         matchskipstr,
         enabled_channels[channel][0],
-        'won' if d_victory == 'Victory' else 'lost',
+        winstatus,
         latestmatch['match_id'])
 
     extramatchdata = "Level {} {} {} - KDA: {}/{}/{} - CS: {}/{} - GPM: {} - XPM: {}".format(
         d_level, d_team, d_hero, d_kills, d_deaths, d_assists, d_lasthits, d_denies, d_gpm, d_xpm)
-
 
     finaloutput = matchoutput + ' -- ' + extramatchdata + (' -- ' + get_match_mmr_string(channel) if getmmr else '') + (' -- ' + notableplayerdata if notableplayerdata else '')
 
