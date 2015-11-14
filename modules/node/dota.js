@@ -771,7 +771,7 @@ var zrpcserver = new zerorpc.Server({
         var totalresponses = (startgame/10) + 1,
             receivedgames = 0;
 
-        if (lobbyids) {
+        if (lobbyids.length > 0) {
             totalresponses++;
         }
 
