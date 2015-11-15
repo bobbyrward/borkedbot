@@ -259,7 +259,7 @@ def get_source_tv_games(**gcargs):
                     return [json.loads(zrpc.getsourcetvgames(
                         args['searchkey'], args['leagueid'], args['heroid'], args['startgame'], args['gamelistindex'], args['lobbyids']))]
             except zerorpc.RemoteError as e:
-                if e.message == 'Search running':
+                if e.msg == 'busy':
                     time.sleep(0.2)
                     retries += 1
                     if retries > 25:
@@ -267,6 +267,13 @@ def get_source_tv_games(**gcargs):
                 else:
                     raise e
 
+def get_player_info(*accountids):
+    with ZRPC() as zrpc:
+        return json.loads(zrpc.getplayerinfo(accountids))
+
+def get_profile_card(accountid):
+    with ZRPC() as zrpc:
+        return json.loads(zrpc.getprofilecard(accountid))
 
 def get_user_status(steamid):
     with ZRPC() as zrpc:
