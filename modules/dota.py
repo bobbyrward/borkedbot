@@ -520,20 +520,14 @@ def notablePlayerBlurb(channel, pages=33):
             settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 60.0, announce=False)
 
 
-# TODO: Fix this with that other playerinfo protobuf message to get names since they're not sent anymore
+# TODO: Add additional data from new info
 def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
-    herodata = getHeroes()
+    # herodata = getHeroes()
     herodict = getHeroNamedict()
     herodict[0] = "Unknown hero"
 
-    userstatus = node.get_user_status(dotaToSteam(dotaid))
-    if userstatus == '#DOTA_RP_PLAYING_AS':
-        heroid = node.get_user_playing_as(dotaToSteam(dotaid))
-        heroid = getHeroIddict(False)[heroid[0]]
-    else: heroid = None
-
     notable_players = settings.getdata('dota_notable_players')
-    game = getSourceTVLiveGameForPlayer(dotaid, heroid)
+    game = getSourceTVLiveGameForPlayer(dotaid)
 
     teamformat = '%s%s: \n'                  # ('## ' if markdown else '', team)
     playerformat = '%s%s: %s\n'              # ('#### ' if markdown else '  ', hero, name)
@@ -553,24 +547,25 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
 
             data += teamformat % ('## ' if markdown else '', team)
 
-            for player in game['goodPlayers' if team=='Radiant' else 'badPlayers']:
-                data += playerformat % ('#### ' if markdown else '  ', herodict[player['heroId']], player['name'].decode('utf8'))
+            for player in game['players'][slice(None, 5) if team=='Radiant' else slice(5, None)]:
+                pname = node.get_player_info(player['account_id'])['player_infos'].index(player)['name']
+                data += playerformat % ('#### ' if markdown else '  ', herodict[player['hero_id']], pname.decode('utf8'))
 
-                if steamToDota(player['steamId']) in notable_players:
-                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[steamToDota(player['steamId'])].decode('utf8'))
+                if player['account_id'] in notable_players:
+                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[player['account_id']].decode('utf8'))
 
-                mkupsteamlink = linkformat % (linktypes['steam'], player['steamId'])
+                mkupsteamlink = linkformat % (linktypes['steam'], dotaToSteam(player['account_id']))
 
-                ressteam = requests.head(linktypes['steam'] + player['steamId']).headers.get('location')
+                ressteam = requests.head(linktypes['steam'] + str(dotaToSteam(player['account_id']))).headers.get('location')
 
                 if ressteam:
                     data += mkupsteamlink.replace('\n', '') + ' (%s)\n' % ressteam.split('.com')[-1][:-1]
                 else:
                     data += mkupsteamlink
 
-                data += linkformat % (linktypes['dotabuff'], steamToDota(long(player['steamId'])))
+                data += linkformat % (linktypes['dotabuff'], player['account_id'])
                 if checktwitch:
-                    tname = twitchapi.get_twitch_from_steam_id(player['steamId'])
+                    tname = twitchapi.get_twitch_from_steam_id(dotaToSteam(player['account_id']))
                     if tname:
                         data += linkformat % (linktypes['twitch'], tname)
                 data += '\n'
