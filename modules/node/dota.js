@@ -33,7 +33,7 @@ global.config = require("./config");
 var onSteamLogOn = function onSteamLogOn(logonResp) {
         if (logonResp.eresult == steam.EResult.OK) {
             steamFriends.setPersonaState(steam.EPersonaState.Busy); // to display your steamClient's status as "Online"
-            steamFriends.setPersonaName("Borkedbot [Testing]"); // to change its nickname
+            steamFriends.setPersonaName("Borkedbot"); // to change its nickname
             util.log("Logged on.");
             Dota2.launch();
             Dota2.on("ready", function() {
@@ -347,6 +347,34 @@ var zrpcserver = new zerorpc.Server({
             reply(null, response);
         });
     },
+    getplayerinfo: function(account_ids, reply) {
+        reply = arguments[arguments.length - 1];
+        account_ids = Array.isArray(account_ids) ? account_ids : [account_ids];
+
+        Dota2.once('playerInfoData', function (account_id, data) {
+            reply(null, JSON.stringify(data));
+        });
+        Dota2.requestPlayerInfo(account_ids);
+    },
+    getprofilecard: function(dotaid, reply) {
+        reply = arguments[arguments.length - 1];
+        dotaid = typeof dotaid !== 'function' ? dotaid : null;
+
+        if (!dotaid) {
+            reply("Bad arguments");
+            return;
+        }
+
+        if (!Dota2._gcReady) {
+            reply(null, false);
+            return;
+        }
+
+        Dota2.requestProfileCard(Number(dotaid), function(err, body){
+            util.log(util.format('Got data for %s', dotaid));
+            reply(null, JSON.stringify(body));
+        });
+    },
     downloadreplay: function(channel, matchid, matchdetails, reply) {
         reply = arguments[arguments.length - 1];
         channel = typeof channel !== 'function' ? channel : undefined;
@@ -416,7 +444,6 @@ var zrpcserver = new zerorpc.Server({
         util.log("ZRPC: Fetching mmr for " + dotaid);
 
         Dota2.requestProfileCard(Number(dotaid), function(err, body){
-            console.log(JSON.stringify(body));
             util.log(util.format('Got data for %s', dotaid));
             var data = {};
             body.slots.forEach(function(item) {
@@ -757,7 +784,7 @@ var zrpcserver = new zerorpc.Server({
         reply = arguments[arguments.length - 1];
 
         if (zrpc_sourcetvgames_request_locked) {
-            reply("Search running");
+            reply("busy");
             return;
         }
 
@@ -771,7 +798,7 @@ var zrpcserver = new zerorpc.Server({
         var totalresponses = (startgame/10) + 1,
             receivedgames = 0;
 
-        if (lobbyids) {
+        if (lobbyids.length > 0) {
             totalresponses++;
         }
 
@@ -791,11 +818,11 @@ var zrpcserver = new zerorpc.Server({
                 }
 
                 receivedgames++;
-                util.log("Received game", receivedgames);
+                // util.log("Received game", receivedgames);
                 reply(null, JSON.stringify(gamedata), receivedgames < totalresponses);
 
                 if (receivedgames == totalresponses) {
-                    util.log("Removing games listener.");
+                    util.log("Received all games, removing games listener.");
                     Dota2.removeListener('newSourceTVGamesData', stvdata);
                     zrpc_sourcetvgames_request_locked = false;
                 }

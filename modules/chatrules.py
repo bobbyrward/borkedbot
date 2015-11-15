@@ -855,7 +855,7 @@ def generate_message_commands(bot):
         else:
             playerheroid = None
 
-        if pages > 9 and playerheroid: pages = 9
+        if pages > 10 and playerheroid: pages = 10
         players = dota.searchForNotablePlayers(playerid, pages, playerheroid)
 
         if players is None:
@@ -1153,20 +1153,21 @@ def generate_message_commands(bot):
     #
 
     def f(channel, user, message, args, data, bot):
-        return # I need to figure out how to get the right watch_server command
         import dota, settings
         try:
-            ccom = getSourceTVLiveGameForPlayer(settings.getdata('%s_dota_id' % channel))['server_steam_id']
-        except:
+            ccom = dota.getSourceTVLiveGameForPlayer(settings.getdata('%s_dota_id' % channel))['server_steam_id']
+        except Exception as e:
+            print e
             return "Game not found (or some other error)"
-        return 'Put this in your dota console: %s' % ccom
+        return 'Dota console command: watch_server %s' % ccom
 
-    coms.append(command.Command('!watchgame', f, bot, groups=me_only_group))
+    coms.append(command.Command('!watchgame', f, bot, repeatdelay=30))
 
     def f(channel, user, message, args, data, bot):
         import dota, settings, makegist
 
         pdata = dota.get_players_in_game_for_player(settings.getdata('%s_dota_id' % channel), checktwitch=True, markdown=True)
+        print "Generated data"
 
         if pdata is None:
             return 'Cannot find match.'
