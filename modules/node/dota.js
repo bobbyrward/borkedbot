@@ -919,14 +919,13 @@ process.on('error', function(err) {
 
 
 function rss_error(err) {
-    // if (err) console.log(util.format('RSS error: %s (%s)', err.message, JSON.stringify(err)));
+    if (err) console.log(util.format('RSS error: %s (%s)', err.message, JSON.stringify(err)));
 };
 
 function get_steam_news_rss(entries) {
-    entries = typeof entries == 'number' ? entries : 1;
+    entries = typeof entries == 'number' ? entries : 10;
 
-    var feedparser = new FeedParser(),
-        steam_rss_datas = [];
+    var feedparser = new FeedParser();
 
     feedparser.on('error', rss_error);
     feedparser.on('end', rss_error);
@@ -941,7 +940,6 @@ function get_steam_news_rss(entries) {
             // feedparser.end()
         }, 500, entries);
     });
-
 
     req = request('http://store.steampowered.com/feeds/news.xml', {
         timeout: 5000,
@@ -958,10 +956,9 @@ function get_steam_news_rss(entries) {
 };
 
 function get_dota_rss(entries) {
-    entries = typeof entries == 'number' ? entries : 1;
+    entries = typeof entries == 'number' ? entries : 10;
 
-    var feedparser = new FeedParser(),
-        dota_rss_datas = [];
+    var feedparser = new FeedParser();
 
     feedparser.on('error', rss_error);
     feedparser.on('end', rss_error);
@@ -976,7 +973,6 @@ function get_dota_rss(entries) {
             // feedparser.end()
         }, 500, entries);
     });
-
 
     req = request('http://blog.dota2.com/feed/', {
         timeout: 5000,
