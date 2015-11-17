@@ -830,12 +830,12 @@ def generate_message_commands(bot):
         if channel not in dota.enabled_channels:
             return
 
-        if user == 'bluepowervan' and not bot.user_is_op(user):
-            bot.botsay('.timeout bluepowervan 3840')
-            return "You know that doesn't work for you, stop trying."
+        # if user == 'bluepowervan' and not bot.user_is_op(user):
+            # bot.botsay('.timeout bluepowervan 3840')
+            # return "You know that doesn't work for you, stop trying."
 
-        if not bot.user_is_op(user) and user != 'imayhaveborkedit':
-            return
+        # if not bot.user_is_op(user) and user != 'imayhaveborkedit':
+            # return
 
         if args:
             try:
@@ -850,19 +850,19 @@ def generate_message_commands(bot):
 
         playerid = settings.getdata('%s_dota_id' % channel)
 
-        if node.get_user_status(dota.dotaToSteam(playerid)) == '#DOTA_RP_PLAYING_AS':
-            playerheroid = dota.getHeroIddict(False)[node.get_user_playing_as(dota.dotaToSteam(playerid))[0]]
+        if node.get_user_status(dota.Player(playerid).steamid) == '#DOTA_RP_PLAYING_AS':
+            playerheroid = dota.getHeroIddict(False)[node.get_user_playing_as(dota.Player(playerid).steamid)[0]]
         else:
             playerheroid = None
 
         if pages > 10 and playerheroid: pages = 10
-        players = dota.searchForNotablePlayers(playerid, pages, playerheroid)
+        players, mmr = dota.searchForNotablePlayers(playerid, pages, playerheroid, True)
 
         if players is None:
             return "Game not found in %s pages." % pages
 
         if players:
-            return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
+            return "Notable players in this game: %s -- Average MMR: %s" % (', '.join(['%s (%s)' % (p,h) for p,h in players]), mmr)
         else:
             return "No other notable players found in the current game."
 
@@ -1159,7 +1159,7 @@ def generate_message_commands(bot):
         except Exception as e:
             print e
             return "Game not found (or some other error)"
-        return 'Dota console command: watch_server %s' % ccom
+        return str('Dota console command: watch_server %s' % ccom)
 
     coms.append(command.Command('!watchgame', f, bot, repeatdelay=30))
 
