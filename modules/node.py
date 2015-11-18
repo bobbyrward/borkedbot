@@ -30,7 +30,7 @@ class ZRPC(object):
             print 'Node error:', evalue, '(%s)' % etype
         self.zrpc.close()
 
-def get_batched_data(zfunction, ifcomp, convertjson, unpackargs, *args):
+def get_batched_data(zfunction, ifcomp, convertjson, unpackargs, args):
     def convjson(data):
         return json.loads(data) if convertjson else data
 
@@ -267,7 +267,7 @@ def get_source_tv_games(**gcargs):
     """
 
     args = {'searchkey': '', 'leagueid': 0, 'heroid': 0, 'startgame': 0, 'gamelistindex': 0, 'lobbyids': []}
-    
+
     if 'pages' in gcargs and 1 <= gcargs['pages'] <= 10:
         args['startgame'] = 10 * (gcargs['pages'] - 1)
         del gcargs['pages']
