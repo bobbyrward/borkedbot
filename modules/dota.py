@@ -584,7 +584,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
         if noinfoids:
             noinfodatas = {int(data['friendid']): data['player_name'] for data in node.get_friend_data([ID(i).steamid for i in noinfoids])}
             for x in noinfoids:
-                playerinfodict[ID(x).dotaid] = noinfodatas[ID(x).steamid]
+                playerinfodict[ID(x).dotaid] = {'name': noinfodatas[ID(x).steamid]}
 
         for team in ['Radiant', 'Dire']:
             data += teamformat % ('## ' if markdown else '', team)
