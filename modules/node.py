@@ -226,7 +226,7 @@ def send_steam_message(steamid, message):
 def get_friend_data(steamids):
     steamids = [str(s) for s in steamids]
     with ZRPC() as zrpc:
-        return get_batched_data(zrpc.getfrienddata, len(steamids) > 1, True, False, steamids)
+        return get_batched_data(zrpc.getfrienddata, len(steamids) > 1, True, True, (steamids, None))
 
 ########
 
