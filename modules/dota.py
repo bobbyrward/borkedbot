@@ -689,6 +689,7 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
                     break
 
                 settings.setdata('%s_dota_last_steam_rss_update_url' % channel, str(item['guid']))
+                settings.setdata('%s_last_dota_rss_check' % channel, last_rss_check, announce=False)
 
                 return str("Steam News Feed: %s - %s" % (item['title'], item['guid']))
             else:
