@@ -30,7 +30,7 @@ class ZRPC(object):
             print 'Node error:', evalue, '(%s)' % etype
         self.zrpc.close()
 
-def get_batched_data(zfunction, ifcomp, convertjson, unpackargs, *args):
+def get_batched_data(zfunction, ifcomp, convertjson, unpackargs, args):
     def convjson(data):
         return json.loads(data) if convertjson else data
 
@@ -223,7 +223,7 @@ def send_steam_message(steamid, message):
     with ZRPC() as zrpc:
         return zrpc.evaljs("bot.sendMessage('%s', '%s')" % (steamid, message))
 
-def get_friend_data(*steamids):
+def get_friend_data(steamids):
     steamids = [str(s) for s in steamids]
     with ZRPC() as zrpc:
         return get_batched_data(zrpc.getfrienddata, len(steamids) > 1, True, False, steamids)
@@ -267,7 +267,7 @@ def get_source_tv_games(**gcargs):
     """
 
     args = {'searchkey': '', 'leagueid': 0, 'heroid': 0, 'startgame': 0, 'gamelistindex': 0, 'lobbyids': []}
-    
+
     if 'pages' in gcargs and 1 <= gcargs['pages'] <= 10:
         args['startgame'] = 10 * (gcargs['pages'] - 1)
         del gcargs['pages']
