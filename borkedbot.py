@@ -6,6 +6,7 @@ import time
 
 from datetime import timedelta
 from contextlib import contextmanager
+from bs4 import UnicodeDammit
 from twisted.internet import reactor, task, protocol
 from twisted.words.protocols import irc
 
@@ -233,18 +234,14 @@ class Borkedbot(irc.IRCClient):
         try:
             self.say(self.factory.channel, msg, length)
         except:
-            print '[Borkedbot] Blarg how do I do this shit: %s' % msg
+            print '[Borkedbot] How is this not encoded correctly: ' % msg
 
             try:
-                self.say(self.factory.channel, msg.decode("utf-8"), length)
+                self.say(self.factory.channel, UnicodeDammit(msg).unicode_markup.encode('utf8'), length)
             except Exception, e:
-                print 'No that didn\'t work either, wtf how retarded is twisted/unicode'
-
-                try:
-                    self.say(self.factory.channel, msg.encode("utf-8"), length)
-                except Exception, e:
-                    print 'I give up'
-                    return
+                print "That didn't work and that's kinda bad: ", e
+                print msg
+                print list(msg)
 
         self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.is_op())
 
