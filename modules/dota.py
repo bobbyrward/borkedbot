@@ -501,6 +501,8 @@ def searchForNotablePlayers(targetdotaid, pages=10, heroid=None, includemmr=Fals
                     return (notable_players_found, game['average_mmr'])
                 else:
                     return notable_players_found
+            else:
+                return (None, None)
 
 
 def getNotableCheckReady(channel):
