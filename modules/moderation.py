@@ -17,7 +17,7 @@ def setup(bot):
     pass
 
 def alert(event):
-    if event.etype in ['msg', 'action'] and event.bot.user_is_op(event.bot.nickname) and not event.bot.user_is_op(event.user):
+    if event.etype in ['msg', 'action'] and event.bot.is_op() and not event.bot.user_is_op(event.user):
         reload(moderation)
 
         # Spam check
