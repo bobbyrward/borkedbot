@@ -33,7 +33,7 @@ class BorkedbotSupervisorService(rpyc.Service):
     def __init__(self, conn):
         rpyc.Service.__init__(self, conn)
         self.connid = conn._config['connid']
-        print '[%s] Connection established' % self.connid
+        print '[%s] New connection established' % self.connid
         self.botchannel = None
         self.bot = None
         self.codebase = supervisor.BorkedbotSupervisorCodebase(self)

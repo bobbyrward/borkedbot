@@ -4,6 +4,7 @@ sys.dont_write_bytecode = True
 import os
 import time
 import datetime
+from bs4 import UnicodeDammit
 
 LOAD_ORDER = 10
 
@@ -51,6 +52,6 @@ def log(user, channel, msg, isop, isaction = False, logstdout = True):
             f.write(logfileformat % (now, user, msg))
         except UnicodeEncodeError:
             print 'Error logging line:', msg
-            print 'Attempting to decode'
-            f.write(logfileformat % (now, user, msg.encode('utf8')))
+            print 'Attempting to fix encoding'
+            f.write(logfileformat % (now, user, UnicodeDammit(msg).unicode_markup.encode('utf8')))
 

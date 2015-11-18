@@ -30,6 +30,26 @@ class ZRPC(object):
             print 'Node error:', evalue, '(%s)' % etype
         self.zrpc.close()
 
+def get_batched_data(zfunction, ifcomp, convertjson, unpackargs, *args):
+    def convjson(data):
+        return json.loads(data) if convertjson else data
+
+    retries = 0
+    while True:
+        try:
+            if ifcomp:
+                return [convjson(x) for x in zfunction(*args if unpackargs else args)]
+            else:
+                return [convjson(zfunction(*args if unpackargs else args))]
+        except zerorpc.RemoteError as e:
+            if e.msg == 'busy':
+                time.sleep(0.2)
+                retries += 1
+                if retries > 25:
+                    raise Exception('Took too long.')
+            else:
+                raise e
+
 ######################################################################
 
 def raw_eval(raw_command):
@@ -203,6 +223,12 @@ def send_steam_message(steamid, message):
     with ZRPC() as zrpc:
         return zrpc.evaljs("bot.sendMessage('%s', '%s')" % (steamid, message))
 
+def get_friend_data(*steamids):
+    steamids = [str(s) for s in steamids]
+    with ZRPC() as zrpc:
+        return get_batched_data(zrpc.getfrienddata, len(steamids) > 1, True, False, steamids)
+
+
 ########
 
 def invite_to_guild(guildid, steamid):
@@ -247,25 +273,10 @@ def get_source_tv_games(**gcargs):
         del gcargs['pages']
 
     args.update({k:gcargs[k] for k in gcargs if k in args})
+    argdata = (args['searchkey'], args['leagueid'], args['heroid'], args['startgame'], args['gamelistindex'], args['lobbyids'])
 
     with ZRPC() as zrpc:
-        retries = 0
-        while True:
-            try:
-                if args['startgame'] > 0:
-                    return [json.loads(x) for x in zrpc.getsourcetvgames(
-                        args['searchkey'], args['leagueid'], args['heroid'], args['startgame'], args['gamelistindex'], args['lobbyids'])]
-                else:
-                    return [json.loads(zrpc.getsourcetvgames(
-                        args['searchkey'], args['leagueid'], args['heroid'], args['startgame'], args['gamelistindex'], args['lobbyids']))]
-            except zerorpc.RemoteError as e:
-                if e.msg == 'busy':
-                    time.sleep(0.2)
-                    retries += 1
-                    if retries > 25:
-                        raise Exception('Took too long.')
-                else:
-                    raise e
+        return get_batched_data(zrpc.getsourcetvgames, args['startgame'] > 0, True, True, argdata)
 
 def get_player_info(*accountids):
     with ZRPC() as zrpc:
@@ -302,3 +313,4 @@ def get_dota_rss(entries=0):
         return zrpc.evaljs('dota_rss_datas')
     else:
         return zrpc.evaljs('dota_rss_datas')
+
