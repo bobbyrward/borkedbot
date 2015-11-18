@@ -1170,7 +1170,7 @@ def generate_message_commands(bot):
             pdata = dota.get_players_in_game_for_player(settings.getdata('%s_dota_id' % channel), checktwitch=True, markdown=True)
         except Exception as e:
             print e
-            return "Unable to generate playerdata: %s" % str(e)
+            return "Unable to generate playerdata: %s" % str(e.message)
 
         print "Generated data" + ("" if pdata else "(but its empty)")
         if pdata is None:

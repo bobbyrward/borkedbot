@@ -228,7 +228,6 @@ def get_friend_data(steamids):
     with ZRPC() as zrpc:
         return get_batched_data(zrpc.getfrienddata, len(steamids) > 1, True, False, steamids)
 
-
 ########
 
 def invite_to_guild(guildid, steamid):
