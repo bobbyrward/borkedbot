@@ -883,6 +883,7 @@ var zrpcserver = new zerorpc.Server({
         zrpc_frienddata_request_locked = true;
 
         console.log("Expecting", totalresponses, "friend datas.");
+        console.log("Looking up", steamids);
 
         var sfonps = function(data) {
             if (steamids.indexOf(data.friendid) > -1) {

@@ -577,7 +577,6 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
         playerinfodict = {pl.pop('account_id'): pl for pl in playerinfos.copy()['player_infos']}
 
         if noinfoids:
-            print noinfoids
             noinfodatas = {data['friendid']: data['player_name'] for data in node.get_friend_data([ID(i).steamid for i in noinfoids])}
             for x in noinfoids:
                 print 'ok it worked:', noinfodatas
