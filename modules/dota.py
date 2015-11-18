@@ -578,7 +578,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
 
         if noinfoids:
             print noinfoids
-            noinfodatas = {data['friendid']: data['player_name'] for data in node.get_friend_data(noinfoids)}
+            noinfodatas = {data['friendid']: data['player_name'] for data in node.get_friend_data([ID(i).steamid for i in noinfoids])}
             for x in noinfoids:
                 print 'ok it worked:', noinfodatas
                 playerinfodict[x] = noinfodatas[ID(x).steamid]
