@@ -23,7 +23,8 @@ var steam = require("steam"),
     steam_rss_datas = [],
     dota_rss_datas = [],
 
-    zrpc_sourcetvgames_request_locked = false;
+    zrpc_sourcetvgames_request_locked = false,
+    zrpc_frienddata_request_locked = false;
 
 
 // Load config
@@ -98,6 +99,10 @@ var onSteamLogOn = function onSteamLogOn(logonResp) {
             Dota2.on("newSourceTVGamesData", function(games_data){
                 // console.log("Yay new source tv games data");
                 // console.log(games_data);
+            });
+
+            Dota2.on("liveLeagueGamesUpdate", function (ldata) {
+                console.log(arguments);
             });
 
             Dota2.on('error', function(err) {
@@ -849,6 +854,63 @@ var zrpcserver = new zerorpc.Server({
             game_list_index: gamelistindex,
             lobby_ids: lobbyids
         });
+    },
+
+    /*
+        Node-steam stuff
+    */
+
+    getfrienddata: function(steamids, datatype, reply) {
+        reply = arguments[arguments.length - 1];
+
+        steamids = Array.isArray(steamids) ? steamids : [steamids];
+        datatype = typeof datatype !== 'function' ? datatype : 3154;
+
+        if (zrpc_frienddata_request_locked) {
+            reply("busy");
+            return;
+        }
+
+        if (!steamClient.loggedOn) {
+            reply("Steam not ready.");
+            return;
+        }
+
+        var totalresponses = steamids.length,
+            receivedresponses = 0,
+            unrequestedresponses = 0;
+
+        zrpc_frienddata_request_locked = true;
+
+        console.log("Expecting", totalresponses, "friend datas.");
+
+        var sfonps = function(data) {
+            if (steamids.indexOf(data.friendid) > -1) {
+                console.log("Received friend data");
+                receivedresponses++;
+            } else {
+                console.log("Caught unrequested friend data");
+                // unrequestedresponses++;
+                // if (unrequestedresponses == totalresponses) {
+                    // zrpc_frienddata_request_locked = false;
+                    // steamFriends.removeListener('personaState', sfonps);
+                    // reply("Bad input ids, convert to strings please.");
+                // };
+                return;
+            }
+
+            reply(null, JSON.stringify(data), receivedresponses < totalresponses);
+
+            if (receivedresponses == totalresponses) {
+                console.log("Got all the friend datas, removing listener");
+                steamFriends.removeListener('personaState', sfonps);
+                zrpc_frienddata_request_locked = false;
+                return;
+            }
+        };
+
+        steamFriends.on('personaState', sfonps);
+        steamFriends.requestFriendData(steamids, datatype);
     },
 
     /*
