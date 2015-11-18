@@ -752,7 +752,7 @@ def generate_message_commands(bot):
         if channel in en_chans:
             return "You already set this up.  Ask imayhaveborkedit if you have a question."
 
-        notablecheck = dota.enable_channel(channel, dota.steamToDota(ch_sid), True, True)
+        notablecheck = dota.enable_channel(channel, dota.ID.steam_to_dota(ch_sid), True, True)
 
         if notablecheck:
             return "All that's left is to add this one to the notable players list, then thats it.  Let imayhaveborkedit know of any bugs or issues, and remember to mod the bot."
@@ -850,8 +850,8 @@ def generate_message_commands(bot):
 
         playerid = settings.getdata('%s_dota_id' % channel)
 
-        if node.get_user_status(dota.Player(playerid).steamid) == '#DOTA_RP_PLAYING_AS':
-            playerheroid = dota.getHeroIddict(False)[node.get_user_playing_as(dota.Player(playerid).steamid)[0]]
+        if node.get_user_status(dota.ID(playerid).steamid) == '#DOTA_RP_PLAYING_AS':
+            playerheroid = dota.getHeroIddict(False)[node.get_user_playing_as(dota.ID(playerid).steamid)[0]]
         else:
             playerheroid = None
 
@@ -1166,9 +1166,13 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import dota, settings, makegist
 
-        pdata = dota.get_players_in_game_for_player(settings.getdata('%s_dota_id' % channel), checktwitch=True, markdown=True)
-        print "Generated data"
+        try:
+            pdata = dota.get_players_in_game_for_player(settings.getdata('%s_dota_id' % channel), checktwitch=True, markdown=True)
+        except Exception as e:
+            print e
+            return "Unable to generate playerdata: %s" % str(e)
 
+        print "Generated data" + ("" if pdata else "(but its empty)")
         if pdata is None:
             return 'Cannot find match.'
 
@@ -1307,7 +1311,7 @@ def generate_message_commands(bot):
 
         tsid = dota.determineSteamid(linked_id)
 
-        smmr, pmmr = node.get_mmr_for_dotaid(dota.steamToDota(tsid))
+        smmr, pmmr = node.get_mmr_for_dotaid(dota.ID(tsid).dotaid)
 
         if smmr is not None:
             return '%s: %s!' % (user, smmr)

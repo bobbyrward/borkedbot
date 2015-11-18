@@ -22,7 +22,9 @@ LOAD_ORDER = 35
 STEAM_TO_DOTA_CONSTANT = 76561197960265728
 POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange',      'Pink', 'Gray', 'Light Blue', 'Green', 'Brown']
 
-#####
+herodata = None
+
+####
 # This line evidently gives people problems when they try to run the bot when the dota_enabled_channels key isnt set
 # For now, to fix this, run in an interpreter:
 #
@@ -32,16 +34,33 @@ POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange',      'Pink', 'G
 
 enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
-#####
+####
 
-herodata = None
+class ID(object):
+    def __init__(self, ID=None, channel=None):
+        if ID:
+            if ID > STEAM_TO_DOTA_CONSTANT:
+                self.steamid = ID
+                self.dotaid = self.steam_to_dota(self.steamid)
+            elif ID < STEAM_TO_DOTA_CONSTANT:
+                self.dotaid = ID
+                self.steamid = self.dota_to_steam(self.dotaid)
+            else:
+                raise ValueError()
 
+        elif channel:
+            self.dotaid = settings.getdata('%s_dota_id' % channel, coerceto=int)
+            self.steamid = self.dota_to_steam(self.dotaid)
 
-def dotaToSteam(dotaid):
-    return int(dotaid) + STEAM_TO_DOTA_CONSTANT
+    @staticmethod
+    def steam_to_dota(ID):
+        return int(ID) - STEAM_TO_DOTA_CONSTANT
 
-def steamToDota(steamid):
-    return int(steamid) - STEAM_TO_DOTA_CONSTANT
+    @staticmethod
+    def dota_to_steam(ID):
+        return int(ID) + STEAM_TO_DOTA_CONSTANT
+
+####
 
 def update_channels():
     global enabled_channels
@@ -183,7 +202,6 @@ def blurb(channel, bot, override=False):
     return r is not None
 
 def latestBlurb(channel, override=False):
-    # if node.get_user_status(dota.dotaToSteam(settings.getdata('%s_dota_id' % channel))) is not None:
     if checktimeout(channel) or override:
         dotaid = settings.getdata('%s_dota_id' % channel)
         if dotaid is None:
@@ -192,7 +210,8 @@ def latestBlurb(channel, override=False):
 
         try:
             matches = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=25)['result']['matches']
-        except:
+        except Exception as e:
+            print 'Error with steam api data:', e
             return
 
         settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
@@ -269,8 +288,14 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     settings.setdata('%s_last_match' % channel, latestmatch, announce=False)
 
-    matchdata = steamapi.GetMatchDetails(latestmatch['match_id'])
     herodata = getHeroes()
+    matchdata = steamapi.GetMatchDetails(latestmatch['match_id'])
+
+    try:
+        matchdata['result']['players']
+    except Exception as e:
+        print 'Error with match data:', e
+        raise e
 
     playerdata = None
     for p in matchdata['result']['players']:
@@ -428,7 +453,7 @@ def getSourceTVLiveGameForPlayer(targetdotaid, heroid=None):
                     return game
 
 
-def searchForNotablePlayers(targetdotaid, pages=10, heroid=None):
+def searchForNotablePlayers(targetdotaid, pages=10, heroid=None, includemmr=False):
     # Needs check for if in a game (maybe need a status indicator for richPresence)
     t0 = time.time()
     herodata = getHeroes()
@@ -472,7 +497,10 @@ def searchForNotablePlayers(targetdotaid, pages=10, heroid=None):
                 else:
                     print '[Dota-Notable] No notable players.'
 
-                return notable_players_found
+                if includemmr:
+                    return (notable_players_found, game['average_mmr'])
+                else:
+                    return notable_players_found
 
 
 def getNotableCheckReady(channel):
@@ -496,7 +524,7 @@ def getNotableCheckReady(channel):
 #    Fine tune usage frequency
 def notablePlayerBlurb(channel, pages=33):
     playerid = settings.getdata('%s_dota_id' % channel)
-    userstatus = node.get_user_status(dotaToSteam(playerid))
+    userstatus = node.get_user_status(ID(playerid).steamid)
     if userstatus:
         # print 'Dota status for %s: %s' % (channel, userstatus)
 
@@ -504,7 +532,7 @@ def notablePlayerBlurb(channel, pages=33):
             if getNotableCheckReady(channel):
                 if twitchapi.is_streaming(channel):
                     if userstatus == '#DOTA_RP_PLAYING_AS':
-                        playerheroid = node.get_user_playing_as(dotaToSteam(playerid))
+                        playerheroid = node.get_user_playing_as(ID(playerid).steamid)
                         playerheroid = getHeroIddict(False)[playerheroid[0]]
                     else:
                         playerheroid = None
@@ -529,7 +557,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
     notable_players = settings.getdata('dota_notable_players')
     game = getSourceTVLiveGameForPlayer(dotaid)
 
-    teamformat = '%s%s: \n'                  # ('## ' if markdown else '', team)
+    teamformat = '%s%s \n'                  # ('## ' if markdown else '', team)
     playerformat = '%s%s: %s\n'              # ('#### ' if markdown else '  ', hero, name)
     notableformat = '%sNotable player: %s\n' # ('###### ' if markdown else '   - ', name)
     linkformat = '   - %s%s\n'               # (linktype, linkdata)
@@ -543,20 +571,28 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
     if game:
         data = ''
 
-        for team in ['Radiant', 'Dire']:
+        playerinfos = node.get_player_info(*[int(p['account_id']) for p in game['players']])
+        noinfoids = [p['account_id'] for p in playerinfos['player_infos'] if p['name'] is None]
 
+        playerinfodict = {pl.pop('account_id'): pl for pl in playerinfos.copy()['player_infos']}
+
+        if noinfoids:
+            for x in noinfoids:
+                playerinfodict[x] = {'name': '[placeholder text]'}
+
+        for team in ['Radiant', 'Dire']:
             data += teamformat % ('## ' if markdown else '', team)
 
             for player in game['players'][slice(None, 5) if team=='Radiant' else slice(5, None)]:
-                pname = node.get_player_info(player['account_id'])['player_infos'].index(player)['name']
-                data += playerformat % ('#### ' if markdown else '  ', herodict[player['hero_id']], pname.decode('utf8'))
+                pname = playerinfodict[player['account_id']]['name']
+
+                data += playerformat % ('#### ' if markdown else '  ', herodict[player['hero_id']], pname)
 
                 if player['account_id'] in notable_players:
-                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[player['account_id']].decode('utf8'))
+                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[player['account_id']])
 
-                mkupsteamlink = linkformat % (linktypes['steam'], dotaToSteam(player['account_id']))
-
-                ressteam = requests.head(linktypes['steam'] + str(dotaToSteam(player['account_id']))).headers.get('location')
+                mkupsteamlink = linkformat % (linktypes['steam'], ID(player['account_id']).steamid)
+                ressteam = requests.head(linktypes['steam'] + str(ID(player['account_id']).steamid)).headers.get('location')
 
                 if ressteam:
                     data += mkupsteamlink.replace('\n', '') + ' (%s)\n' % ressteam.split('.com')[-1][:-1]
@@ -565,7 +601,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
 
                 data += linkformat % (linktypes['dotabuff'], player['account_id'])
                 if checktwitch:
-                    tname = twitchapi.get_twitch_from_steam_id(dotaToSteam(player['account_id']))
+                    tname = twitchapi.get_twitch_from_steam_id(ID(player['account_id']).steamid)
                     if tname:
                         data += linkformat % (linktypes['twitch'], tname)
                 data += '\n'
@@ -630,7 +666,6 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
         return
 
     settings.setdata('%s_last_dota_rss_check' % channel, time.time(), announce=False)
-
 
     rs = [li for li in node.get_steam_rss() if li]
     last_feed_url = settings.trygetset('%s_dota_last_steam_rss_update_url' % channel, '0')
