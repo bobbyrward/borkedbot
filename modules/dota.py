@@ -37,13 +37,14 @@ enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata
 ####
 
 class ID(object):
-    def __init__(self, ID=None, channel=None):
-        if ID:
-            if ID > STEAM_TO_DOTA_CONSTANT:
-                self.steamid = ID
+    def __init__(self, ID_=None, channel=None):
+        ID_ = int(ID_)
+        if ID_:
+            if ID_ > STEAM_TO_DOTA_CONSTANT:
+                self.steamid = ID_
                 self.dotaid = self.steam_to_dota(self.steamid)
-            elif ID < STEAM_TO_DOTA_CONSTANT:
-                self.dotaid = ID
+            elif ID_ < STEAM_TO_DOTA_CONSTANT:
+                self.dotaid = ID_
                 self.steamid = self.dota_to_steam(self.dotaid)
             else:
                 raise ValueError()
@@ -52,13 +53,15 @@ class ID(object):
             self.dotaid = settings.getdata('%s_dota_id' % channel, coerceto=int)
             self.steamid = self.dota_to_steam(self.dotaid)
 
-    @staticmethod
-    def steam_to_dota(ID):
-        return int(ID) - STEAM_TO_DOTA_CONSTANT
+    # TODO: Expand with comparison methods
 
     @staticmethod
-    def dota_to_steam(ID):
-        return int(ID) + STEAM_TO_DOTA_CONSTANT
+    def steam_to_dota(ID_):
+        return int(ID_) - STEAM_TO_DOTA_CONSTANT
+
+    @staticmethod
+    def dota_to_steam(ID_):
+        return int(ID_) + STEAM_TO_DOTA_CONSTANT
 
 ####
 
@@ -579,10 +582,9 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
         playerinfodict = {pl.pop('account_id'): pl for pl in playerinfos.copy()['player_infos']}
 
         if noinfoids:
-            noinfodatas = {data['friendid']: data['player_name'] for data in node.get_friend_data([ID(i).steamid for i in noinfoids])}
+            noinfodatas = {int(data['friendid']): data['player_name'] for data in node.get_friend_data([ID(i).steamid for i in noinfoids])}
             for x in noinfoids:
-                print 'ok it worked:', noinfodatas
-                playerinfodict[x] = noinfodatas[ID(x).steamid]
+                playerinfodict[ID(x).dotaid] = noinfodatas[ID(x).steamid]
 
         for team in ['Radiant', 'Dire']:
             data += teamformat % ('## ' if markdown else '', team)
