@@ -234,7 +234,7 @@ class Borkedbot(irc.IRCClient):
         try:
             self.say(self.factory.channel, msg, length)
         except:
-            print '[Borkedbot] How is this not encoded correctly: ' % msg
+            print '[Borkedbot] How is this not encoded correctly: ', msg
 
             try:
                 self.say(self.factory.channel, UnicodeDammit(msg).unicode_markup.encode('utf8'), length)
