@@ -19,7 +19,7 @@ from twisted.internet import reactor
 
 LOAD_ORDER = 35
 
-STEAM_TO_DOTA_CONSTANT = 76561197960265728
+
 POSITION_COLORS = ['Blue', 'Teal', 'Purple', 'Yellow', 'Orange',      'Pink', 'Gray', 'Light Blue', 'Green', 'Brown']
 
 herodata = None
@@ -37,13 +37,15 @@ enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata
 ####
 
 class ID(object):
+    STEAM_TO_DOTA_CONSTANT = 76561197960265728
+
     def __init__(self, ID_=None, channel=None):
         ID_ = int(ID_)
         if ID_:
-            if ID_ > STEAM_TO_DOTA_CONSTANT:
+            if ID_ > self.STEAM_TO_DOTA_CONSTANT:
                 self.steamid = ID_
                 self.dotaid = self.steam_to_dota(self.steamid)
-            elif ID_ < STEAM_TO_DOTA_CONSTANT:
+            elif ID_ < self.STEAM_TO_DOTA_CONSTANT:
                 self.dotaid = ID_
                 self.steamid = self.dota_to_steam(self.dotaid)
             else:
@@ -53,15 +55,22 @@ class ID(object):
             self.dotaid = settings.getdata('%s_dota_id' % channel, coerceto=int)
             self.steamid = self.dota_to_steam(self.dotaid)
 
-    # TODO: Expand with comparison methods
+    def __cmp__(self, other):
+        if isinstance(other, self.__class__):
+            return self.dotaid - other.dotaid
+        else:
+            return self.dotaid - self.__class__(other).dotaid
 
-    @staticmethod
-    def steam_to_dota(ID_):
-        return int(ID_) - STEAM_TO_DOTA_CONSTANT
+    def __repr__(self):
+        return "<ID - Steam: %s, Dota: %s)>" % (self.steamid, self.dotaid)
 
-    @staticmethod
-    def dota_to_steam(ID_):
-        return int(ID_) + STEAM_TO_DOTA_CONSTANT
+    @classmethod
+    def steam_to_dota(cl, ID_):
+        return int(ID_) - cl.STEAM_TO_DOTA_CONSTANT
+
+    @classmethod
+    def dota_to_steam(cl, ID_):
+        return int(ID_) + cl.STEAM_TO_DOTA_CONSTANT
 
 ####
 
@@ -106,7 +115,7 @@ def determineSteamid(steamthing):
 
     if steamthing.startswith('STEAM_'):
         sx,sy,sz = steamthing.split('_')[1].split(':')
-        maybesteamid = (int(sz)*2+int(sy)) + STEAM_TO_DOTA_CONSTANT
+        maybesteamid = (int(sz)*2+int(sy)) + ID.STEAM_TO_DOTA_CONSTANT
 
     elif 'steamcommunity.com/profiles/' in steamthing:
         maybesteamid = [x for x in steamthing.split('/') if x][-1]
@@ -125,10 +134,7 @@ def determineSteamid(steamthing):
         import re
         match = re.match(r'^\d*$', steamthing)
         if match:
-            if long(match.string) < STEAM_TO_DOTA_CONSTANT:
-                maybesteamid  = long(match.string) + STEAM_TO_DOTA_CONSTANT
-            else:
-                maybesteamid = match.string
+            return ID(match.string).steamid
         else:
             try:
                 result = steamapi.ResolveVanityURL(steamthing)['response']
@@ -467,45 +473,45 @@ def searchForNotablePlayers(targetdotaid, pages=10, heroid=None, includemmr=Fals
 
         print '[Dota-Notable] Searching using heroid %s' % heroid
 
-    pages = node.get_source_tv_games(heroid=heroid, pages=pages)
+    game = getSourceTVLiveGameForPlayer(targetdotaid, heroid)
 
-    for page in pages:
-        for game in page['game_list']:
+    if not game:
+        return (None, None)
 
-            players = game['players']
-            notable_players_found = []
-            target_found = False
+    players = game['players']
+    notable_players_found = []
+    target_found = False
 
-            for player in players:
-                if player['account_id'] in notable_players:
-                    print '[Dota-Notable] %s (%s)' % ('', notable_players[player['account_id']])
+    for player in players:
+        if player['account_id'] in notable_players:
+            print '[Dota-Notable] %s (%s)' % ('', notable_players[player['account_id']])
 
-                    try:
-                        playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['hero_id'])][0])
-                    except:
-                        playerhero = POSITION_COLORS[players.index(player)]
+            try:
+                playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['hero_id'])][0])
+            except:
+                playerhero = POSITION_COLORS[players.index(player)]
 
-                    if long(player['account_id']) != long(targetdotaid):
-                        notable_players_found.append((notable_players[player['account_id']], playerhero))
+            if ID(player['account_id']) != ID(targetdotaid):
+                notable_players_found.append((notable_players[player['account_id']], playerhero))
 
-                if player['account_id'] == long(targetdotaid):
-                    print '[Dota-Notable] found target player'
-                    target_found = True
+        if ID(player['account_id']) == ID(targetdotaid):
+            print '[Dota-Notable] found target player'
+            target_found = True
 
-            #TODO: ADD THE OTHER DATA IN HERE SOMEWHERE
+    #TODO: ADD THE OTHER DATA IN HERE SOMEWHERE
 
-            if target_found:
-                if notable_players_found:
-                    print '[Dota-Notable] Found: %s' % notable_players_found
-                else:
-                    print '[Dota-Notable] No notable players.'
+    if target_found:
+        if notable_players_found:
+            print '[Dota-Notable] Found: %s' % notable_players_found
+        else:
+            print '[Dota-Notable] No notable players.'
 
-                if includemmr:
-                    return (notable_players_found, game['average_mmr'])
-                else:
-                    return notable_players_found
-            else:
-                return (None, None)
+        if includemmr:
+            return (notable_players_found, game['average_mmr'])
+        else:
+            return notable_players_found
+    else:
+        return (None, None) if includemmr else None
 
 
 def getNotableCheckReady(channel):

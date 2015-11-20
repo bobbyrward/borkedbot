@@ -1307,7 +1307,7 @@ def generate_message_commands(bot):
 
         linked_id = twitchapi.get_steam_id_from_twitch(user)
         if not linked_id:
-            return '%s: I dunno! Link your steam and twitch accounts!' % user
+            return '%s: I dunno! Link your steam and twitch accounts in your twich settings!' % user
 
         tsid = dota.determineSteamid(linked_id)
 
