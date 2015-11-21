@@ -308,7 +308,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     playerdata = None
     for p in matchdata['result']['players']:
-        if str(p['account_id']) == str(dotaid):
+        if ID(p['account_id']) == ID(dotaid):
             playerdata = p
             break
 
@@ -326,7 +326,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
             if p['account_id'] in notable_players:
                 playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(p['hero_id'])][0]) # p['heroId'] ?
 
-                if int(p['account_id']) != int(dotaid):
+                if ID(p['account_id']) != ID(dotaid):
                     notable_players_found.append((notable_players[p['account_id']], playerhero))
 
         if notable_players_found:
@@ -409,6 +409,8 @@ def get_match_mmr_string(channel):
     solommrupdate = all([oldmmr[0] and newmmr[0]]) and oldmmr[0] != newmmr[0]
     partymmrupdate = all([oldmmr[1] and newmmr[1]]) and oldmmr[1] != newmmr[1]
 
+    # Maybe someday dota won't be awful and will update profile card mmr at the end of a match
+
     # if solommrupdate:
         # solodiff = newmmr[0] - oldmmr[0]
         # if solodiff >= 0:
@@ -451,7 +453,6 @@ def get_mmr_for_channel(channel):
         return (None, None)
 
 
-
 def getSourceTVLiveGameForPlayer(targetdotaid, heroid=None):
     pages = node.get_source_tv_games(heroid=heroid, pages=10)
 
@@ -463,7 +464,6 @@ def getSourceTVLiveGameForPlayer(targetdotaid, heroid=None):
 
 
 def searchForNotablePlayers(targetdotaid, pages=10, heroid=None, includemmr=False):
-    # Needs check for if in a game (maybe need a status indicator for richPresence)
     t0 = time.time()
     herodata = getHeroes()
     notable_players = settings.getdata('dota_notable_players')
@@ -484,7 +484,7 @@ def searchForNotablePlayers(targetdotaid, pages=10, heroid=None, includemmr=Fals
 
     for player in players:
         if player['account_id'] in notable_players:
-            print '[Dota-Notable] %s (%s)' % ('', notable_players[player['account_id']])
+            # print '[Dota-Notable] %s (%s)' % ('', notable_players[player['account_id']])
 
             try:
                 playerhero = str([h['localized_name'] for h in herodata['result']['heroes'] if str(h['id']) == str(player['hero_id'])][0])
@@ -495,7 +495,7 @@ def searchForNotablePlayers(targetdotaid, pages=10, heroid=None, includemmr=Fals
                 notable_players_found.append((notable_players[player['account_id']], playerhero))
 
         if ID(player['account_id']) == ID(targetdotaid):
-            print '[Dota-Notable] found target player'
+            # print '[Dota-Notable] found target player'
             target_found = True
 
     #TODO: ADD THE OTHER DATA IN HERE SOMEWHERE
@@ -568,7 +568,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
     notable_players = settings.getdata('dota_notable_players')
     game = getSourceTVLiveGameForPlayer(dotaid)
 
-    teamformat = '%s%s \n'                  # ('## ' if markdown else '', team)
+    teamformat = '%s%s \n'                   # ('## ' if markdown else '', team)
     playerformat = '%s%s: %s\n'              # ('#### ' if markdown else '  ', hero, name)
     notableformat = '%sNotable player: %s\n' # ('###### ' if markdown else '   - ', name)
     linkformat = '   - %s%s\n'               # (linktype, linkdata)
@@ -621,7 +621,7 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
         return data
 
 
-# TODO: SPlit into func that returns id:pairs and one that sets them and prints changes
+# TODO: Split into func that returns id:pairs and one that sets them and prints changes
 def update_verified_notable_players():
     class DotabuffParser(HTMLParser):
         table_active = False
@@ -686,7 +686,6 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
         if not item: continue
         if item['author'] == 'Valve' and 'Dota 2 Update' in item['title']:
             if item['guid'] != last_feed_url:
-                # print '[Dota-RSS] Found steam blog update'
                 if last_feed_url == 'derp': last_feed_url = '0'
 
                 try:
@@ -697,7 +696,6 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
                         break
                 except Exception as e:
                     print '[Dota-RSS] Error checking steam rss:', e
-                    # print "Ok what the fuck is up with the steam rss"
                     break
 
                 settings.setdata('%s_dota_last_steam_rss_update_url' % channel, str(item['guid']))
@@ -724,12 +722,10 @@ def check_for_steam_dota_rss_update(channel, setkey=True):
                     break
             except Exception as e:
                 print '[Dota-RSS] Error checking dota rss:', e
-                # print "Ok what the fuck is up with the dota rss"
                 break
 
             settings.setdata('%s_dota_last_dota2_rss_update_url' % channel, str(item['guid']))
 
-            # print '[Dota-RSS] Found dota blog update'
             return str("Dota 2 Blog Post: %s - %s" % (item['title'], item['link']))
         else:
             break
@@ -767,7 +763,6 @@ def download_all_available_replays(channel, dotaid=None, games=500):
             print '- Ded'
 
 
-
 def collect_match_ids(dotaid, games):
     if games > 500: raise ValueError('Cannot request more than 500 games')
 
@@ -780,15 +775,6 @@ def collect_match_ids(dotaid, games):
         matchids.sort(reverse=True)
 
     return matchids
-
-
-# For matching games:
-#   Delete:
-#     numSpectators
-#     towerState
-#     tvBroadcastTime
-#
-# The rest should be matchable
 
 
 class Lobby(object):
