@@ -438,7 +438,7 @@ def generate_message_commands(bot):
         import twitchapi
         if args:
             sid = twitchapi.get_steam_id_from_twitch(args[0])
-            sid = 'http://steamcommunity.com/profiles/%s' % sid if sid else 'No steam account linked to %s.' % args[0]
+            sid = 'http://steamcommunity.com/profiles/%s' % int(sid) if sid else 'No steam account linked to %s.' % args[0]
             return sid
 
     coms.append(command.Command('!twitch2steam', f, bot, True))
