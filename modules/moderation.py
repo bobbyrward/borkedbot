@@ -232,9 +232,10 @@ def scan_link(link):
             return '.scr download'
 
         if r2.headers.get('transfer-encoding') == 'chunked':
-            print '[Moderation-Scan] Most likely a download, but I have no good solution for this.' 
+            print '[Moderation-Scan] Most likely a download, this is the best I can do.' 
+            if len(r2.history) > 2:
+                return 'Redirect to download'
             # perhaps this should only return if it went through a link shortener
-            # return 'Redirect to download'
 
     elif r.headers.get('content-type', '').startswith('text'): # preferably text/html but I don't know if that's always set
         #TODO: various if checks to make sure what we're about to do is sane
