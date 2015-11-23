@@ -1143,7 +1143,7 @@ def generate_message_commands(bot):
        bot, channels=['moodota2'], targeted=True, repeatdelay=15))
 
     coms.append(command.SimpleCommand(['!song', '!music', '!playlist', '!songlist'],
-        "Pandora", bot, channels=['moodota2'], repeatdelay=10, targeted=True))
+        "Try this for now: http://www.twitchecho.com/moodota2 Don't be surprised if it doesn't work though.", bot, channels=['moodota2'], repeatdelay=10, targeted=True))
 
     # B9 ###############################
 

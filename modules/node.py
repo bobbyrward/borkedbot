@@ -223,10 +223,25 @@ def send_steam_message(steamid, message):
     with ZRPC() as zrpc:
         return zrpc.evaljs("bot.sendMessage('%s', '%s')" % (steamid, message))
 
-def get_friend_data(steamids):
+class FriendDataFlags():
+    Status        = 1
+    PlayerName    = 2 # Default
+    QueryPort     = 4
+    SourceID      = 8 # Default
+    Presence      = 16 # Default
+    Metadata      = 32
+    LastSeen      = 64
+    ClanInfo      = 128
+    GameExtraInfo = 256 # Default
+    GameDataBlob  = 512
+    ClanTag       = 1024
+    Facebook      = 2048
+    ALL           = 4095
+
+def get_friend_data(steamids, datatype=None):
     steamids = [str(s) for s in steamids]
     with ZRPC() as zrpc:
-        return get_batched_data(zrpc.getfrienddata, len(steamids) > 1, True, True, (steamids, None))
+        return get_batched_data(zrpc.getfrienddata, len(steamids) > 1, True, True, (steamids, datatype))
 
 ########
 
