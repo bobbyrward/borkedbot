@@ -866,6 +866,26 @@ var zrpcserver = new zerorpc.Server({
         steamids = Array.isArray(steamids) ? steamids : [steamids];
         datatype = typeof datatype !== 'function' ? datatype : 3154;
 
+        /*
+
+        enum EClientPersonaStateFlag flags
+        {
+            Status = 1;
+            PlayerName = 2; *
+            QueryPort = 4;
+            SourceID = 8; *
+            Presence = 16; *
+            Metadata = 32;
+            LastSeen = 64;
+            ClanInfo = 128;
+            GameExtraInfo = 256; *
+            GameDataBlob = 512;
+            ClanTag = 1024;
+            Facebook = 2048;
+        };
+
+        */
+
         if (zrpc_frienddata_request_locked) {
             reply("busy");
             return;
@@ -909,6 +929,18 @@ var zrpcserver = new zerorpc.Server({
                 return;
             }
         };
+
+        setTimeout(function() {
+            if (receivedresponses != totalresponses) {
+                msg = util.format("Did not receive all requested data. (%s/%s)", receivedresponses, totalresponses)
+
+                console.log(msg);
+                reply(msg);
+                
+                steamFriends.removeListener('personaState', sfonps);
+                zrpc_frienddata_request_locked = false;
+            }
+        }, 10000);
 
         steamFriends.on('personaState', sfonps);
         steamFriends.requestFriendData(steamids, datatype);
