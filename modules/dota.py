@@ -174,7 +174,7 @@ def alert(event):
             except RuntimeWarning as e:
                 pass
             except Exception as e:
-               print '[Dota-Error] Match blurb failure: %s' % e
+                print '[Dota-Error] Match blurb failure: %s' % e
                 settings.setdata('%s_matchblurb_running' % event.channel, False, announce=False)
             else:
                 settings.setdata('%s_matchblurb_running' % event.channel, False, announce=False)
