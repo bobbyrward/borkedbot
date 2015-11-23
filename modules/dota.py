@@ -175,7 +175,7 @@ def alert(event):
                 pass
             except Exception as e:
                print '[Dota-Error] Match blurb failure: %s' % e
-            finally:
+            else:
                 settings.setdata('%s_matchblurb_running' % event.channel, False, announce=False)
 
             # msgtimer.stop()
