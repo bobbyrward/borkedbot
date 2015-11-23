@@ -40,7 +40,7 @@ class Borkedbot(irc.IRCClient):
         pass
 
     @staticmethod
-    def reload_manager(self):
+    def reload_manager():
         reload(chatmanager)
 
     @property
@@ -231,6 +231,11 @@ class Borkedbot(irc.IRCClient):
 
     def botsay(self, msg, length=None):
         if length == None: length = self._max_line_length
+
+        if isinstance(msg, unicode):
+            # I really hope this doesn't break anything
+            msg = msg.encode('utf8')
+
         try:
             self.say(self.factory.channel, msg, length)
         except:

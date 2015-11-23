@@ -438,7 +438,7 @@ def generate_message_commands(bot):
         import twitchapi
         if args:
             sid = twitchapi.get_steam_id_from_twitch(args[0])
-            sid = 'http://steamcommunity.com/profiles/%s' % sid if sid else 'No steam account linked to %s.' % args[0]
+            sid = 'http://steamcommunity.com/profiles/%s' % int(sid) if sid else 'No steam account linked to %s.' % args[0]
             return sid
 
     coms.append(command.Command('!twitch2steam', f, bot, True))
@@ -692,11 +692,11 @@ def generate_message_commands(bot):
         if channel == 'barnyyy':
             return '%s: 5k' % user
 
-        if channel not in dota.enabled_channels.keys():
+        if channel not in dota.get_enabled_channels().keys():
             print 'Channel not enabled for dota'
             return
 
-        if channel in dota.enabled_channels.keys() and not dota.enabled_channels[channel][1]:
+        if channel in dota.get_enabled_channels().keys() and not dota.get_enabled_channels()[channel][1]:
             if user == channel:
                 rs = '''Hi %s, I can provide accurate MMR and automatically announce \
                 games when they are finished with mmr change and totals. \
@@ -764,7 +764,7 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import dota
 
-        if channel not in dota.enabled_channels:
+        if channel not in dota.get_enabled_channels():
             return
 
         dotaid = settings.getdata('%s_dota_id' % channel)
@@ -784,10 +784,10 @@ def generate_message_commands(bot):
             if args[0].lower() == 'status':
                 return "This will be reworked."
 
-                if channel not in dota.enabled_channels:
+                if channel not in dota.get_enabled_channels():
                     return "Channel is not enabled for dota."
 
-                return "MMR is %s." % ('enabled' if dota.enabled_channels[channel][1] else 'disabled')
+                return "MMR is %s." % ('enabled' if dota.get_enabled_channels()[channel][1] else 'disabled')
 
             if args[0].lower() in ['setname', 'rename'] and len(args) >= 2:
                 newname = ' '.join(args[1:])
@@ -827,7 +827,7 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import dota, settings, node
 
-        if channel not in dota.enabled_channels:
+        if channel not in dota.get_enabled_channels():
             return
 
         # if user == 'bluepowervan' and not bot.user_is_op(user):
@@ -1141,6 +1141,9 @@ def generate_message_commands(bot):
 
     coms.append(command.SimpleCommand('!announcer', 'Weeaboo Onodera+Kongou waifu announcer > http://saylith.github.io/harem-announcer/',
        bot, channels=['moodota2'], targeted=True, repeatdelay=15))
+
+    coms.append(command.SimpleCommand(['!song', '!music', '!playlist', '!songlist'],
+        "Pandora", bot, channels=['moodota2'], repeatdelay=10, targeted=True))
 
     # B9 ###############################
 
