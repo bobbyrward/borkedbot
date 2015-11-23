@@ -15,12 +15,15 @@ redisdb = redis.StrictRedis(host=auth.REDIS_HOST, port=auth.REDIS_PORT, db=auth.
 
 defaultdomain = 'settings-global'
 
-
-def getdata(key, domain=defaultdomain, coerceto=None):
+# TODO: noerror argument thing
+def getdata(key, domain=defaultdomain, coerceto=None, noerror=False):
     kdata = redisdb.hget(domain, key)
 
     if kdata is None:
-        raise NameError('Key does not exist')
+        if noerror:
+            return None
+        else:
+            raise NameError('Key does not exist')
 
     result = dill.loads(kdata)
 
