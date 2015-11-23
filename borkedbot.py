@@ -40,7 +40,7 @@ class Borkedbot(irc.IRCClient):
         pass
 
     @staticmethod
-    def reload_manager(self):
+    def reload_manager():
         reload(chatmanager)
 
     @property
