@@ -31,6 +31,7 @@ herodata = None
 # import settings; settings.setdata('dota_enabled_channels', [])
 #
 # This will give it an empty list so it doesn't complain about not having the key
+# I'll add an argument to settings.getdata to not raise an exception when there's no key ~eventually~
 
 enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
 
@@ -74,6 +75,9 @@ class ID(object):
 
 ####
 
+def get_enabled_channels():
+    return {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
+
 def update_channels():
     global enabled_channels
     enabled_channels = {ch:(settings.getdata('%s_common_name' % ch),settings.getdata('%s_mmr_enabled' % ch)) for ch in settings.getdata('dota_enabled_channels')}
@@ -96,7 +100,6 @@ def disable_channel(channel, mmr=False):
     settings.setdata('dota_enabled_channels', list(set(en_chans) - set([channel])))
     settings.setdata('%s_mmr_enabled' % channel, mmr)
     update_channels()
-
 
 def getHeroes():
     global herodata
@@ -155,9 +158,9 @@ def setup(bot):
     # rework into a context manager
 
 def alert(event):
-    if event.channel in enabled_channels:
-        msgtimer = timer.Timer('Dota message Timer')
-        msgtimer.start()
+    if event.channel in get_enabled_channels():
+        # msgtimer = timer.Timer('Dota message Timer')
+        # msgtimer.start()
         if event.etype == 'msg': # Meh
             mes_count = settings.trygetset('%s_notable_message_count' % event.channel, 1)
             settings.setdata('%s_notable_message_count' % event.channel, mes_count + 1, announce=False)
@@ -174,8 +177,9 @@ def alert(event):
                print '[Dota-Error] Match blurb failure: %s' % e
             finally:
                 settings.setdata('%s_matchblurb_running' % event.channel, False, announce=False)
-            msgtimer.stop()
-            # print msgtimer
+
+            # msgtimer.stop()
+            # print '[Dota] Matchblurb completed in %4.4f seconds.' % msgtimer.runtime()
 
         if event.etype == 'timer':
             try:
@@ -187,7 +191,7 @@ def alert(event):
                 print '[Dota-Error] RSS check failure: %s (%s)' % (e,type(e))
 
 
-            # This is disabled until sourcetv stuff is fixed
+            # I'll leave this disabled until richpresence/persona stuff is fixed
             # try:
                 # nblurb = notablePlayerBlurb(event.channel)
                 # if nblurb:
@@ -206,7 +210,6 @@ def blurb(channel, bot, override=False):
 
         settings.setdata('%s_matchblurb_running' % channel, False, announce=False)
         reactor.callLater(6.0, bot.botsay, r)
-        # bot.botsay(r)
 
     return r is not None
 
@@ -221,6 +224,7 @@ def latestBlurb(channel, override=False):
             matches = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=25)['result']['matches']
         except Exception as e:
             print 'Error with steam api data:', e
+            raise e
             return
 
         settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
@@ -235,8 +239,8 @@ def latestBlurb(channel, override=False):
 
                 matchlist = [m['match_id'] for m in matches]
 
-                # TODO: Fix -1 issues for lastmatch
-                # For some reason, a failed match (early abandon) was never saved as the lastest match
+                # If there was a problem here it either was never a problem or doesn't exist now?
+
                 try:
                     skippedmatches = matchlist.index(previoussavedmatch['match_id']) - 1
                 except:
@@ -252,7 +256,7 @@ def latestBlurb(channel, override=False):
             settings.setdata('%s_notable_message_count' % channel, settings.trygetset('%s_notable_message_limit' % channel, 50), announce=False)
 
             print "[Dota] Match ID change found (%s:%s) (Lobby type %s)" % (previoussavedmatch['match_id'], latestmatch['match_id'], str(latestmatch['lobby_type']))
-            return getLatestGameBlurb(channel, dotaid, latestmatch, skippedmatches=skippedmatches, getmmr = enabled_channels[channel][1] and str(latestmatch['lobby_type']) == '7')
+            return getLatestGameBlurb(channel, dotaid, latestmatch, skippedmatches=skippedmatches, getmmr = get_enabled_channels()[channel][1] and str(latestmatch['lobby_type']) == '7')
 
 
 def checktimeout(channel):
@@ -381,7 +385,7 @@ def getLatestGameBlurb(channel, dotaid, latestmatch=None, skippedmatches=0, getm
 
     matchoutput = "%s%s has %s a game.  http://www.dotabuff.com/matches/%s" % (
         matchskipstr,
-        enabled_channels[channel][0],
+        get_enabled_channels()[channel][0],
         winstatus,
         latestmatch['match_id'])
 
