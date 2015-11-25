@@ -892,6 +892,7 @@ def generate_message_commands(bot):
             'moodota2': 'Moo',
             'gixgaming': 'giX',
             'bloodynine_': 'Bloody Nine',
+            'aliastar': 'remember11',
         }
 
         if channel not in namemap: return
@@ -1147,6 +1148,7 @@ def generate_message_commands(bot):
 
     def f(channel, user, message, args, data, bot):
         defaultpics = ['iilyXeY', 'eTbvrvX', 'f4xHnra', 'GYyRYvl', 'Whwh8JQ', 'tdXvXfZ', 'VIcaqLo', 'nuPgY2Z', 'bBtMqke', 'ceA2egp', 'TERo4Ny']
+
         if (bot.user_is_op(user) or bot.user_is_sub(user) or user == 'imayhaveborkedit') and not args:
             return "http://imgur.com/" + ','.join(settings.trygetset('aliastar_catpics', defaultpics))
 
@@ -1167,7 +1169,7 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!catpics', f, bot, channels=['aliastar'], repeatdelay=5))
 
-    coms.append(command.SimpleCommand('!slurp', "http://vocaroo.com/i/s0c16Bda2ejY", bot, True, channels=['aliastar'], repeatdelay=10))
+    coms.append(command.SimpleCommand('!slurp', "http://vocaroo.com/i/s0c16Bda2ejY Warning: LEWD", bot, True, channels=['aliastar'], repeatdelay=10, prependuser=False))
 
     ######################################################################
     #
