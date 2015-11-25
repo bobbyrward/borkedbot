@@ -247,7 +247,6 @@ def scan_link(link):
 
         # This should work and I don't know if I want to bring in BeautifulSoup just for this
         metamatch = re.search(moderation.SPECIAL_REGEX['meta'], rget.text)
-
         if metamatch:
             print '[Moderation-Scan] Scanning meta redirect to "%s"' % metamatch.groups()[0]
             return scan_link(metamatch.groups()[0])
@@ -260,6 +259,12 @@ def scan_link(link):
             if match_xaasu:
                 print '[Moderation-Scan] xaa.su redirect found: %s' % match_xaasu.groups()[0]
                 return scan_link(str(match_xaasu.groups()[0]))
+
+        # This one is pretty dumb I just hope the regex doesn't break
+        jswindowlocmatch = re.search(moderation.SPECIAL_REGEX['window.location'], rget.text)
+        if jswindowlocmatch:
+            print '[Moderation-Scan] Ok lets see where the rabbit hole goes: %s' % jswindowlocmatch.groups()[0]
+            return scan_link(str(jswindowlocmatch.groups()[0]))
 
         # Other checks
         # check for links to exes and scrs and warn, maybe return a (ban_duration:int [-1 no ban, 0 ban, 1+ timeout duration], reason:str)

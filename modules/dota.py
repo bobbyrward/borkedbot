@@ -3,6 +3,7 @@ sys.dont_write_bytecode = True
 
 import os
 import time
+import re
 import json
 import requests
 import steamapi
@@ -133,9 +134,14 @@ def determineSteamid(steamthing):
             maybesteamid = result['steamid']
         else:
             maybesteamid = None
+
+    elif 'dotabuff.com/players/' in steamthing:
+        match = re.search(r'/players/(\d+)', steamthing)
+        if match:
+            return ID(match.groups()[0]).dotaid
+
     else:
-        import re
-        match = re.match(r'^\d*$', steamthing)
+        match = re.match(r'\d*$', steamthing)
         if match:
             return ID(match.string).steamid
         else:

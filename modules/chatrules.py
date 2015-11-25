@@ -721,12 +721,10 @@ def generate_message_commands(bot):
         elif mmrdata[1] is not None:
             return 'Party: %s' % mmrdata[1]
 
-    coms.append(command.Command('!mmr', f, bot, repeatdelay=10))
+    coms.append(command.Command('!mmr', f, bot, repeatdelay=15))
 
-    def f(channel, user, message, args, data, bot): #TODO: rework this since the bot can't add people
+    def f(channel, user, message, args, data, bot):
         import dota, node, settings, twitchapi
-
-        # return "I'm in the middle of rewriting this command. Don't worry it's almost done."
 
         if user not in [channel, 'imayhaveborkedit']:
             return
@@ -864,7 +862,7 @@ def generate_message_commands(bot):
         if players:
             return "Notable players in this game: %s -- Average MMR: %s" % (', '.join(['%s (%s)' % (p,h) for p,h in players]), mmr)
         else:
-            return "No other notable players found in the current game."
+            return "No other notable players found in the current game -- Average MMR: %s" % mmr
 
     coms.append(command.Command('!notableplayers', f, bot, repeatdelay=10))
 
@@ -1317,13 +1315,40 @@ def generate_message_commands(bot):
         smmr, pmmr = node.get_mmr_for_dotaid(dota.ID(tsid).dotaid)
 
         if smmr is not None:
-            return '%s: %s!' % (user, smmr)
+            return '%s: %s!%s' % (user, smmr, '' if int(smmr) < 6000 else ' ヽ༼ຈل͜ຈ༽ﾉ')
         elif pmmr is not None:
             return '%s: %s!' % (user, pmmr)
         else:
             return '%s: I dunno! Stop hiding your mmr!' % user
 
     coms.append(command.Command('!mymmr', f, bot, repeatdelay=1))
+
+
+    def f(channel, user, message, args, data, bot):
+        import node, dota, twitchapi
+
+        if not args: return
+
+        try:
+            lookupid = dota.determineSteamid(args[0])
+        except:
+            lookupid = None
+
+        if not lookupid:
+            lookupid = twitchapi.get_steam_id_from_twitch(args[0])
+            if not lookupid:
+                return "%s: Could not determine what account that is." % user
+
+        smmr, pmmr = node.get_mmr_for_dotaid(dota.ID(lookupid).dotaid)
+
+        if smmr is not None:
+            return "%s: That person has %s solo mmr." % (user, smmr)
+        elif pmmr is not None:
+            return "%s: That person has %s party mmr." % (user, pmmr)
+        else:
+            return "%s: That person isn\'t displaying their mmr." % user
+
+    coms.append(command.Command('!mmrof', f, bot, True, repeatdelay=1))
 
 
     ######################################################################
