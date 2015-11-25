@@ -11,9 +11,9 @@ from HTMLParser import HTMLParser
 
 LOAD_ORDER = 30
 
-sub_alert_channel_list = ['monkeys_forever', 'superjoe', 'kizzmett', 'moodota2', 'unsanitylive']
+sub_alert_channel_list = ['monkeys_forever', 'superjoe', 'kizzmett', 'moodota2', 'unsanitylive', 'aliastar']
 youtube_title_channel_list = ['monkeys_forever', 'unsanitylive', 'pelmaleon', 'mynameisamanda', 'imayhaveborkedit', 'barnyyy', 
-                              'moodota2', 'gixgaming', 'kazkarontwo', 'lamperkat', 'f4ldota', 'kizzmett', 'akutober', 'venastoned']
+                              'moodota2', 'gixgaming', 'kazkarontwo', 'lamperkat', 'f4ldota', 'kizzmett', 'akutober', 'venastoned', 'aliastar']
 
 def setup(bot):
     pass
