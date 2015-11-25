@@ -4,6 +4,8 @@ var steam = require("steam"),
     crypto = require("crypto"),
     dota2 = require("dota2"),
 
+    kvparse = require('binarykvparser'),
+
     zerorpc = require("zerorpc"),
     request = require('request'),
     FeedParser = require('feedparser'),
@@ -11,12 +13,14 @@ var steam = require("steam"),
     steamClient = new steam.SteamClient(),
     steamUser = new steam.SteamUser(steamClient),
     steamFriends = new steam.SteamFriends(steamClient),
+    steamRichPresence = new steam.SteamRichPresence(steamClient, 570),
     Dota2 = new dota2.Dota2Client(steamClient, true),
 
     adminids = ['76561198030495011'],
     chatkeymap = {},
     pendingenables = {},
 
+    user_rich_presence_data = {},
     dotauserstatus = {},
     dotauserplayingas = {},
 
@@ -215,6 +219,16 @@ var onSteamLogOn = function onSteamLogOn(logonResp) {
 
     };
 
+steamRichPresence.on('info', function(info) {
+    for (var i = info.rich_presence.length - 1; i >= 0; i--) {
+        kvdata = kvparse.parse(info.rich_presence[i].rich_presence_kv);
+        steamuserid = info.rich_presence[i].steamid_user;
+        user_rich_presence_data[steamuserid] = kvdata.RP;
+
+        // if (kvdata.RP.status) { console.log(steamuserid, kvdata.RP.status); };
+    };
+});
+
 steamUser.on('updateMachineAuth', function(sentry, callback) {
         fs.writeFileSync('sentry', sentry.bytes)
         util.log("sentryfile saved");
@@ -239,6 +253,7 @@ steamClient.on('servers', onSteamServers);
 steamClient.on('message', onMessage);
 steamClient.on('richPresence', onRichPresence);
 steamClient.on('friend', onFriend);
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////

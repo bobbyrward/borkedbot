@@ -300,6 +300,14 @@ def get_profile_card(accountid):
     with ZRPC() as zrpc:
         return json.loads(zrpc.getprofilecard(accountid))
 
+def get_rich_presence_available_for_steamid(steamid):
+    with ZRPC() as zrpc:
+        return zrpc.raw_eval('user_rich_presence_data.indexOf("%s") > -1' % steamid)
+
+def get_user_rich_presence(steamid):
+    with ZRPC() as zrpc:
+        return zrpc.raw_eval('user_rich_presence_data["%s"]' % steamid)
+
 def get_user_status(steamid):
     with ZRPC() as zrpc:
         return zrpc.evaljs("dotauserstatus['%s']" % steamid)
