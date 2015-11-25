@@ -1149,7 +1149,7 @@ def generate_message_commands(bot):
         defaultpics = ['iilyXeY', 'eTbvrvX', 'f4xHnra', 'GYyRYvl', 'Whwh8JQ', 'tdXvXfZ', 'VIcaqLo', 'nuPgY2Z', 'bBtMqke', 'ceA2egp', 'TERo4Ny']
         if (bot.user_is_op(user) or bot.user_is_sub(user) or user == 'imayhaveborkedit') and not args:
             return "http://imgur.com/" + ','.join(settings.trygetset('aliastar_catpics', defaultpics))
-        
+
         elif (bot.user_is_op(user) or user == 'imayhaveborkedit') and args:
             if args[0] in ['+', 'add'] and len(args) >= 2:
                 catpiclist = settings.trygetset('aliastar_catpics', defaultpics)
@@ -1159,12 +1159,12 @@ def generate_message_commands(bot):
 
             elif args[0] in ['-', 'del', 'remove', 'rm'] and len(args) >= 2:
                 catpiclist = settings.trygetset('aliastar_catpics', defaultpics)
-                settings.setdata('aliastar_catpics', list(set([x for x in catpiclist if x not in args[1:]])))
+                settings.setdata('aliastar_catpics', [x for x in catpiclist if x not in args[1:]])
                 return "Removed %s pics." % len(args[1:])
-            
+
             elif args[0] in ['list', 'ls']:
                 return '%s: %s' % (user, ' '.join(settings.getdata('aliastar_catpics')))
-    
+
     coms.append(command.Command('!catpics', f, bot, channels=['aliastar'], repeatdelay=5))
 
     coms.append(command.SimpleCommand('!slurp', "http://vocaroo.com/i/s0c16Bda2ejY", bot, True, channels=['aliastar'], repeatdelay=10))
