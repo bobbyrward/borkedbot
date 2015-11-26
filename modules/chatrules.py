@@ -892,6 +892,7 @@ def generate_message_commands(bot):
             'moodota2': 'Moo',
             'gixgaming': 'giX',
             'bloodynine_': 'Bloody Nine',
+            'aliastar': 'remember11',
         }
 
         if channel not in namemap: return
@@ -1143,10 +1144,32 @@ def generate_message_commands(bot):
     coms.append(command.SimpleCommand(['!song', '!music', '!playlist', '!songlist'],
         "Try this for now: http://www.twitchecho.com/moodota2 Don't be surprised if it doesn't work though.", bot, channels=['moodota2'], repeatdelay=10, targeted=True))
 
-    # B9 ###############################
+    # Aliastar ###############################
 
-    # coms.append(command.SimpleCommand(['!music', '!playlist', '!songlist'],
-    #     "https://www.youtube.com/playlist?list=PLCUELUXNSjikxw-Utn8E_XrdjDLNm13IO", bot, channels=['bloodynine_'], repeatdelay=10))
+    def f(channel, user, message, args, data, bot):
+        defaultpics = ['iilyXeY', 'eTbvrvX', 'f4xHnra', 'GYyRYvl', 'Whwh8JQ', 'tdXvXfZ', 'VIcaqLo', 'nuPgY2Z', 'bBtMqke', 'ceA2egp', 'TERo4Ny']
+
+        if (bot.user_is_op(user) or bot.user_is_sub(user) or user == 'imayhaveborkedit') and not args:
+            return "http://imgur.com/" + ','.join(settings.trygetset('aliastar_catpics', defaultpics))
+
+        elif (bot.user_is_op(user) or user == 'imayhaveborkedit') and args:
+            if args[0] in ['+', 'add'] and len(args) >= 2:
+                catpiclist = settings.trygetset('aliastar_catpics', defaultpics)
+                catpiclist.extend(args[1:])
+                settings.setdata('aliastar_catpics', catpiclist)
+                return "Added %s new pics." % len(args[1:])
+
+            elif args[0] in ['-', 'del', 'remove', 'rm'] and len(args) >= 2:
+                catpiclist = settings.trygetset('aliastar_catpics', defaultpics)
+                settings.setdata('aliastar_catpics', [x for x in catpiclist if x not in args[1:]])
+                return "Removed %s pics." % len(args[1:])
+
+            elif args[0] in ['list', 'ls']:
+                return '%s: %s' % (user, ' '.join(settings.getdata('aliastar_catpics')))
+
+    coms.append(command.Command('!catpics', f, bot, channels=['aliastar'], repeatdelay=5))
+
+    coms.append(command.SimpleCommand('!slurp', "http://vocaroo.com/i/s0c16Bda2ejY Warning: LEWD", bot, True, channels=['aliastar'], repeatdelay=10, prependuser=False))
 
     ######################################################################
     #

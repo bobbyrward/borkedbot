@@ -64,7 +64,8 @@ def alert(event):
                     ban(event)
 
     if event.etype in ['msg', 'action'] and not event.isop:
-        inspect_for_bad_link(event)
+        if check_for_option('inspect', event.channel):
+            inspect_for_bad_link(event)
 
 
 def check_for_option(option, channel):
@@ -159,14 +160,12 @@ def inspect_for_bad_link(event):
             if badlink:
                 print '[Moderation-Scan] Bad link detected (%s)' % badlink
 
-                if check_for_option('inspect', event.channel):
+                if check_for_option('inspect-warning', event.channel):
+                    bl_warning = 'That looks like a bad link, don\'t touch it. (%s)' % badlink
+                else:
+                    bl_warning = None
 
-                    if check_for_option('inspect-warning', event.channel):
-                        bl_warning = 'That looks like a bad link, don\'t touch it. (%s)' % badlink
-                    else:
-                        bl_warning = None
-
-                    ban(event, bl_warning)
+                ban(event, bl_warning)
 
                 if check_for_option('inspect-warning', event.channel):
                     event.bot.botsay('I would advise against clicking that link. (%s)' % badlink)
