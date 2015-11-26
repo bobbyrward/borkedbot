@@ -965,9 +965,7 @@ def generate_message_commands(bot):
         else:
             return "Youtube title posting is %s." % 'ON' if settings.trygetset('%s_post_youtube_titles' % channel, True) else 'OFF'
 
-    coms.append(command.Command('!youtubes', f, bot, repeatdelay=30, groups=me_and_broadcaster))
-
-
+    coms.append(command.Command('!youtubes', f, bot, groups=me_and_broadcaster))
 
 
     # Monkeys_forever ######################################################
