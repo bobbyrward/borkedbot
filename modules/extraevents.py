@@ -12,12 +12,10 @@ from HTMLParser import HTMLParser
 LOAD_ORDER = 30
 
 sub_alert_channel_list = ['monkeys_forever', 'superjoe', 'kizzmett', 'moodota2', 'unsanitylive', 'aliastar']
-youtube_title_channel_list = ['monkeys_forever', 'unsanitylive', 'pelmaleon', 'mynameisamanda', 'imayhaveborkedit', 'barnyyy', 
-                              'moodota2', 'gixgaming', 'kazkarontwo', 'lamperkat', 'f4ldota', 'kizzmett', 'akutober', 'venastoned', 'aliastar', 'brinkdota']
+# rework this one too
 
 def setup(bot):
     pass
-
 
 def alert(event):
     # Sub alert
@@ -46,7 +44,7 @@ def alert(event):
     # http://youtube.com/get_video_info?video_id=n4D-N6aWIV4
 
     if event.etype in ['msg', 'action']:
-        if event.channel in youtube_title_channel_list:
+        if settings.trygetset('%s_post_youtube_titles' % event.channel, True):
             if ('youtube.com/watch?' in event.data or 'youtu.be/' in event.data) and not event.data.strip().startswith('!'):# and event.user != 'rime_':
                 print '[ExtraEvents] Found youtube link, looking up title'
 

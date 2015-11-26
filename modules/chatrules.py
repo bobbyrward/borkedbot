@@ -951,6 +951,24 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!blog', f, bot, repeatdelay=30))
 
+    def f(channel, user, message, args, data, bot):
+        import settings
+
+        if args:
+            if args[0].lower() == 'on':
+                settings.setdata('%s_post_youtube_titles' % channel, True)
+                return "Turned youtube title posting on."
+
+            elif args[0].lower() == 'off':
+                settings.setdata('%s_post_youtube_titles' % channel, False)
+                return "Turned youtube title posting off."
+        else:
+            return "Youtube title posting is %s." % 'ON' if settings.trygetset('%s_post_youtube_titles' % channel, True) else 'OFF'
+
+    coms.append(command.Command('!youtubes', f, bot, repeatdelay=30, groups=me_and_broadcaster))
+
+
+
 
     # Monkeys_forever ######################################################
 
