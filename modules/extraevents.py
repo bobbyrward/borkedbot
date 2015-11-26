@@ -6,6 +6,8 @@ import re
 import requests
 import urllib2
 
+import settings
+
 from HTMLParser import HTMLParser
 
 
