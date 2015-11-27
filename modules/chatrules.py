@@ -893,6 +893,7 @@ def generate_message_commands(bot):
             'gixgaming': 'giX',
             'bloodynine_': 'Bloody Nine',
             'aliastar': 'remember11',
+            'brinkdota': 'brink',
         }
 
         if channel not in namemap: return

@@ -27,7 +27,8 @@ def doreload(bot):
             try:
                os.path.getmtime(m.__file__) > modules_mtime[m]
             except:
-                continue #TODO: FIX
+                continue 
+                #TODO: FIX unimported modules not reloading
 
             if os.path.getmtime(m.__file__) > modules_mtime[m]:
                 _info("Reloading %s" % m.__name__)

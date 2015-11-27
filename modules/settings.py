@@ -51,7 +51,7 @@ def setdata(key, value, domain=defaultdomain, announce=True):
 
 def trygetset(key, value, domain=defaultdomain, coerceto=None, announce=True):
     if not redisdb.hexists(domain, key):
-        print "[Settings] Key added: %s (%s)" % (key, value)
+        # print "[Settings] Key added: %s (%s)" % (key, value)
         setdata(key, value, domain, announce)
 
     return getdata(key, domain, coerceto)
