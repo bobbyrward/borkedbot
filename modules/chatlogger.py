@@ -49,9 +49,7 @@ def log(user, channel, msg, isop, isaction = False, logstdout = True):
     with open(logpath + "log.txt", 'a+') as f:
         # f.write(now + user +": " +  msg + "\n")
         try:
-            f.write(logfileformat % (now, user, msg))
-        except UnicodeEncodeError:
-            print 'Error logging line:', msg
-            print 'Attempting to fix encoding'
             f.write(logfileformat % (now, user, UnicodeDammit(msg).unicode_markup.encode('utf8')))
+        except Exception as e:
+            print "Error writing line to log:", e
 
