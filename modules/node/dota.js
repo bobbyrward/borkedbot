@@ -92,7 +92,7 @@ var onSteamLogOn = function onSteamLogOn(logonResp) {
                 // Dota2.joinChat(response.channelName, dota2.DOTAChatChannelType_t.DOTAChannelType_Lobby);
             });
 
-            Dota2.on("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
+            Dota2.on("matchmakingStatsData", function(searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
                 util.log('Got matchmaking stats');
                 //util.log("Wait times:\n")
                 //util.log(waitTimesByGroup)
@@ -336,7 +336,7 @@ var zrpcserver = new zerorpc.Server({
         reply = arguments[arguments.length - 1];
         Dota2.requestMatchmakingStats();
 
-        Dota2.once("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
+        Dota2.once("matchmakingStatsData", function(searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
             var mmdata = {};
 
             for (var i = searchingPlayersByGroup.length - 1; i >= 0; i--) {
@@ -1147,22 +1147,26 @@ var DOTA_RP_STATUSES = {
     "DOTA_RP_BOTPRACTICE"                : "Playing Against Bots",
     "DOTA_RP_TRAINING"                   : "On a Training Mission" },
 
-    mmregions = ['USWest',
-                 'USEast',
-                 'Europe',
-                 'Singapore',
-                 'Shanghai',
-                 'Brazil',
-                 'Korea',
-                 'Austria',
-                 'Stockholm',
-                 'Australia',
-                 'SouthAfrica',
-                 'PerfectWorldTelecom',
-                 'PerfectWorldUnicom',
-                 'Dubai',
-                 'Chile',
-                 'Peru'];
+    mmregions = ["USWest",
+                 "USEast",
+                 "Europe",
+                 "Singapore",
+                 "Shanghai",
+                 "Brazil",
+                 "Korea",
+                 "Stockholm",
+                 "Austria",
+                 "Australia",
+                 "SouthAfrica",
+                 "PerfectWorldTelecom",
+                 "PerfectWorldUnicom",
+                 "Dubai",
+                 "Chile",
+                 "Peru",
+                 "India",
+                 "PerfectWorldTelecomGuangdong",
+                 "PerfectWorldTelecomZhejiang",
+                 "Japan"];
 
 
 /*
