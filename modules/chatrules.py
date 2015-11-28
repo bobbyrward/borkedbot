@@ -1354,10 +1354,17 @@ def generate_message_commands(bot):
 
         smmr, pmmr = node.get_mmr_for_dotaid(dota.ID(tsid).dotaid)
 
+        if smmr == 0:
+            meme = ' EleGiggle'
+        elif smmr >= 6000:
+            meme = ' PogChamp'
+        else:
+            meme = ''
+
         if smmr is not None:
-            return '%s: %s!%s' % (user, smmr, '' if int(smmr) < 6000 else ' ヽ༼ຈل͜ຈ༽ﾉ')
+            return '%s: %s!%s' % (user, smmr, meme)
         elif pmmr is not None:
-            return '%s: %s!' % (user, pmmr)
+            return '%s: %s... except it\'s party mmr...' % (user, pmmr)
         else:
             return '%s: I dunno! Stop hiding your mmr!' % user
 
