@@ -138,12 +138,14 @@ def determineSteamid(steamthing):
     elif 'dotabuff.com/players/' in steamthing:
         match = re.search(r'/players/(\d+)', steamthing)
         if match:
-            return ID(match.groups()[0]).dotaid
+            maybesteamid = ID(match.groups()[0]).dotaid
+        else:
+            maybesteamid = None
 
     else:
         match = re.match(r'\d*$', steamthing)
         if match:
-            return ID(match.string).steamid
+            maybesteamid = ID(match.string).steamid
         else:
             try:
                 result = steamapi.ResolveVanityURL(steamthing)['response']
