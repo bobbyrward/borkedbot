@@ -169,7 +169,10 @@ def generate_message_commands(bot):
         if args:
             player_datas = settings.getdata('dota_notable_players')
 
-            if args[0] == 'add':
+            if user == channel and args[0].lower() != 'rename':
+                return
+
+            if args[0].lower() == 'add':
                 try:
                     new_player_id = int(args[1])
                     new_player_name = ' '.join(args[2:])
@@ -182,7 +185,7 @@ def generate_message_commands(bot):
                     settings.setdata('dota_notable_players', player_datas, announce=False)
                     return "%s registered as a notable player." % new_player_name
 
-            elif args[0] == 'remove' and len(args) == 2:
+            elif args[0].lower() == 'remove' and len(args) == 2:
                 try:
                     player_id = int(args[1])
                 except:
@@ -196,7 +199,7 @@ def generate_message_commands(bot):
                     else:
                         return "That id is not in the list."
 
-            elif args[0] == 'rename':
+            elif args[0].lower() == 'rename':
                 try:
                     player_id = int(args[1])
                     new_name = ' '.join(args[2:])
@@ -204,6 +207,10 @@ def generate_message_commands(bot):
                     return "Bad player id"
                 else:
                     if player_id in player_datas:
+                        if user == channel and channel in dota.get_enabled_channels():
+                            if player_id != settings.getdata('%s_dota_id'):
+                                return "%s: You can only rename yourself (%s)." % (channel, settings.getdata('%s_dota_id'))
+                        
                         old_name = player_datas[player_id]
                         player_datas[player_id] = new_name
                         settings.setdata('dota_notable_players', player_datas, announce=False)
@@ -211,15 +218,15 @@ def generate_message_commands(bot):
                     else:
                         return "That id is not in the list."
 
-            elif args[0] == 'update':
+            elif args[0].lower() == 'update':
                 changed = dota.update_verified_notable_players()
                 return "Updated list, %s entries changed." % changed
 
-            elif args[0] == 'reset':
+            elif args[0].lower() == 'reset':
                 settings.setdata('%s_notable_last_check' % channel, 0.0)
                 settings.setdata('%s_notable_message_count' % channel, 10000)
 
-    coms.append(command.Command('!notable', f, bot, groups=me_only_group))
+    coms.append(command.Command('!notable', f, bot, groups=me_and_broadcaster))
 
 
     ######################################################################
@@ -674,7 +681,7 @@ def generate_message_commands(bot):
                 channel = hc
                 textstr += ' (hosted channel)'
 
-        return textstr.format(user, channel) #+ " | Friendly reminder that BTTV has a /uptime command." if args else ''
+        return textstr.format(user, channel)
 
     coms.append(command.Command('!uptime', f, bot, chanblacklist = ['mynameisamanda', 'gixgaming', 'bloodynine_'], repeatdelay=15))
 
@@ -726,38 +733,43 @@ def generate_message_commands(bot):
     def f(channel, user, message, args, data, bot):
         import dota, node, settings, twitchapi
 
-        if user not in [channel, 'imayhaveborkedit']:
-            return
+        if channel in dota.get_enabled_channels():
+            return "It's already set up. There's no easy way to change accounts right now. Ask imayhaveborkedit if you have a question."
 
         if args:
             if args[0].lower() == 'help':
-                helpstr = "If you've linked your steam and twitch accounts this command should just set everything up. "
-                helpstr += 'Otherwise you need to supply a steam account, or dota id, or something like that.'
-                return helpstr
+                return ("If you've linked your steam and twitch accounts this command should automatically set everything up. "
+                    "Otherwise you need to supply a steam account, dotabuff link, dota id, or something to identify your account.")
             else:
                 linked_id = args[0]
-                if not linked_id:
-                    return "I can't use that.  Give me something else."
         else:
             linked_id = twitchapi.get_steam_id_from_twitch(channel)
-
-        if not linked_id:
-            return "Unable to automatically setup mmr.  You'll need to supply some sort of steam account."
+            if not linked_id:
+                return "Unable to automatically setup mmr.  You'll need to supply some sort of steam account."
 
         ch_sid = dota.determineSteamid(linked_id)
+        if not ch_sid:
+            return "I can't use that.  Give me something else."
 
-        en_chans = settings.getdata('dota_enabled_channels')
-        if channel in en_chans:
-            return "You already set this up.  Ask imayhaveborkedit if you have a question."
-
-        notablecheck = dota.enable_channel(channel, dota.ID.steam_to_dota(ch_sid), True, True)
+        dotaid = dota.ID.steam_to_dota(ch_sid)
+        notablecheck = dota.enable_channel(channel, dotaid, True, True)
 
         if notablecheck:
-            return "All that's left is to add this one to the notable players list, then thats it.  Let imayhaveborkedit know of any bugs or issues, and remember to mod the bot."
-        else:
-            return "Ok, that should be it.  Let imayhaveborkedit know of any bugs or issues, and remember to mod the bot."
+            playername = node.get_player_info(dotaid)['player_infos']['name']
+            if playername:
+                player_datas = settings.getdata('dota_notable_players')
+                player_datas[dotaid] = playername
+                settings.setdata('dota_notable_players', player_datas, announce=False)
 
-    coms.append(command.Command('!mmrsetup', f, bot, groups=me_and_broadcaster, repeatdelay=5))
+                return ("Done. \"%s\" has been added as a notable player. "
+                    "Use `!notable rename %s player_name` to change it. "
+                    "Let imayhaveborkedit know of any bugs or issues, and remember to mod the bot.") % (playername, dotaid)
+            else:
+                return "Almost done. Run `!notable add %s player_name`. Let imayhaveborkedit know of any bugs or issues, and remember to mod the bot." % dotaid
+        else:
+            return "Done. Let imayhaveborkedit know of any bugs or issues, and remember to mod the bot."
+
+    coms.append(command.Command('!mmrsetup', f, bot, groups=me_and_broadcaster))
 
     def f(channel, user, message, args, data, bot):
         import dota
