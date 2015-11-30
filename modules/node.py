@@ -38,9 +38,9 @@ def get_batched_data(zfunction, ifcomp, convertjson, unpackargs, args):
     while True:
         try:
             if ifcomp:
-                return [convjson(x) for x in zfunction(*args if unpackargs else args)]
+                return [convjson(x) for x in zfunction(*args if unpackargs else [args])]
             else:
-                return [convjson(zfunction(*args if unpackargs else args))]
+                return [convjson(zfunction(*args if unpackargs else [args]))]
         except zerorpc.RemoteError as e:
             if e.msg == 'busy':
                 time.sleep(0.2)
@@ -223,6 +223,10 @@ def send_steam_message(steamid, message):
     with ZRPC() as zrpc:
         return zrpc.evaljs("bot.sendMessage('%s', '%s')" % (steamid, message))
 
+def is_friends_with(steamid):
+    with ZRPC() as zrpc:
+        return zrpc.evaljs('steamFriends.friends["%s"]' % steamid) is not None
+
 class FriendDataFlags():
     Status        = 1
     PlayerName    = 2 # Default
@@ -300,13 +304,13 @@ def get_profile_card(accountid):
     with ZRPC() as zrpc:
         return json.loads(zrpc.getprofilecard(accountid))
 
-def get_rich_presence_available_for_steamid(steamid):
-    with ZRPC() as zrpc:
-        return zrpc.raw_eval('user_rich_presence_data.indexOf("%s") > -1' % steamid)
+# def get_rich_presence_available_for_steamid(steamid):
+#     with ZRPC() as zrpc:
+#         return zrpc.evaljs('user_rich_presence_data.indexOf("%s") > -1' % steamid)
 
-def get_user_rich_presence(steamid):
-    with ZRPC() as zrpc:
-        return zrpc.raw_eval('user_rich_presence_data["%s"]' % steamid)
+# def get_user_rich_presence(steamid):
+#     with ZRPC() as zrpc:
+#         return zrpc.evaljs('user_rich_presence_data["%s"]' % steamid)
 
 def get_user_status(steamid):
     with ZRPC() as zrpc:
@@ -336,3 +340,9 @@ def get_dota_rss(entries=0):
     else:
         return zrpc.evaljs('dota_rss_datas')
 
+def get_rich_presence_for_steamid(steamids):
+    steamids = [str(s) for s in steamids]
+    with ZRPC() as zrpc:
+        data = get_batched_data(zrpc.getrichpresence, False, True, False, steamids)[0]
+        return {int(k):data[k] for k in data}
+        # MAYBE TODO: try/except convert all number values back into ints
