@@ -112,31 +112,6 @@ def _delayed_timeout(bot, delay, user, duration):
     reactor.callLater(delay, bot.timeout, user, duration)
 
 
-def expand_googl(url):
-    r = requests.get('https://www.googleapis.com/urlshortener/v1/url?shortUrl=' + url)
-    try:
-        if r.json()['status'] == 'OK':
-            return r.json()['longUrl']
-        elif r.json()['status'] in ['REMOVED', 'MALWARE']:
-            return
-        else:
-            print "wtf is this: %s" % r.json()
-    except:
-        print r.status_code, r.reason
-        print r.text
-
-        # FIX MAKE BETTER
-
-def expand_shortlink(url):
-    r = requests.head(url)
-    if r.status_code == 301:
-        return r.headers['location']
-    elif r.status_code == 404:
-        return False
-    else:
-        print 'Unknown thing:', r, r.reason
-
-
 def inspect_for_bad_link(event):
     t0 = time.time()
     foundlinks = [m[0] for m in moderation.LINK_REGEX.findall(event.data) if m]
@@ -219,7 +194,7 @@ def scan_link(link, previouslocs=0):
 
         # 'content-disposition': 'attachment; filename="Screenshot###.scr"
         if r2.headers.get('content-disposition', '').startswith('attachment;'):
-            if re.search('filename\=.+?\.scr', r2.headers.get('content-disposition'), re.IGNORECASE):
+            if re.search(r'filename\=.+?\.scr', r2.headers.get('content-disposition'), re.IGNORECASE):
                 return '.scr download'
         elif re.search(moderation.SPECIAL_REGEX['dropbox_scr'], loc):
             return '.scr download'
