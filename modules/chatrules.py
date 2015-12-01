@@ -210,7 +210,7 @@ def generate_message_commands(bot):
                         if user == channel and channel in dota.get_enabled_channels():
                             if player_id != settings.getdata('%s_dota_id'):
                                 return "%s: You can only rename yourself (%s)." % (channel, settings.getdata('%s_dota_id'))
-                        
+
                         old_name = player_datas[player_id]
                         player_datas[player_id] = new_name
                         settings.setdata('dota_notable_players', player_datas, announce=False)
@@ -1194,7 +1194,7 @@ def generate_message_commands(bot):
                 return "Removed %s pics." % len(args[1:])
 
             elif args[0] in ['list', 'ls']:
-                return '%s: %s' % (user, ' '.join(settings.getdata('aliastar_catpics')))
+                return '%s: %s :3c' % (user, ' '.join(settings.getdata('aliastar_catpics')))
 
     coms.append(command.Command('!catpics', f, bot, channels=['aliastar'], repeatdelay=5))
 
@@ -1396,7 +1396,7 @@ def generate_message_commands(bot):
         if not lookupid:
             lookupid = twitchapi.get_steam_id_from_twitch(args[0])
             if not lookupid:
-                return "%s: Could not determine what account that is." % user
+                return "%s: That person has no linked steam account." % user
 
         smmr, pmmr = node.get_mmr_for_dotaid(dota.ID(lookupid).dotaid)
 
@@ -1408,6 +1408,54 @@ def generate_message_commands(bot):
             return "%s: That person isn\'t displaying their mmr." % user
 
     coms.append(command.Command('!mmrof', f, bot, True, repeatdelay=1))
+
+    def f(channel, user, message, args, data, bot):
+        import node, dota, settings, twitchapi
+
+        chcname = settings.getdata('%s_common_name' % channel)
+        sid = dota.ID.dota_to_steam(settings.getdata('%s_dota_id' % channel))
+        rpdata = node.get_rich_presence(sid)[sid]
+        partydata = rpdata.get('party', None)
+
+        if partydata and partydata.get('members', None):
+            partydata['members'].remove(sid)
+
+            if len(partydata['members']):
+                pmdata = {int(data['friendid']): data['player_name'] for data in node.get_friend_data(partydata['members'])}
+                return 'Party members: ' + ''.join([pmdata[pid] for pid in partydata['members']])
+
+        return '%s is not in a party.' % chcname
+
+    coms.append(command.Command('!party', f, bot, repeatdelay=10))
+
+
+    def f(channel, user, message, args, data, bot):
+        import node, difflib, time
+
+        mmdata = node.get_mm_stats()
+
+        try:
+            args[0]
+        except:
+            args.append('USEast')
+
+        if args[0] == 'list':
+            return 'Matchmaking regions: %s' % ', '.join(mmdata.keys())
+
+        if args[0].lower() == 'all':
+            return 'Matchmaking data for all regions: http://yasp.co/mmstats'
+
+        try:
+            lnames = {n.lower():n for n in mmdata.keys()}
+            region = [lnames[r] for r in difflib.get_close_matches(args[0].lower(), lnames, 1)][0]
+        except:
+            return "No match for %s" % args[0]
+
+        searchers = mmdata[region]
+
+        return  "Players queuing in %s (probably): %s" % (region, searchers)
+
+    coms.append(command.Command('!matchmaking', f, bot, repeatdelay=10))
 
 
     ######################################################################
