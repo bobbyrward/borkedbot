@@ -28,7 +28,8 @@ var steam = require("steam"),
     dota_rss_datas = [],
 
     zrpc_sourcetvgames_request_locked = false,
-    zrpc_frienddata_request_locked = false;
+    zrpc_frienddata_request_locked = false,
+    zrpc_richpresence_request_locked = false;
 
 
 // Load config
@@ -92,7 +93,7 @@ var onSteamLogOn = function onSteamLogOn(logonResp) {
                 // Dota2.joinChat(response.channelName, dota2.DOTAChatChannelType_t.DOTAChannelType_Lobby);
             });
 
-            Dota2.on("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
+            Dota2.on("matchmakingStatsData", function(searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
                 util.log('Got matchmaking stats');
                 //util.log("Wait times:\n")
                 //util.log(waitTimesByGroup)
@@ -221,11 +222,17 @@ var onSteamLogOn = function onSteamLogOn(logonResp) {
 
 steamRichPresence.on('info', function(info) {
     for (var i = info.rich_presence.length - 1; i >= 0; i--) {
-        kvdata = kvparse.parse(info.rich_presence[i].rich_presence_kv);
+        try {
+            kvdata = kvparse.parse(info.rich_presence[i].rich_presence_kv);
+        } catch (e) {
+            console.log('Error: Probably bad data for ', info.rich_presence[i].steamid_user, e);
+            console.log(info);
+            continue;
+        }
         steamuserid = info.rich_presence[i].steamid_user;
         user_rich_presence_data[steamuserid] = kvdata.RP;
 
-        // if (kvdata.RP.status) { console.log(steamuserid, kvdata.RP.status); };
+        // if (kvdata.RP.status) { console.log(steamuserid); console.log(kvdata.RP); };
     };
 });
 
@@ -336,7 +343,7 @@ var zrpcserver = new zerorpc.Server({
         reply = arguments[arguments.length - 1];
         Dota2.requestMatchmakingStats();
 
-        Dota2.once("matchmakingStatsData", function(waitTimesByGroup, searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
+        Dota2.once("matchmakingStatsData", function(searchingPlayersByGroup, disabledGroups, matchmakingStatsResponse){
             var mmdata = {};
 
             for (var i = searchingPlayersByGroup.length - 1; i >= 0; i--) {
@@ -743,55 +750,12 @@ var zrpcserver = new zerorpc.Server({
             return;
         };
 
-        // 0 - Kick member from guild.
+        // 0 - Kick from guild.
         // 1 - Leader.
         // 2 - Officer.
         // 3 - Member.
 
         Dota2.setGuildAccountRole(guildid, Dota2.ToAccountID(targetid), targetrole, function(err, response) {
-            reply(err, response['result']);
-        });
-    },
-    invitetomonkeysguild: function(targetid, reply) {
-        reply = arguments[arguments.length - 1];
-
-        targetid = typeof targetid !== 'function' ? targetid : undefined;
-
-        if (!(targetid)) {
-            reply('Bad arguments');
-            return;
-        }
-
-        if (!Dota2._gcReady) {
-            reply('GC unready');
-            return;
-        };
-
-        Dota2.inviteToGuild("228630", Dota2.ToAccountID(targetid), function(err, response) {
-            reply(err, response['result']);
-        });
-    },
-    cancelinvitetomonkeysguild: function(targetid, reply) {
-        reply = arguments[arguments.length - 1];
-
-        // { result: 'ERROR_NO_PERMISSION' } -> Given when an invite has already been accepted
-        // { result: 'ERROR_ACCOUNT_ALREADY_IN_GUILD' } -> Really now
-        // { result: 'ERROR_ACCOUNT_ALREADY_INVITED' } -> When an invite has been sent but not accepted
-        // { result: 'SUCCESS' } -> An invite has been rescinded
-
-        targetid = typeof targetid !== 'function' ? targetid : undefined;
-
-        if (!(targetid)) {
-            reply('Bad arguments');
-            return;
-        }
-
-        if (!Dota2._gcReady) {
-            reply('GC unready');
-            return;
-        };
-
-        Dota2.cancelInviteToGuild("228630", Dota2.ToAccountID(targetid), function(err, response) {
             reply(err, response['result']);
         });
     },
@@ -951,14 +915,71 @@ var zrpcserver = new zerorpc.Server({
 
                 console.log(msg);
                 reply(msg);
-                
+
                 steamFriends.removeListener('personaState', sfonps);
                 zrpc_frienddata_request_locked = false;
             }
-        }, 10000);
+        }, 9500);
 
         steamFriends.on('personaState', sfonps);
         steamFriends.requestFriendData(steamids, datatype);
+    },
+
+    getrichpresence: function(steamids, reply) {
+        reply = arguments[arguments.length - 1];
+        steamids = Array.isArray(steamids) ? steamids : [steamids];
+
+        if (zrpc_richpresence_request_locked) {
+            reply("busy");
+            return;
+        }
+
+        if (!steamClient.loggedOn) {
+            reply("Steam not ready.");
+            return;
+        }
+
+        var expectedresponsecount = steamids.length,
+            datasok = false;
+        zrpc_richpresence_request_locked = true;
+
+        console.log("Expecting a response with", expectedresponsecount, "datas.");
+        console.log("Looking up", steamids);
+
+        var rpcatch = function(info) {
+            if (info.rich_presence.length == expectedresponsecount && steamids[0] == info.rich_presence[0].steamid_user) {
+                var data = {};
+                for (var i = info.rich_presence.length - 1; i >= 0; i--) {
+                    try {
+                        kvdata = kvparse.parse(info.rich_presence[i].rich_presence_kv);
+                    } catch (e) {
+                        console.log('ZRPC Error: Probably bad data for ', info.rich_presence[i].steamid_user, e);
+                        data[info.rich_presence[i].steamid_user] = null;
+                        continue;
+                    }
+                    data[info.rich_presence[i].steamid_user] = kvdata.RP;
+                }
+                console.log("Assembled data for", expectedresponsecount, "datas.");
+
+                steamRichPresence.removeListener('info', rpcatch);
+                zrpc_richpresence_request_locked = false;
+                datasok = true;
+                reply(null, JSON.stringify(data));
+            }
+        };
+
+        setTimeout(function() {
+            if (!datasok) {
+                console.log("Did not receive the desired response.");
+                reply("Did not receive the desired response.");
+
+                steamRichPresence.removeListener('info', rpcatch);
+                zrpc_richpresence_request_locked = false;
+            }
+        }, 9500);
+
+        steamRichPresence.on('info', rpcatch);
+        steamRichPresence.request({steamid_request: steamids});
     },
 
     /*
@@ -1147,22 +1168,26 @@ var DOTA_RP_STATUSES = {
     "DOTA_RP_BOTPRACTICE"                : "Playing Against Bots",
     "DOTA_RP_TRAINING"                   : "On a Training Mission" },
 
-    mmregions = ['USWest',
-                 'USEast',
-                 'Europe',
-                 'Singapore',
-                 'Shanghai',
-                 'Brazil',
-                 'Korea',
-                 'Austria',
-                 'Stockholm',
-                 'Australia',
-                 'SouthAfrica',
-                 'PerfectWorldTelecom',
-                 'PerfectWorldUnicom',
-                 'Dubai',
-                 'Chile',
-                 'Peru'];
+    mmregions = ["USWest",
+                 "USEast",
+                 "Europe",
+                 "Singapore",
+                 "Shanghai",
+                 "Brazil",
+                 "Korea",
+                 "Stockholm",
+                 "Austria",
+                 "Australia",
+                 "SouthAfrica",
+                 "PerfectWorldTelecom",
+                 "PerfectWorldUnicom",
+                 "Dubai",
+                 "Chile",
+                 "Peru",
+                 "India",
+                 "PerfectWorldTelecomGuangdong",
+                 "PerfectWorldTelecomZhejiang",
+                 "Japan"];
 
 
 /*

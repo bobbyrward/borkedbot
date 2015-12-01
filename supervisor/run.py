@@ -90,7 +90,6 @@ class BorkedbotSupervisorService(rpyc.Service):
         self.sv_list[channel].mailqueue.append((datatype, data))
 
 
-
 def dump_object_attr_info(thing):
     print '%s.%s' % (thing.__class__.__module__, thing.__class__.__name__)
 
