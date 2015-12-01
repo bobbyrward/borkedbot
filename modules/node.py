@@ -1,6 +1,7 @@
 import sys
 sys.dont_write_bytecode = True
 
+import re
 import time
 import json
 import zerorpc
@@ -340,9 +341,33 @@ def get_dota_rss(entries=0):
     else:
         return zrpc.evaljs('dota_rss_datas')
 
-def get_rich_presence_for_steamid(steamids):
-    steamids = [str(s) for s in steamids]
+def get_rich_presence(steamids):
+    if isinstance(steamids, int):
+        steamids = [str(steamids)]
+    else:
+        steamids = [str(s) for s in steamids]
+
     with ZRPC() as zrpc:
         data = get_batched_data(zrpc.getrichpresence, False, True, False, steamids)[0]
-        return {int(k):data[k] for k in data}
+        intdata = {int(k):data[k] for k in data}
+        print intdata
+        for sid in intdata:
+            for k in intdata[sid].iterkeys():
+                if k == 'party':
+                    intdata[sid].update({'party': _unfuck_rp_party_data(intdata[sid]['party'])})
+
+                if isinstance(intdata[sid][k], basestring) and intdata[sid][k].isdigit():
+                    intdata[sid].update({k: int(intdata[sid][k])})
+
+        return intdata
         # MAYBE TODO: try/except convert all number values back into ints
+
+def _unfuck_rp_party_data(i):
+    things = re.findall(r'(\w+?:\s\w+|members\s\{\w+?:\d*\s\})', i)
+    datas = dict([x.split(': ') for x in things if not x.startswith('steam_id')])
+    datas.update({'members': [int(x.split(': ')[1]) for x in things if x.startswith('steam_id')]})
+    datas.update({'open': False if datas['open'] == 'false' else True, 'party_id': int(datas['party_id'])})
+    return datas
+
+def _unfuck_rp_lobby_data(i):
+    pass
