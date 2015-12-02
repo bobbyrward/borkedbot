@@ -697,7 +697,11 @@ def generate_message_commands(bot):
         import json, os, time, settings, dota
 
         if channel == 'barnyyy':
-            return '%s: 5k' % user
+            mmrdata = dota.fetch_mmr_for_channel(channel)
+            if mmrdata[0] is not None:
+                return '%s: %sk' % (user, str(mmrdata[0])[0])
+            else:
+                return '%s: 5k' % user
 
         if channel not in dota.get_enabled_channels().keys():
             print 'Channel not enabled for dota'
@@ -1422,7 +1426,8 @@ def generate_message_commands(bot):
 
             if len(partydata['members']):
                 pmdata = {int(data['friendid']): data['player_name'] for data in node.get_friend_data(partydata['members'])}
-                return 'Party members: ' + ''.join([pmdata[pid] for pid in partydata['members']])
+
+                return 'Party members: ' + ', '.join([pmdata[pid] for pid in partydata['members']])
 
         return '%s is not in a party.' % chcname
 

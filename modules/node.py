@@ -364,6 +364,7 @@ def get_rich_presence(steamids):
 def _unfuck_rp_party_data(i):
     things = re.findall(r'(\w+?:\s\w+|members\s\{\w+?:\d*\s\})', i)
     datas = dict([x.split(': ') for x in things if not x.startswith('steam_id')])
+
     if 'members' in i:
         datas.update({'members': [int(x.split(': ')[1]) for x in things if x.startswith('steam_id')]})
     if 'open' in i:
@@ -375,4 +376,5 @@ def _unfuck_rp_party_data(i):
 
 # TODO: Test and fix lobby string unfucking
 def _unfuck_rp_lobby_data(i):
+    # probably can reuse the other regex
     pass

@@ -543,6 +543,7 @@ def getNotableCheckReady(channel):
         return False
 
 # TODO:
+#    FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX
 #    Stop further searches if no players are found
 #    Store results for use in end game blurb
 #    Fine tune usage frequency
