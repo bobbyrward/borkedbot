@@ -244,9 +244,13 @@ class Borkedbot(irc.IRCClient):
             try:
                 self.say(self.factory.channel, UnicodeDammit(msg).unicode_markup.encode('utf8'), length)
             except Exception, e:
-                print "That didn't work and that's kinda bad: ", e
-                print msg
-                print list(msg)
+                print "Could not force conversion, data may be an object type?"
+                msg = str(msg)
+                try:
+                    self.say(self.factory.channel, msg, length)
+                except:
+                    print "That didn't work and that's kinda bad: ", e
+                    print type(msg), msg
 
         self.send_event(self.chan(), self.nickname, 'botsay', msg, self, self.is_op())
 
