@@ -11,9 +11,11 @@ import twitchapi
 import settings
 import node
 import timer
+import traceback
 
 from secrets.moderation import USER_AGENT
 
+from bs4 import UnicodeDammit
 from HTMLParser import HTMLParser
 from twisted.internet import reactor
 
@@ -202,11 +204,17 @@ def alert(event):
 
             # I'll leave this disabled until richpresence/persona stuff is fixed
             # try:
-                # nblurb = notablePlayerBlurb(event.channel)
-                # if nblurb:
-                    # event.bot.botsay(nblurb)
+            #     nblurb = notablePlayerBlurb(event.channel)
+            #     if nblurb:
+            #         event.bot.botsay(nblurb)
             # except Exception, e:
-                # print '[Dota-Error] Notable player blurb failure: %s' % e
+            #     print '[Dota-Error] Notable player blurb failure: %s' % e
+            #     import traceback
+            #     print traceback.format_exc()
+            # 
+            # 
+            # OK FUCK ALL OF THIS ITS BEING REWRITTEN
+            # 
 
 
 def blurb(channel, bot, override=False):
@@ -230,11 +238,19 @@ def latestBlurb(channel, override=False):
             return
 
         try:
-            matches = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=25)['result']['matches']
-        except Exception as e:
-            print 'Error with steam api data:', e
-            raise e
+            mat = steamapi.GetMatchHistory(account_id=dotaid, matches_requested=25)
+            matches = mat['result']['matches']
+        except requests.exceptions.ConnectionError:
             return
+        except Exception as e:
+            if mat == {}:
+                # print "Bad data from GetMatchHistory:", mat
+                return
+            else:
+                print 'Error with steam api data:', e
+                print mat
+                print traceback.format_exc()
+                return
 
         settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
 
@@ -489,7 +505,7 @@ def searchForNotablePlayers(targetdotaid, pages=10, heroid=None, includemmr=Fals
     game = getSourceTVLiveGameForPlayer(targetdotaid, heroid)
 
     if not game:
-        return (None, None)
+        return (None, None) if includemmr else None
 
     players = game['players']
     notable_players_found = []
@@ -524,54 +540,92 @@ def searchForNotablePlayers(targetdotaid, pages=10, heroid=None, includemmr=Fals
         else:
             return notable_players_found
     else:
+        print (None, None) if includemmr else None
         return (None, None) if includemmr else None
 
 
 def getNotableCheckReady(channel):
     lastcheck = settings.trygetset('%s_notable_last_check' % channel, time.time())
     message_limit = settings.trygetset('%s_notable_message_limit' % channel, 50)
-    notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 900.0)
+    notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 600.0)
 
     if time.time() - lastcheck > notable_check_timeout:
         mes_count = settings.trygetset('%s_notable_message_count' % channel, 1)
         if mes_count <= message_limit:
+            print '%s/%s' % (mes_count, message_limit)
             return False
-        settings.setdata('%s_notable_last_check' % channel, time.time(), announce=False)
+
         return True
     else:
-        # print notable_check_timeout - (time.time() - lastcheck)
+        print notable_check_timeout - (time.time() - lastcheck)
         return False
 
 # TODO:
-#    FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX FIX
 #    Stop further searches if no players are found
 #    Store results for use in end game blurb
 #    Fine tune usage frequency
-def notablePlayerBlurb(channel, pages=33):
+def notablePlayerBlurb(channel, pages=10, override=False, updatetimers=True):
     playerid = settings.getdata('%s_dota_id' % channel)
-    userstatus = node.get_user_status(ID(playerid).steamid)
-    if userstatus:
-        # print 'Dota status for %s: %s' % (channel, userstatus)
+    checkstatus = node.get_cached_rich_presence(ID(playerid).steamid)[ID(playerid).steamid]
 
-        if userstatus in ["#DOTA_RP_HERO_SELECTION", "#DOTA_RP_PRE_GAME", "#DOTA_RP_GAME_IN_PROGRESS", "#DOTA_RP_PLAYING_AS"]:
-            if getNotableCheckReady(channel):
+    if checkstatus:
+        userstatus = node.get_rich_presence(ID(playerid).steamid)[ID(playerid).steamid]
+        if userstatus and userstatus['status'] in ["#DOTA_RP_HERO_SELECTION", "#DOTA_RP_PRE_GAME", "#DOTA_RP_GAME_IN_PROGRESS", "#DOTA_RP_PLAYING_AS"]:
+
+            if getNotableCheckReady(channel) or override:
                 if twitchapi.is_streaming(channel):
-                    if userstatus == '#DOTA_RP_PLAYING_AS':
-                        playerheroid = node.get_user_playing_as(ID(playerid).steamid)
-                        playerheroid = getHeroIddict(False)[playerheroid[0]]
+                    if userstatus['status'] == '#DOTA_RP_PLAYING_AS':
+                        playerheroid = userstatus['param0']
                     else:
                         playerheroid = None
 
                     print "[Dota-Notable] Doing search for notable players%s" % (' using hero id' if playerheroid else '')
                     players = searchForNotablePlayers(playerid, pages, playerheroid)
-                    settings.setdata('%s_notable_message_count' % channel, 0, announce=False)
 
-                    if players:
+                    if any(players):
+                        settings.setdata('%s_notable_message_count' % channel, 0, announce=False)
+                        settings.setdata('%s_notable_last_check' % channel, time.time(), announce=False)
                         return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players])
-        else:
-            notable_check_timeout = settings.trygetset('%s_notable_check_timeout' % channel, 600.0)
-            settings.setdata('%s_notable_last_check' % channel, time.time() - notable_check_timeout + 60.0, announce=False)
+                    # else:
+                        # print "[Dota-Notable] No players found"
+            
+            # Not ready to post a blurb    
+        # User not in a game
+    # User not in dota?
 
+def get_auto_notable_player_blurb(channel, ignore_online=False):
+    playerid = settings.getdata('%s_dota_id' % channel)
+    steamid = ID.dota_to_steam(playerid)
+    isfriend = node.is_friends_with(steamid)
+
+    if isfriend:
+        user_rp_data = node.get_cached_rich_presence(steamid)[ID(playerid).steamid]
+        if user_rp_data is None:
+            user_rp_data = node.get_rich_presence(steamid)[ID(playerid).steamid]
+    else:
+        # If I decide this feature requires being on the friends list this is where I return
+        user_rp_data = node.get_rich_presence(steamid)[ID(playerid).steamid]
+
+    if user_rp_data:
+        if user_rp_data['status'] in ["#DOTA_RP_HERO_SELECTION", "#DOTA_RP_PRE_GAME", "#DOTA_RP_GAME_IN_PROGRESS", "#DOTA_RP_PLAYING_AS"]:
+            if user_rp_data['status'] == '#DOTA_RP_PLAYING_AS': # TODO: Check if PRE_GAME has the hero params
+                playerheroid = user_rp_data['param0']
+            else:
+                playerheroid = None
+
+            print "[Dota-Notable] Doing search for notable players%s" % (' using hero id' if playerheroid else '')
+            players = searchForNotablePlayers(playerid, heroid=playerheroid, includemmr=True)
+            # TODO: Check if game is ranked or not and set includemmr accordingly
+
+            if players[0]:
+                return "Notable players in this game: %s" % ', '.join(['%s (%s)' % (p,h) for p,h in players[0]])
+
+
+            # WHY DOES THIS ALL SUCK SO MUCH I FUCKING HATE THIS MODULE
+
+
+        # User not in a game
+    # User not in dota?
 
 # TODO: Add additional data from new info
 def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
@@ -615,7 +669,8 @@ def get_players_in_game_for_player(dotaid, checktwitch=False, markdown=False):
                 data += playerformat % ('#### ' if markdown else '  ', herodict[player['hero_id']], pname)
 
                 if player['account_id'] in notable_players:
-                    data += notableformat % ('###### ' if markdown else '   - ', notable_players[player['account_id']])
+                    npd = '###### ' if markdown else '   - '
+                    data += notableformat % (UnicodeDammit(npd).unicode_markup.encode('utf8'), notable_players[player['account_id']])
 
                 mkupsteamlink = linkformat % (linktypes['steam'], ID(player['account_id']).steamid)
                 ressteam = requests.head(linktypes['steam'] + str(ID(player['account_id']).steamid)).headers.get('location')
