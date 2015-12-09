@@ -232,7 +232,9 @@ steamRichPresence.on('info', function(info) {
         steamuserid = info.rich_presence[i].steamid_user;
         user_rich_presence_data[steamuserid] = kvdata.RP;
 
-        // if (kvdata.RP.status) { console.log(steamuserid); console.log(kvdata.RP); };
+        if (kvdata.RP.status) { 
+            util.log("RP update:", steamuserid, kvdata.RP.status);
+        };
     };
 });
 
@@ -953,7 +955,7 @@ var zrpcserver = new zerorpc.Server({
                     try {
                         kvdata = kvparse.parse(info.rich_presence[i].rich_presence_kv);
                     } catch (e) {
-                        console.log('ZRPC Error: Probably bad data for ', info.rich_presence[i].steamid_user, e);
+                        console.log('ZRPC Error: Probably bad data for ', info.rich_presence[i].steamid_user);
                         data[info.rich_presence[i].steamid_user] = null;
                         continue;
                     }

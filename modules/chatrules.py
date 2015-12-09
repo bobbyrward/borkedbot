@@ -245,7 +245,7 @@ def generate_message_commands(bot):
 
         return str(reldelta).replace('relativedelta','').replace('+','').replace('(','').replace(')','')
 
-    coms.append(command.Command('!accountage', f, bot, groups=me_and_broadcaster))
+    coms.append(command.Command('!accountage', f, bot, True))
 
 
     def f(channel, user, message, args, data, bot):
@@ -903,23 +903,15 @@ def generate_message_commands(bot):
     coms.append(command.Command('!nel', f, bot, repeatdelay=50))
 
     def f(channel, user, message, args, data, bot):
-        namemap = {
-            'monkeys_forever': 'monkeys-forever',
-            'moodota2': 'Moo',
-            'gixgaming': 'giX',
-            'bloodynine_': 'Bloody Nine',
-            'aliastar': 'remember11',
-            'brinkdota': 'brink',
-        }
+        import node, json, requests, time, datetime, dateutil, dateutil.tz, dateutil.relativedelta
 
-        if channel not in namemap: return
+        offname = node.get_player_info(settings.getdata('%s_dota_id' % channel))['player_infos'][0]['name']
 
-        import json, requests, time, datetime, dateutil, dateutil.tz, dateutil.relativedelta
         lburl = "http://www.dota2.com/webapi/ILeaderboard/GetDivisionLeaderboard/v0001?division=americas"
         jdata = json.loads(requests.get(lburl).text)
 
         try:
-            rank, mmr = {i['name']:(i['rank'],i['solo_mmr']) for i in jdata['leaderboard']}[namemap[channel]]
+            rank, mmr = {i['name']:(i['rank'],i['solo_mmr']) for i in jdata['leaderboard']}[offname]
         except:
             return "Uhhh, about that..."
 
@@ -1175,7 +1167,7 @@ def generate_message_commands(bot):
        bot, channels=['moodota2'], targeted=True, repeatdelay=15))
 
     coms.append(command.SimpleCommand(['!song', '!music', '!playlist', '!songlist'],
-        "Try this for now: http://www.twitchecho.com/moodota2 Don't be surprised if it doesn't work though.", bot, channels=['moodota2'], repeatdelay=10, targeted=True))
+        "Try this for now: http://www.twitchecho.com/moodota2 It might not work if there's too much noise though.", bot, channels=['moodota2'], repeatdelay=10, targeted=True))
 
     # Aliastar ###############################
 
@@ -1364,7 +1356,7 @@ def generate_message_commands(bot):
 
         linked_id = twitchapi.get_steam_id_from_twitch(user)
         if not linked_id:
-            return '%s: I dunno! Link your steam and twitch accounts in your twich settings!' % user
+            return '%s: I dunno! Link your steam to twitch! https://secure.twitch.tv/settings/connections' % user
 
         tsid = dota.determineSteamid(linked_id)
 
@@ -1384,7 +1376,7 @@ def generate_message_commands(bot):
         else:
             return '%s: I dunno! Stop hiding your mmr!' % user
 
-    coms.append(command.Command('!mymmr', f, bot, repeatdelay=1))
+    coms.append(command.Command('!mymmr', f, bot))
 
 
     def f(channel, user, message, args, data, bot):
@@ -1392,14 +1384,11 @@ def generate_message_commands(bot):
 
         if not args: return
 
-        try:
-            lookupid = dota.determineSteamid(args[0])
-        except:
-            lookupid = None
-
+        lookupid = twitchapi.get_steam_id_from_twitch(args[0])
         if not lookupid:
-            lookupid = twitchapi.get_steam_id_from_twitch(args[0])
-            if not lookupid:
+            try:
+                lookupid = dota.determineSteamid(args[0])
+            except:
                 return "%s: That person has no linked steam account." % user
 
         smmr, pmmr = node.get_mmr_for_dotaid(dota.ID(lookupid).dotaid)
@@ -1462,6 +1451,33 @@ def generate_message_commands(bot):
 
     coms.append(command.Command('!matchmaking', f, bot, repeatdelay=10))
 
+    def f(channel, user, message, args, data, bot):
+        if not args: 
+            return
+        else:
+            i = args[0].strip('cfCF')
+            try:
+                float(i)
+            except:
+                return '%s: invalid input' % user
+        
+        return '%s: %.2g°C ' % (user, (float(i) - 32.0)*(5.0/9.0))
+
+    coms.append(command.Command('!f2c', f, bot, repeatdelay=10))
+
+    def f(channel, user, message, args, data, bot):
+        if not args: 
+            return
+        else:
+            i = args[0].strip('cfCF')
+            try:
+                float(i)
+            except:
+                return '%s: invalid input' % user
+        
+        return '%s: %.2g°F ' % (user, (float(i)*(9.0/5.0)) + 32.0)
+
+    coms.append(command.Command('!c2f', f, bot, repeatdelay=10))
 
     ######################################################################
 
