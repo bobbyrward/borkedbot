@@ -352,14 +352,32 @@ def get_rich_presence(steamids):
         intdata = {int(k):data[k] for k in data}
 
         for sid in intdata:
-            for k in intdata[sid].iterkeys():
-                if k == 'party':
-                    intdata[sid].update({'party': _unfuck_rp_party_data(intdata[sid]['party'])})
+            if intdata[sid] is not None:
+                for k in intdata[sid].iterkeys():
+                    if k == 'party':
+                        intdata[sid].update({'party': _unfuck_rp_party_data(intdata[sid]['party'])})
 
-                if isinstance(intdata[sid][k], basestring) and intdata[sid][k].isdigit():
-                    intdata[sid].update({k: int(intdata[sid][k])})
+                    if isinstance(intdata[sid][k], basestring) and intdata[sid][k].isdigit():
+                        intdata[sid].update({k: int(intdata[sid][k])})
 
         return intdata
+
+def get_cached_rich_presence(steamids):
+    if isinstance(steamids, int):
+        steamids = [str(steamids)]
+    else:
+        steamids = [str(s) for s in steamids]
+
+    with ZRPC() as zrpc:
+        data = {}
+        for i in steamids:
+            dumbdata = zrpc.evaljs('user_rich_presence_data["%s"]' % i)
+            if dumbdata and dumbdata.get('party', None):
+                dumbdata.update({'party': _unfuck_rp_party_data(dumbdata['party'])})
+            
+            data[int(i)] = dumbdata
+        
+        return data
 
 def _unfuck_rp_party_data(i):
     things = re.findall(r'(\w+?:\s\w+|members\s\{\w+?:\d*\s\})', i)
