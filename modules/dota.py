@@ -242,6 +242,9 @@ def latestBlurb(channel, override=False):
             matches = mat['result']['matches']
         except requests.exceptions.ConnectionError:
             return
+        except KeyError as e:
+            if mat['result']['status'] == 15:
+                return # Match history is disabled
         except Exception as e:
             if mat == {}:
                 # print "Bad data from GetMatchHistory:", mat
@@ -251,8 +254,9 @@ def latestBlurb(channel, override=False):
                 print mat
                 print traceback.format_exc()
                 return
-
-        settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
+        
+        finally:
+            settings.setdata('%s_last_match_fetch' % channel, time.time(), announce=False)
 
         latestmatch = matches[0]
         previousnewmatch = matches[1]
@@ -743,7 +747,7 @@ def update_verified_notable_players():
 def check_for_steam_dota_rss_update(channel, setkey=True):
     last_rss_check = settings.trygetset('%s_last_dota_rss_check' % channel, time.time())
 
-    if time.time() - last_rss_check < 30.0:
+    if time.time() - last_rss_check < 10.0:
         return
 
     settings.setdata('%s_last_dota_rss_check' % channel, time.time(), announce=False)

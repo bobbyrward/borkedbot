@@ -58,7 +58,8 @@ def alert(event):
             if output[1] is command.OK:
                 # print "[Chatrules] Output for %s: %s" % (comm.trigger, output[0])
                 print "[Chatrules] '%s': %4.4fms, Total time: %4.4fms" % (comm.trigger, (t2-t1)*1000, (t2-tstart)*1000)
-                event.bot.botsay(output[0])
+                with event.bot.unlock_linelength():
+                    event.bot.botsay(output[0])
 
 def _getargs(msg):
     try:
@@ -491,7 +492,8 @@ def generate_message_commands(bot):
             noper_cats = ', '.join(catlist)
 
             if args[0].lower() == 'list':
-                return ', '.join(noper_cats)
+                print len(noper_cats)
+                return noper_cats
             elif args[0].lower() in catlist:
                 cat = args[0].lower()
             else:
@@ -521,7 +523,7 @@ def generate_message_commands(bot):
             noper_cats = ', '.join(catlist)
 
             if args[0].lower() == 'list':
-                return ', '.join(catlist)
+                return noper_cats
             elif args[0].lower() in catlist:
                 cat = '/usr/share/games/fortunes/off/' + args[0].lower()
             else:
@@ -1167,7 +1169,8 @@ def generate_message_commands(bot):
        bot, channels=['moodota2'], targeted=True, repeatdelay=15))
 
     coms.append(command.SimpleCommand(['!song', '!music', '!playlist', '!songlist'],
-        "Try this for now: http://www.twitchecho.com/moodota2 It might not work if there's too much noise though.", bot, channels=['moodota2'], repeatdelay=10, targeted=True))
+        "It's Pandora, but you can try this for now: http://www.twitchecho.com/moodota2 It might not work if there's too much noise though.", 
+        bot, channels=['moodota2'], repeatdelay=10, targeted=True))
 
     # Aliastar ###############################
 
@@ -1384,12 +1387,15 @@ def generate_message_commands(bot):
 
         if not args: return
 
+        if args[0].lower() == user:
+            return "What the fuck are you doing just use !mymmr"
+
         lookupid = twitchapi.get_steam_id_from_twitch(args[0])
         if not lookupid:
             try:
                 lookupid = dota.determineSteamid(args[0])
             except:
-                return "%s: That person has no linked steam account." % user
+                return "%s: Could not determine steam id." % user
 
         smmr, pmmr = node.get_mmr_for_dotaid(dota.ID(lookupid).dotaid)
 
